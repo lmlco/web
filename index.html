@@ -2,104 +2,185 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>土留め親ぐい計算ソフト</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-:root {
-  --bg: #1a1a2e; --surface: #16213e; --surface2: #0f3460;
-  --accent: #e94560; --accent2: #4cc9f0; --text: #eaeaea;
-  --text2: #a0a0b0; --border: #2a2a4a; --success: #4caf50;
-  --warn: #ff9800; --err: #f44336; --radius: 8px;
-  --shadow: 0 4px 20px rgba(0,0,0,0.4);
+:root{
+  --bg:#1a1a2e;--surface:#16213e;--surface2:#0f3460;
+  --accent:#e94560;--accent2:#4cc9f0;--text:#eaeaea;
+  --text2:#a0a0b0;--border:#2a2a4a;--success:#4caf50;
+  --warn:#ff9800;--err:#f44336;--radius:8px;
+  --shadow:0 4px 20px rgba(0,0,0,.4);
+  --bottom-nav:60px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;min-height:100vh;overscroll-behavior:none}
 
-/* Layout */
-.app{display:grid;grid-template-rows:auto 1fr;grid-template-columns:340px 1fr;min-height:100vh}
-header{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:20px;box-shadow:var(--shadow)}
-header h1{font-size:1.2rem;font-weight:700;color:var(--accent2)}
-header span{color:var(--text2);font-size:0.85rem}
-.method-tabs{display:flex;gap:8px;margin-left:auto}
-.tab-btn{padding:8px 20px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:0.85rem;transition:.2s}
+/* ===== DESKTOP LAYOUT ===== */
+.app{display:grid;grid-template-rows:auto 1fr;grid-template-columns:360px 1fr;height:100vh}
+header{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow);flex-shrink:0}
+header h1{font-size:1.1rem;font-weight:700;color:var(--accent2);white-space:nowrap}
+header .sub{color:var(--text2);font-size:0.78rem;display:none}
+.method-tabs{display:flex;gap:6px;margin-left:auto}
+.tab-btn{padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:0.82rem;transition:.2s;min-height:36px}
 .tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-/* Sidebar */
-.sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px}
-.sidebar-section{margin-bottom:20px}
-.sidebar-section h3{font-size:0.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-label{display:block;font-size:0.82rem;color:var(--text2);margin-bottom:3px;margin-top:8px}
-input[type=number],select{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.9rem;transition:.2s}
-input[type=number]:focus,select:focus{outline:none;border-color:var(--accent2)}
-.unit{font-size:0.75rem;color:var(--text2);margin-left:4px}
+/* Sidebar (desktop) */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:14px 14px 20px;display:flex;flex-direction:column;gap:4px}
+
+/* Accordion sections */
+.acc-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:var(--radius);cursor:pointer;user-select:none;border:1px solid var(--border);margin-bottom:2px}
+.acc-header h3{font-size:0.82rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.acc-arrow{font-size:0.7rem;color:var(--text2);transition:transform .25s}
+.acc-header.open .acc-arrow{transform:rotate(180deg)}
+.acc-body{padding:10px 4px 4px;display:none}
+.acc-body.open{display:block}
+
+/* Form controls */
+label{display:block;font-size:0.82rem;color:var(--text2);margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input[type=number],input[type=text],select{
+  width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--text);font-size:0.95rem;transition:.2s;
+  min-height:44px;-webkit-appearance:none;appearance:none
+}
+input[type=number]:focus,input[type=text]:focus,select:focus{outline:none;border-color:var(--accent2);background:#1e2a45}
+.unit{font-size:0.72rem;color:var(--text2);margin-left:3px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.calc-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),#c0392b);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:1rem;font-weight:700;margin-top:12px;transition:.2s}
-.calc-btn:hover{opacity:.9;transform:translateY(-1px)}
-.export-row{display:flex;gap:8px;margin-top:10px}
-.export-btn{flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.8rem;transition:.2s}
-.export-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 
 /* Soil layers */
-.layer-list{display:flex;flex-direction:column;gap:6px}
-.layer-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:8px;position:relative}
-.layer-del{position:absolute;top:6px;right:6px;background:none;border:none;color:var(--err);cursor:pointer;font-size:1rem;line-height:1}
-.add-layer-btn{width:100%;padding:7px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:0.82rem;transition:.2s;margin-top:6px}
-.add-layer-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.layer-list{display:flex;flex-direction:column;gap:8px}
+.layer-card{background:var(--bg);border:2px solid var(--border);border-radius:var(--radius);padding:10px 10px 8px;position:relative;transition:.2s}
+.layer-card:active{border-color:var(--accent2)}
+.layer-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.layer-num{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid var(--accent2);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:var(--accent2);flex-shrink:0}
+.layer-name-input{flex:1;min-height:36px;padding:6px 10px;font-size:0.9rem}
+.layer-del{background:none;border:none;color:var(--err);cursor:pointer;font-size:1.4rem;line-height:1;padding:2px 4px;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
+.layer-params{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.layer-params label{margin-top:6px;font-size:0.75rem}
+.layer-params input{min-height:40px;font-size:0.88rem;padding:8px 8px}
+.layer-thick{margin-top:6px}
+.layer-thick label{font-size:0.75rem;margin-top:0}
+.layer-thick input{min-height:40px;font-size:0.88rem}
+
+.add-layer-btn{width:100%;padding:12px;background:transparent;border:2px dashed var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:0.9rem;transition:.2s;margin-top:4px;min-height:48px}
+.add-layer-btn:hover,.add-layer-btn:active{border-color:var(--accent2);color:var(--accent2)}
+
+/* Action buttons */
+.calc-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#c0392b);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:1.05rem;font-weight:700;transition:.2s;min-height:52px;letter-spacing:.05em}
+.calc-btn:hover{opacity:.9}
+.calc-btn:active{transform:scale(.98)}
+.export-row{display:flex;gap:8px;margin-top:8px}
+.export-btn{flex:1;padding:10px 4px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.8rem;transition:.2s;min-height:44px}
+.export-btn:hover{border-color:var(--accent2);color:var(--accent2)}
 
 /* Main content */
-.main{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px}
-.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:.2s}
-.result-card:hover{border-color:var(--accent2)}
-.result-card .label{font-size:0.78rem;color:var(--text2)}
-.result-card .value{font-size:1.6rem;font-weight:700;margin:4px 0;color:var(--accent2)}
-.result-card .sub{font-size:0.75rem;color:var(--text2)}
+.main{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;transition:.2s}
+.result-card .label{font-size:0.75rem;color:var(--text2)}
+.result-card .value{font-size:1.5rem;font-weight:700;margin:4px 0;color:var(--accent2)}
+.result-card .sub{font-size:0.72rem;color:var(--text2)}
 .result-card.warn .value{color:var(--warn)}
 .result-card.err .value{color:var(--err)}
 .result-card.ok .value{color:var(--success)}
 
-.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
-.chart-box h4{font-size:0.82rem;color:var(--text2);margin-bottom:12px}
-.chart-box canvas{max-height:380px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.chart-box h4{font-size:0.8rem;color:var(--text2);margin-bottom:10px}
+.chart-box canvas{max-height:360px}
 
 .result-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.result-table h4{padding:12px 16px;font-size:0.85rem;border-bottom:1px solid var(--border);color:var(--text2)}
-table{width:100%;border-collapse:collapse}
-th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:0.78rem;color:var(--text2);font-weight:600}
-td{padding:7px 12px;font-size:0.82rem;border-bottom:1px solid var(--border)}
+.result-table h4{padding:10px 14px;font-size:0.83rem;border-bottom:1px solid var(--border);color:var(--text2)}
+table{width:100%;border-collapse:collapse;font-size:0.8rem}
+th{background:var(--surface2);padding:7px 10px;text-align:right;font-size:0.73rem;color:var(--text2);font-weight:600}
+th:first-child{text-align:left}
+td{padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:monospace;font-size:0.78rem}
+td:first-child{text-align:left}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(76,201,240,.05)}
+tr:hover td{background:rgba(76,201,240,.04)}
 
-.status-bar{padding:10px 16px;border-radius:var(--radius);font-size:0.85rem;font-weight:600}
+.status-bar{padding:10px 14px;border-radius:var(--radius);font-size:0.85rem;font-weight:600}
 .status-bar.ok{background:rgba(76,175,80,.1);border:1px solid var(--success);color:var(--success)}
 .status-bar.err{background:rgba(244,67,54,.1);border:1px solid var(--err);color:var(--err)}
 .status-bar.info{background:rgba(76,201,240,.1);border:1px solid var(--accent2);color:var(--accent2)}
+.section-hd{font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 
-.section-header{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+/* ===== MOBILE OVERRIDES ===== */
+@media(max-width:768px){
+  .app{
+    display:flex;flex-direction:column;height:100vh;
+    padding-bottom:var(--bottom-nav);
+  }
+  header{padding:10px 14px;flex-shrink:0}
+  header h1{font-size:1rem}
+  header .sub{display:block}
+  .method-tabs .tab-btn{padding:6px 12px;font-size:0.78rem}
 
-/* Elastic method extras */
-#elastic-panel{display:none}
-#elastic-panel.active{display:contents}
+  /* Mobile panels */
+  .sidebar{
+    flex:1;overflow-y:auto;border-right:none;padding:12px 12px 16px;
+    display:none;
+  }
+  .sidebar.sp-active{display:flex}
+  .main{
+    flex:1;overflow-y:auto;padding:12px;
+    display:none;
+  }
+  .main.sp-active{display:flex}
 
-.convergence-badge{font-size:0.75rem;padding:3px 8px;border-radius:20px;background:rgba(76,175,80,.2);color:var(--success)}
+  /* Bottom navigation */
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:var(--bottom-nav);
+    background:var(--surface);border-top:1px solid var(--border);z-index:100
+  }
+  .bottom-nav button{
+    flex:1;background:none;border:none;color:var(--text2);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;font-size:0.65rem;padding:6px 0;transition:.2s
+  }
+  .bottom-nav button .icon{font-size:1.3rem}
+  .bottom-nav button.active{color:var(--accent2)}
+  .bottom-nav button.active .icon{filter:drop-shadow(0 0 6px var(--accent2))}
 
-@media(max-width:900px){
-  .app{grid-template-columns:1fr}
-  .sidebar{border-right:none;border-bottom:1px solid var(--border)}
+  /* Accordion auto-open styling on mobile */
+  .acc-header{padding:12px 14px;min-height:50px}
+  .acc-header h3{font-size:0.85rem}
+  .acc-body{padding:12px 4px 6px}
+
+  /* Bigger layer cards on mobile */
+  .layer-params{grid-template-columns:1fr 1fr}
+  .layer-params input{min-height:44px;font-size:0.95rem}
+
   .charts-row{grid-template-columns:1fr}
+  .result-grid{grid-template-columns:1fr 1fr}
+
+  /* Overflow table scroll */
+  .result-table{overflow-x:auto}
+  table{min-width:560px}
+
+  .calc-btn{font-size:1.1rem;min-height:56px}
+}
+
+/* Desktop: hide bottom nav */
+@media(min-width:769px){
+  .bottom-nav{display:none}
+  .sidebar{display:flex!important}
+  .main{display:flex!important}
 }
 </style>
 </head>
 <body>
 <div class="app">
 
+<!-- ===== HEADER ===== -->
 <header>
   <div>
     <h1>🏗 土留め親ぐい計算ソフト</h1>
-    <span>Earth Retaining Pile Calculator</span>
+    <span class="sub">Earth Retaining Pile Calculator</span>
   </div>
   <div class="method-tabs">
     <button class="tab-btn active" onclick="switchMethod('conventional')">慣用法</button>
@@ -107,114 +188,133 @@ tr:hover td{background:rgba(76,201,240,.05)}
   </div>
 </header>
 
-<!-- ===== SIDEBAR ===== -->
-<div class="sidebar" id="sidebar">
+<!-- ===== SIDEBAR (入力パネル) ===== -->
+<div class="sidebar sp-active" id="sidebar">
 
-  <div class="sidebar-section">
-    <h3>基本条件</h3>
-    <label>根切り深さ H <span class="unit">m</span></label>
-    <input type="number" id="H" value="5.0" step="0.1" min="0.5">
-    <label>地下水位 hw <span class="unit">m（地表面から）</span></label>
-    <input type="number" id="hw" value="2.0" step="0.1" min="0">
-    <label>サポート段数</label>
-    <select id="n_support">
-      <option value="0">切梁なし（片持ち）</option>
-      <option value="1" selected>1段</option>
-      <option value="2">2段</option>
-      <option value="3">3段</option>
-    </select>
-    <div id="support_positions_container"></div>
-  </div>
-
-  <div class="sidebar-section" id="conventional-params">
-    <h3>土質定数</h3>
-    <div id="layer-list" class="layer-list"></div>
-    <button class="add-layer-btn" onclick="addLayer()">+ 地層を追加</button>
-  </div>
-
-  <div class="sidebar-section" id="elastic-params" style="display:none">
-    <h3>弾塑性法パラメータ</h3>
-    <label>地盤反力係数 kh <span class="unit">kN/m³</span></label>
-    <input type="number" id="kh" value="10000" step="100">
-    <label>根入れ部受動土圧低減係数 α</label>
-    <input type="number" id="alpha_ep" value="1.0" step="0.1" min="0.1" max="1.5">
-    <label>収束許容誤差</label>
-    <input type="number" id="tol" value="0.001" step="0.0001" min="0.00001">
-  </div>
-
-  <div class="sidebar-section">
-    <h3>親ぐい断面</h3>
-    <label>部材種類</label>
-    <select id="pile_type" onchange="updatePileInputs()">
-      <option value="H">H形鋼</option>
-      <option value="custom">任意断面</option>
-    </select>
-    <div id="h_steel_inputs">
-      <label>H形鋼規格</label>
-      <select id="h_size" onchange="updatePileProps()">
-        <option value="200x200x8x12">H-200×200×8×12</option>
-        <option value="250x250x9x14">H-250×250×9×14</option>
-        <option value="300x300x10x15">H-300×300×10×15</option>
-        <option value="350x350x12x19" selected>H-350×350×12×19</option>
-        <option value="400x400x13x21">H-400×400×13×21</option>
-        <option value="414x405x18x28">H-414×405×18×28</option>
-        <option value="458x417x30x50">H-458×417×30×50</option>
-        <option value="custom_h">カスタム入力</option>
-      </select>
-    </div>
-    <div id="custom_section" style="display:none">
-    </div>
-    <div class="row2" id="section_props">
-      <div>
-        <label>I <span class="unit">cm⁴</span></label>
-        <input type="number" id="I_val" value="40400" step="100">
-      </div>
-      <div>
-        <label>Z <span class="unit">cm³</span></label>
-        <input type="number" id="Z_val" value="2310" step="10">
-      </div>
-    </div>
-    <label>許容曲げ応力度 fb <span class="unit">N/mm²</span></label>
-    <input type="number" id="fb" value="190" step="5">
-    <label>弾性係数 E <span class="unit">kN/cm²</span></label>
-    <input type="number" id="E_val" value="20500" step="100">
-  </div>
-
-  <div class="sidebar-section">
-    <h3>土圧計算設定</h3>
-    <label>土圧公式</label>
-    <select id="earth_press_method">
-      <option value="rankine">ランキン式</option>
-      <option value="coulomb">クーロン式</option>
-    </select>
-    <label>壁面摩擦角 δ <span class="unit">°（クーロン用）</span></label>
-    <input type="number" id="delta_wall" value="15" step="1">
-    <label>土圧割増係数</label>
-    <input type="number" id="ep_factor" value="1.0" step="0.05" min="0.5" max="2.0">
-  </div>
-
-  <button class="calc-btn" onclick="calculate()">▶ 計算実行</button>
-
-  <div class="export-row">
-    <button class="export-btn" onclick="exportCSV()">📄 CSV</button>
-    <button class="export-btn" onclick="exportPDF()">📑 PDF</button>
-    <button class="export-btn" onclick="window.print()">🖨 印刷</button>
-  </div>
-</div>
-
-<!-- ===== MAIN ===== -->
-<div class="main" id="main-content">
-  <div class="status-bar info" id="status-msg">
-    条件を入力して「計算実行」を押してください。
-  </div>
-
-  <!-- Summary Cards -->
+  <!-- 基本条件 -->
   <div>
-    <div class="section-header" id="sec-summary" style="display:none">計算結果サマリー</div>
+    <div class="acc-header open" onclick="toggleAcc(this)">
+      <h3>📐 基本条件</h3><span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body open">
+      <label>根切り深さ H <span class="unit">m</span></label>
+      <input type="number" id="H" value="5.0" step="0.1" min="0.5" inputmode="decimal">
+      <label>地下水位 hw <span class="unit">m（地表面から）</span></label>
+      <input type="number" id="hw" value="2.0" step="0.1" min="0" inputmode="decimal">
+      <label>サポート段数（切梁）</label>
+      <select id="n_support" onchange="updateSupportUI()">
+        <option value="0">切梁なし（片持ち）</option>
+        <option value="1" selected>1段</option>
+        <option value="2">2段</option>
+        <option value="3">3段</option>
+      </select>
+      <div id="support_positions_container"></div>
+    </div>
+  </div>
+
+  <!-- 土質 -->
+  <div id="conventional-params">
+    <div class="acc-header open" onclick="toggleAcc(this)">
+      <h3>🪨 地層・土質定数</h3><span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body open">
+      <div id="layer-list" class="layer-list"></div>
+      <button class="add-layer-btn" onclick="addLayer()">＋ 地層を追加</button>
+    </div>
+  </div>
+
+  <!-- 弾塑性法パラメータ -->
+  <div id="elastic-params" style="display:none">
+    <div class="acc-header open" onclick="toggleAcc(this)">
+      <h3>⚙️ 弾塑性法パラメータ</h3><span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body open">
+      <label>地盤反力係数 kh <span class="unit">kN/m³</span></label>
+      <input type="number" id="kh" value="10000" step="100" inputmode="numeric">
+      <label>受動土圧低減係数 α</label>
+      <input type="number" id="alpha_ep" value="1.0" step="0.1" min="0.1" max="1.5" inputmode="decimal">
+    </div>
+  </div>
+
+  <!-- 親ぐい断面 -->
+  <div>
+    <div class="acc-header" onclick="toggleAcc(this)">
+      <h3>🔩 親ぐい断面</h3><span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <label>部材種類</label>
+      <select id="pile_type" onchange="updatePileInputs()">
+        <option value="H">H形鋼</option>
+        <option value="custom">任意断面</option>
+      </select>
+      <div id="h_steel_inputs">
+        <label>H形鋼規格</label>
+        <select id="h_size" onchange="updatePileProps()">
+          <option value="200x200x8x12">H-200×200×8×12</option>
+          <option value="250x250x9x14">H-250×250×9×14</option>
+          <option value="300x300x10x15">H-300×300×10×15</option>
+          <option value="350x350x12x19" selected>H-350×350×12×19</option>
+          <option value="400x400x13x21">H-400×400×13×21</option>
+          <option value="414x405x18x28">H-414×405×18×28</option>
+          <option value="458x417x30x50">H-458×417×30×50</option>
+          <option value="custom_h">カスタム入力</option>
+        </select>
+      </div>
+      <div class="row2" id="section_props">
+        <div>
+          <label>I <span class="unit">cm⁴</span></label>
+          <input type="number" id="I_val" value="40400" step="100" inputmode="numeric">
+        </div>
+        <div>
+          <label>Z <span class="unit">cm³</span></label>
+          <input type="number" id="Z_val" value="2310" step="10" inputmode="numeric">
+        </div>
+      </div>
+      <label>許容曲げ応力度 fb <span class="unit">N/mm²</span></label>
+      <input type="number" id="fb" value="190" step="5" inputmode="numeric">
+      <label>弾性係数 E <span class="unit">kN/cm²</span></label>
+      <input type="number" id="E_val" value="20500" step="100" inputmode="numeric">
+    </div>
+  </div>
+
+  <!-- 土圧設定 -->
+  <div>
+    <div class="acc-header" onclick="toggleAcc(this)">
+      <h3>📊 土圧計算設定</h3><span class="acc-arrow">▼</span>
+    </div>
+    <div class="acc-body">
+      <label>土圧公式</label>
+      <select id="earth_press_method">
+        <option value="rankine">ランキン式</option>
+        <option value="coulomb">クーロン式</option>
+      </select>
+      <label>壁面摩擦角 δ <span class="unit">°（クーロン用）</span></label>
+      <input type="number" id="delta_wall" value="15" step="1" inputmode="numeric">
+      <label>土圧割増係数</label>
+      <input type="number" id="ep_factor" value="1.0" step="0.05" min="0.5" max="2.0" inputmode="decimal">
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="margin-top:8px">
+    <button class="calc-btn" onclick="calculate()">▶ 計算実行</button>
+    <div class="export-row">
+      <button class="export-btn" onclick="exportCSV()">📄 CSV</button>
+      <button class="export-btn" onclick="exportPDF()">📑 PDF</button>
+      <button class="export-btn" onclick="window.print()">🖨 印刷</button>
+    </div>
+  </div>
+</div><!-- .sidebar -->
+
+<!-- ===== MAIN (結果パネル) ===== -->
+<div class="main" id="main-content">
+  <div class="status-bar info" id="status-msg">条件を入力して「計算実行」を押してください。</div>
+
+  <div id="sec-summary-wrap" style="display:none">
+    <div class="section-hd">計算結果サマリー</div>
     <div class="result-grid" id="result-cards"></div>
   </div>
 
-  <!-- Charts -->
   <div class="charts-row" id="charts-area" style="display:none">
     <div class="chart-box">
       <h4>土圧分布図</h4>
@@ -230,17 +330,30 @@ tr:hover td{background:rgba(76,201,240,.05)}
     </div>
   </div>
 
-  <!-- Calculation Table -->
   <div class="result-table" id="calc-table" style="display:none">
-    <h4>詳細計算結果</h4>
+    <h4>詳細計算結果（深度別）</h4>
     <table id="detail-table">
-      <thead><tr><th>深度(m)</th><th>主働土圧(kN/m²)</th><th>受動土圧(kN/m²)</th><th>正味土圧(kN/m²)</th><th>せん断力(kN/m)</th><th>曲げM(kN·m/m)</th></tr></thead>
+      <thead><tr>
+        <th>深度 m</th><th>Pa kN/m²</th><th>Pp kN/m²</th>
+        <th>正味 kN/m²</th><th>Q kN/m</th><th>M kN·m/m</th>
+      </tr></thead>
       <tbody id="detail-tbody"></tbody>
     </table>
   </div>
 </div>
 
-</div><!-- .app -->
+<!-- ===== BOTTOM NAV (mobile only) ===== -->
+<div class="bottom-nav" id="bottom-nav">
+  <button class="active" id="bn-input" onclick="spTab('input')">
+    <span class="icon">📝</span>入力
+  </button>
+  <button id="bn-calc" onclick="spCalcAndSwitch()">
+    <span class="icon">▶</span>計算
+  </button>
+  <button id="bn-result" onclick="spTab('result')">
+    <span class="icon">📊</span>結果
+  </button>
+</div>
 
 <script>
 // ============================================================
@@ -248,530 +361,354 @@ tr:hover td{background:rgba(76,201,240,.05)}
 // ============================================================
 let currentMethod = 'conventional';
 let layers = [];
-let chartEP = null, chartSFD = null, chartBMD = null;
+let chartEP=null, chartSFD=null, chartBMD=null;
 let lastResult = null;
 
-// H形鋼データ [I(cm4), Z(cm3)]
 const H_STEEL = {
-  '200x200x8x12':  [4720, 472],
-  '250x250x9x14':  [10800, 867],
-  '300x300x10x15': [20400, 1360],
-  '350x350x12x19': [40400, 2310],
-  '400x400x13x21': [66600, 3330],
-  '414x405x18x28': [92800, 4490],
-  '458x417x30x50': [187000, 8160],
+  '200x200x8x12':[4720,472],
+  '250x250x9x14':[10800,867],
+  '300x300x10x15':[20400,1360],
+  '350x350x12x19':[40400,2310],
+  '400x400x13x21':[66600,3330],
+  '414x405x18x28':[92800,4490],
+  '458x417x30x50':[187000,8160],
 };
 
 // ============================================================
 // INIT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  // Default 2 layers
-  addLayer({name:'埋め土', gamma:18, gamma_sat:20, phi:30, c:0, thick:3});
-  addLayer({name:'砂礫', gamma:20, gamma_sat:21, phi:35, c:0, thick:10});
+document.addEventListener('DOMContentLoaded',()=>{
+  addLayer({name:'埋め土',gamma:18,gamma_sat:20,phi:30,c:0,thick:3});
+  addLayer({name:'砂礫',gamma:20,gamma_sat:21,phi:35,c:0,thick:10});
   updateSupportUI();
   updatePileProps();
   updatePileInputs();
 });
 
 // ============================================================
+// MOBILE TAB SWITCH
+// ============================================================
+function spTab(tab){
+  const sidebar=document.getElementById('sidebar');
+  const main=document.getElementById('main-content');
+  const bi=document.getElementById('bn-input');
+  const br=document.getElementById('bn-result');
+  if(tab==='input'){
+    sidebar.classList.add('sp-active');
+    main.classList.remove('sp-active');
+    bi.classList.add('active');
+    br.classList.remove('active');
+  } else {
+    sidebar.classList.remove('sp-active');
+    main.classList.add('sp-active');
+    bi.classList.remove('active');
+    br.classList.add('active');
+  }
+}
+
+function spCalcAndSwitch(){
+  calculate();
+  if(window.innerWidth<=768) spTab('result');
+}
+
+// ============================================================
+// ACCORDION
+// ============================================================
+function toggleAcc(header){
+  header.classList.toggle('open');
+  const body=header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ============================================================
 // METHOD SWITCH
 // ============================================================
-function switchMethod(m) {
-  currentMethod = m;
+function switchMethod(m){
+  currentMethod=m;
   document.querySelectorAll('.tab-btn').forEach((b,i)=>{
-    b.classList.toggle('active', (i===0&&m==='conventional')||(i===1&&m==='elastic'));
+    b.classList.toggle('active',(i===0&&m==='conventional')||(i===1&&m==='elastic'));
   });
-  document.getElementById('conventional-params').style.display = m==='conventional'?'':'none';
-  document.getElementById('elastic-params').style.display = m==='elastic'?'':'none';
+  document.getElementById('conventional-params').style.display=m==='conventional'?'':'none';
+  document.getElementById('elastic-params').style.display=m==='elastic'?'':'none';
 }
 
 // ============================================================
 // LAYER MANAGEMENT
 // ============================================================
-function addLayer(d={}) {
-  const id = Date.now();
-  const l = {
-    id, name:d.name||'地層'+(layers.length+1),
-    gamma: d.gamma??18, gamma_sat: d.gamma_sat??20,
-    phi: d.phi??30, c: d.c??0, thick: d.thick??2
-  };
-  layers.push(l);
+function addLayer(d={}){
+  const id=Date.now()+Math.random();
+  layers.push({
+    id,name:d.name||'地層'+(layers.length+1),
+    gamma:d.gamma??18,gamma_sat:d.gamma_sat??20,
+    phi:d.phi??30,c:d.c??0,thick:d.thick??2
+  });
   renderLayers();
 }
 
-function removeLayer(id) {
+function removeLayer(id){
   if(layers.length<=1){alert('地層は最低1つ必要です');return;}
-  layers = layers.filter(l=>l.id!==id);
+  layers=layers.filter(l=>l.id!==id);
   renderLayers();
 }
 
-function renderLayers() {
-  const el = document.getElementById('layer-list');
-  el.innerHTML = '';
-  layers.forEach((l,i) => {
-    el.innerHTML += `
-    <div class="layer-item">
-      <button class="layer-del" onclick="removeLayer(${l.id})">×</button>
-      <label>名称</label>
-      <input type="text" value="${l.name}" onchange="layers[${i}].name=this.value">
-      <div class="row2">
-        <div><label>γ<span class="unit">kN/m³</span></label>
-          <input type="number" value="${l.gamma}" step="0.5" onchange="layers[${i}].gamma=+this.value"></div>
-        <div><label>γ_sat</label>
-          <input type="number" value="${l.gamma_sat}" step="0.5" onchange="layers[${i}].gamma_sat=+this.value"></div>
+function renderLayers(){
+  const el=document.getElementById('layer-list');
+  el.innerHTML='';
+  layers.forEach((l,i)=>{
+    const div=document.createElement('div');
+    div.className='layer-card';
+    div.innerHTML=`
+      <div class="layer-card-header">
+        <div class="layer-num">${i+1}</div>
+        <input class="layer-name-input" type="text" value="${l.name}"
+          onchange="layers[${i}].name=this.value" placeholder="地層名">
+        <button class="layer-del" onclick="removeLayer(${l.id})" title="削除">×</button>
       </div>
-      <div class="row2">
-        <div><label>φ <span class="unit">°</span></label>
-          <input type="number" value="${l.phi}" step="1" onchange="layers[${i}].phi=+this.value"></div>
-        <div><label>c <span class="unit">kN/m²</span></label>
-          <input type="number" value="${l.c}" step="1" onchange="layers[${i}].c=+this.value"></div>
+      <div class="layer-params">
+        <div>
+          <label>γ <span class="unit">kN/m³</span></label>
+          <input type="number" value="${l.gamma}" step="0.5" inputmode="decimal"
+            onchange="layers[${i}].gamma=+this.value">
+        </div>
+        <div>
+          <label>γ_sat <span class="unit">kN/m³</span></label>
+          <input type="number" value="${l.gamma_sat}" step="0.5" inputmode="decimal"
+            onchange="layers[${i}].gamma_sat=+this.value">
+        </div>
+        <div>
+          <label>φ <span class="unit">°</span></label>
+          <input type="number" value="${l.phi}" step="1" min="0" max="50" inputmode="numeric"
+            onchange="layers[${i}].phi=+this.value">
+        </div>
+        <div>
+          <label>c <span class="unit">kN/m²</span></label>
+          <input type="number" value="${l.c}" step="1" min="0" inputmode="numeric"
+            onchange="layers[${i}].c=+this.value">
+        </div>
       </div>
-      <label>層厚 <span class="unit">m</span></label>
-      <input type="number" value="${l.thick}" step="0.5" min="0.1" onchange="layers[${i}].thick=+this.value">
-    </div>`;
+      <div class="layer-thick">
+        <label>層厚 <span class="unit">m</span></label>
+        <input type="number" value="${l.thick}" step="0.5" min="0.1" inputmode="decimal"
+          onchange="layers[${i}].thick=+this.value">
+      </div>`;
+    el.appendChild(div);
   });
 }
 
 // ============================================================
 // SUPPORT UI
 // ============================================================
-function updateSupportUI() {
-  const n = +document.getElementById('n_support').value;
-  const c = document.getElementById('support_positions_container');
-  c.innerHTML = '';
+function updateSupportUI(){
+  const n=+document.getElementById('n_support').value;
+  const c=document.getElementById('support_positions_container');
+  c.innerHTML='';
   for(let i=0;i<n;i++){
-    c.innerHTML += `<label>${i+1}段目 位置 <span class="unit">m（地表面から）</span></label>
-    <input type="number" id="sp_${i}" value="${(i+1)*1.5}" step="0.1" min="0">`;
+    c.innerHTML+=`<label>${i+1}段目 位置 <span class="unit">m（地表面から）</span></label>
+    <input type="number" id="sp_${i}" value="${(i+1)*1.5}" step="0.1" min="0" inputmode="decimal">`;
   }
 }
-document.getElementById('n_support').addEventListener('change', updateSupportUI);
 
 // ============================================================
 // PILE SECTION
 // ============================================================
-function updatePileInputs() {
-  const t = document.getElementById('pile_type').value;
-  document.getElementById('h_steel_inputs').style.display = t==='H'?'':'none';
-  document.getElementById('section_props').style.display = '';
+function updatePileInputs(){
+  const t=document.getElementById('pile_type').value;
+  document.getElementById('h_steel_inputs').style.display=t==='H'?'':'none';
   if(t==='H') updatePileProps();
 }
 
-function updatePileProps() {
-  const sel = document.getElementById('h_size').value;
+function updatePileProps(){
+  const sel=document.getElementById('h_size').value;
   if(sel==='custom_h') return;
-  const d = H_STEEL[sel];
-  if(d){
-    document.getElementById('I_val').value = d[0];
-    document.getElementById('Z_val').value = d[1];
-  }
+  const d=H_STEEL[sel];
+  if(d){document.getElementById('I_val').value=d[0];document.getElementById('Z_val').value=d[1];}
 }
 
 // ============================================================
-// EARTH PRESSURE CALC
+// EARTH PRESSURE
 // ============================================================
-function getKa(phi_deg, method, delta_deg=0) {
-  const phi = phi_deg * Math.PI/180;
-  if(method==='rankine'){
-    return Math.tan(Math.PI/4 - phi/2)**2;
-  } else {
-    // Coulomb
-    const d = delta_deg * Math.PI/180;
-    const num = Math.cos(phi)**2;
-    const sq = Math.sqrt(Math.sin(phi+d)*Math.sin(phi)/Math.cos(d));
-    const den = Math.cos(d)*(1+sq)**2;
-    return num/den;
-  }
+function getKa(phi_deg,method,delta_deg=0){
+  const phi=phi_deg*Math.PI/180;
+  if(method==='rankine') return Math.tan(Math.PI/4-phi/2)**2;
+  const d=delta_deg*Math.PI/180;
+  const sq=Math.sqrt(Math.sin(phi+d)*Math.sin(phi)/Math.cos(d));
+  return Math.cos(phi)**2/(Math.cos(d)*(1+sq)**2);
+}
+function getKp(phi_deg,method,delta_deg=0){
+  const phi=phi_deg*Math.PI/180;
+  if(method==='rankine') return Math.tan(Math.PI/4+phi/2)**2;
+  const d=delta_deg*Math.PI/180;
+  const sq=Math.sqrt(Math.sin(phi+d)*Math.sin(phi)/Math.cos(d));
+  return Math.cos(phi)**2/(Math.cos(d)*(1-sq)**2);
 }
 
-function getKp(phi_deg, method, delta_deg=0) {
-  const phi = phi_deg * Math.PI/180;
-  if(method==='rankine'){
-    return Math.tan(Math.PI/4 + phi/2)**2;
-  } else {
-    const d = delta_deg * Math.PI/180;
-    const num = Math.cos(phi)**2;
-    const sq = Math.sqrt(Math.sin(phi+d)*Math.sin(phi)/Math.cos(d));
-    const den = Math.cos(d)*(1-sq)**2;
-    return num/den;
-  }
-}
-
-// Build pressure profile at depth array
-function buildPressureProfile(depths, H, hw, layers, epMethod, delta, epFactor) {
-  const gamma_w = 9.81;
-  // Accumulate overburden
-  const pa = [], pp_embed = [];
-  let totalThick = 0;
-  let sigV = 0; // vertical effective stress
-
-  depths.forEach(z => {
-    // find layer at depth z
-    let t = 0;
-    let gamma = layers[0].gamma, gamma_sat = layers[0].gamma_sat;
-    let phi = layers[0].phi, c = layers[0].c;
-    for(const l of layers){
-      if(z <= t+l.thick){ gamma=l.gamma; gamma_sat=l.gamma_sat; phi=l.phi; c=l.c; break; }
-      t += l.thick;
-    }
-    const aboveWater = Math.max(0, Math.min(z, hw));
-    const belowWater = Math.max(0, z - hw);
-    const sv = aboveWater*gamma + belowWater*(gamma_sat - gamma_w);
-
-    const Ka = getKa(phi, epMethod, delta);
-    const Kp = getKp(phi, epMethod, delta);
-    const uw = z > hw ? gamma_w*(z-hw) : 0;
-
-    const pa_val = epFactor * (Ka*sv - 2*c*Math.sqrt(Ka)) + uw;
-    pa.push(Math.max(0, pa_val));
-
-    if(z >= H){
-      const zEmbed = z - H;
-      const sv_e = (hw < H ? (H-hw)*(gamma_sat-gamma_w) : 0) + zEmbed*(gamma_sat-gamma_w);
-      const uw_e = gamma_w * Math.max(0, z - hw);
-      const pp_val = Kp * sv_e + 2*c*Math.sqrt(Kp) - uw_e * (Kp-Ka);
-      pp_embed.push(Math.max(0, pp_val));
-    } else {
-      pp_embed.push(0);
-    }
+function buildPressureProfile(depths,H,hw,layers,epMethod,delta,epFactor){
+  const gamma_w=9.81;
+  const pa=[],pp_embed=[];
+  depths.forEach(z=>{
+    let t=0,gamma=layers[0].gamma,gamma_sat=layers[0].gamma_sat,phi=layers[0].phi,c=layers[0].c;
+    for(const l of layers){if(z<=t+l.thick){gamma=l.gamma;gamma_sat=l.gamma_sat;phi=l.phi;c=l.c;break;}t+=l.thick;}
+    const aboveW=Math.max(0,Math.min(z,hw));
+    const belowW=Math.max(0,z-hw);
+    const sv=aboveW*gamma+belowW*(gamma_sat-gamma_w);
+    const Ka=getKa(phi,epMethod,delta);
+    const Kp=getKp(phi,epMethod,delta);
+    const uw=z>hw?gamma_w*(z-hw):0;
+    pa.push(Math.max(0,epFactor*(Ka*sv-2*c*Math.sqrt(Ka))+uw));
+    if(z>=H){
+      const ze=z-H;
+      const sv_e=(hw<H?(H-hw)*(gamma_sat-gamma_w):0)+ze*(gamma_sat-gamma_w);
+      const uw_e=gamma_w*Math.max(0,z-hw);
+      pp_embed.push(Math.max(0,Kp*sv_e+2*c*Math.sqrt(Kp)-uw_e*(Kp-Ka)));
+    } else pp_embed.push(0);
   });
-
-  return {pa, pp_embed};
+  return{pa,pp_embed};
 }
 
 // ============================================================
 // CONVENTIONAL METHOD
 // ============================================================
-function calcConventional(H, hw, n_support, supportPos, layers, epMethod, delta, epFactor, Z_cm3, fb, E_kNcm2, I_cm4) {
-  const nDiv = 200;
-  const totalDepth = H + 10; // guess initial embed
-  const dz = totalDepth / nDiv;
-  const depths = Array.from({length:nDiv+1},(_,i)=>i*dz);
-
-  const {pa, pp_embed} = buildPressureProfile(depths, H, hw, layers, epMethod, delta, epFactor);
-
-  // Net pressure above H: pa only (no passive)
-  // Below H: pp - pa (passive minus active)
-  const pnet = pa.map((p,i) => {
-    if(depths[i] < H) return p;
-    return pp_embed[i] - p; // passive surplus at embed
-  });
-
-  // ---- Find required embedment (moment equilibrium) ----
-  // Method: iterate D until moment about bottom support = 0
-  // Simplified: use equivalent beam / static method
-  // For cantilever or supported: use moment equilibrium for D
-
-  // Collect support reactions
-  const supports = n_support===0 ? [] : supportPos.slice(0,n_support);
-
-  // Build piecewise load from depths & pnet
-  // Use numerical integration for SFD and BMD
-
-  // Determine optimal D by equilibrium
-  let D_req = findEmbedmentDepth(H, pnet, depths, dz, supports);
-  D_req = Math.max(D_req, 1.5); // min 1.5m
-
-  // Recalculate with proper D
-  const totalD = H + D_req;
-  const nDiv2 = 400;
-  const dz2 = totalD / nDiv2;
-  const depths2 = Array.from({length:nDiv2+1},(_,i)=>i*dz2);
-  const {pa:pa2, pp_embed:pp2} = buildPressureProfile(depths2, H, hw, layers, epMethod, delta, epFactor);
-  const pnet2 = pa2.map((p,i)=>{
-    if(depths2[i]<H) return p;
-    return Math.max(0, pp2[i]-p);
-  });
-
-  // SFD and BMD by numerical integration
-  const {sfd, bmd, reactions} = integrateForceDiagram(depths2, pnet2, dz2, supports, H, totalD);
-
-  const Mmax = Math.max(...bmd.map(Math.abs));
-  const sig_b = (Mmax * 100) / Z_cm3 * 10; // kN·m/m → N/mm²
-  const ratio = sig_b / fb;
-
-  // Required section modulus
-  const Z_req = (Mmax * 100) / fb * 10; // cm³
-
-  // Deflection at top (cantilever approx)
-  const EI = E_kNcm2 * I_cm4; // kN·cm²
-
-  return {
-    D_req, Mmax, sig_b, ratio, Z_req, Z_cm3,
-    depths: depths2, pa: pa2, pp: pp2, pnet: pnet2,
-    sfd, bmd, reactions, H, hw, totalDepth: totalD,
-    method: '慣用法'
-  };
+function calcConventional(H,hw,n_sup,supportPos,layers,epMethod,delta,epFactor,Z_cm3,fb,E_kNcm2,I_cm4){
+  const nDiv=400,totalD=H+10,dz=totalD/nDiv;
+  const depths=Array.from({length:nDiv+1},(_,i)=>i*dz);
+  const{pa,pp_embed}=buildPressureProfile(depths,H,hw,layers,epMethod,delta,epFactor);
+  const pnet=pa.map((p,i)=>depths[i]<H?p:Math.max(0,pp_embed[i]-p));
+  const supports=supportPos.slice(0,n_sup);
+  const D_req=Math.max(findEmbedment(H,pnet,depths,dz,supports),1.5);
+  const totalFinal=H+D_req;
+  const nDiv2=500,dz2=totalFinal/nDiv2;
+  const depths2=Array.from({length:nDiv2+1},(_,i)=>i*dz2);
+  const{pa:pa2,pp_embed:pp2}=buildPressureProfile(depths2,H,hw,layers,epMethod,delta,epFactor);
+  const pnet2=pa2.map((p,i)=>depths2[i]<H?p:Math.max(0,pp2[i]-p));
+  const{sfd,bmd,reactions}=integrateSFDBMD(depths2,pnet2,dz2,supports,H,totalFinal);
+  const Mmax=Math.max(...bmd.map(Math.abs));
+  const sig_b=(Mmax*100)/Z_cm3*10;
+  return{D_req,Mmax,sig_b,ratio:sig_b/fb,Z_req:(Mmax*100)/fb*10,Z_cm3,
+    depths:depths2,pa:pa2,pp:pp2,pnet:pnet2,sfd,bmd,reactions,H,hw,totalDepth:totalFinal,method:'慣用法'};
 }
 
-function findEmbedmentDepth(H, pnet, depths, dz, supports) {
-  // Simple: iterate D from 0.5 to 10m, find where net force balance works
-  // Use moment equilibrium about the lowest support (or pile top if cantilever)
-  // Simplified: find D such that total passive force >= 1.2 * total active force below H
-  // (Factor of safety 1.2 applied internally)
-  let bestD = 2.0;
-  for(let D=0.5; D<=12; D+=0.05){
-    const embedDepths = [];
-    const embedLoad = [];
+function findEmbedment(H,pnet,depths,dz,supports){
+  for(let D=1.0;D<=15;D+=0.1){
+    let Ma=0,Mp=0;
     depths.forEach((z,i)=>{
-      if(z>H && z<=H+D) {
-        embedDepths.push(z);
-        embedLoad.push(pnet[i]);
-      }
+      if(i===0) return;
+      const load=(pnet[i-1]+pnet[i])/2;
+      if(z<H) Ma+=load*dz*(H-z);
+      if(z>=H&&z<=H+D) Mp+=load*dz*(z-H);
     });
-    if(embedLoad.length===0) continue;
-    const Fp = embedLoad.reduce((s,v,i)=>s+(i>0?(embedLoad[i-1]+v)/2*(embedDepths[i]-embedDepths[i-1]):0),0);
-    if(Fp > 0){ bestD = D; break; }
+    if(Mp>=1.5*Ma) return D;
   }
-  // More refined: iterate until moment about toe = 0
-  for(let D=1.0; D<=15; D+=0.1){
-    // Check moment about point H (top of embedment)
-    // Active moment about H (from loads above H)
-    let Ma = 0, Mp = 0;
-    depths.forEach((z,i)=>{
-      if(z<H && i>0){
-        const load = (pnet[i-1]+pnet[i])/2;
-        const arm = H - (depths[i-1]+depths[i])/2;
-        Ma += load * dz * arm;
-      }
-      if(z>=H && z<=H+D && i>0){
-        const load = (pnet[i-1]+pnet[i])/2;
-        const arm = (depths[i-1]+depths[i])/2 - H;
-        Mp += load * dz * arm;
-      }
-    });
-    if(Mp >= 1.5 * Ma){ bestD = D; break; }
-  }
-  return bestD;
+  return 4.0;
 }
 
-function integrateForceDiagram(depths, pnet, dz, supports, H, totalD) {
-  const n = depths.length;
-  const sfd = new Array(n).fill(0);
-  const bmd = new Array(n).fill(0);
-  const reactions = [];
-
-  // Distributed load → integrate upward
-  // q(z): positive = into wall (active), negative = resisting (passive above H impossible)
-  // Net load on pile:
-  // Above H: active push → positive load
-  // Below H: pnet = passive - active → resisting (negative)
-
-  const q = pnet.map((p,i) => depths[i]<H ? p : -p);
-
+function integrateSFDBMD(depths,pnet,dz,supports,H,totalD){
+  const n=depths.length;
+  const q=pnet.map((p,i)=>depths[i]<H?p:-p);
+  const sfd=new Array(n).fill(0);
+  const bmd=new Array(n).fill(0);
+  const reactions=[];
   if(supports.length===0){
-    // Cantilever: fixed at H+D bottom, free at top
-    // Integrate SFD from top down
-    sfd[0] = 0;
-    for(let i=1;i<n;i++){
-      sfd[i] = sfd[i-1] + (q[i-1]+q[i])/2 * dz;
-    }
-    bmd[0] = 0;
-    for(let i=1;i<n;i++){
-      bmd[i] = bmd[i-1] + (sfd[i-1]+sfd[i])/2 * dz;
-    }
+    for(let i=1;i<n;i++) sfd[i]=sfd[i-1]+(q[i-1]+q[i])/2*dz;
+    for(let i=1;i<n;i++) bmd[i]=bmd[i-1]+(sfd[i-1]+sfd[i])/2*dz;
   } else {
-    // Find support indices
-    const spIdx = supports.map(sp => {
-      let best=0;
-      depths.forEach((z,i)=>{if(Math.abs(z-sp)<Math.abs(depths[best]-sp))best=i;});
-      return best;
-    });
-
-    // Simple: first support as prop, fixed at embedment
-    // 2-span equivalent beam
-    const sp0 = spIdx[0];
-    const embedEnd = n-1;
-
-    // Total load
-    let totLoad = 0;
-    for(let i=1;i<n;i++) totLoad += (q[i-1]+q[i])/2*dz;
-
-    // Moment about embedment bottom for reaction at support
-    let M_bottom = 0;
-    for(let i=1;i<n;i++){
-      const arm = totalD - (depths[i-1]+depths[i])/2;
-      M_bottom += (q[i-1]+q[i])/2*dz*arm;
-    }
-    const R_sp = M_bottom / (totalD - depths[sp0]);
-    reactions.push({pos: depths[sp0], R: R_sp});
-
-    // SFD with reaction at support
-    sfd[0] = 0;
-    for(let i=1;i<n;i++){
-      sfd[i] = sfd[i-1] + (q[i-1]+q[i])/2*dz;
-      if(i===sp0) sfd[i] -= R_sp;
-    }
-    bmd[0] = 0;
-    for(let i=1;i<n;i++){
-      bmd[i] = bmd[i-1] + (sfd[i-1]+sfd[i])/2*dz;
-    }
+    const sp0=supports[0];
+    const spIdx=depths.reduce((best,z,i)=>Math.abs(z-sp0)<Math.abs(depths[best]-sp0)?i:best,0);
+    let Mb=0;
+    for(let i=1;i<n;i++){const arm=totalD-(depths[i-1]+depths[i])/2;Mb+=(q[i-1]+q[i])/2*dz*arm;}
+    const R=Mb/(totalD-depths[spIdx]);
+    reactions.push({pos:depths[spIdx],R});
+    for(let i=1;i<n;i++){sfd[i]=sfd[i-1]+(q[i-1]+q[i])/2*dz;if(i===spIdx)sfd[i]-=R;}
+    for(let i=1;i<n;i++) bmd[i]=bmd[i-1]+(sfd[i-1]+sfd[i])/2*dz;
   }
-
-  return {sfd, bmd, reactions};
+  return{sfd,bmd,reactions};
 }
 
 // ============================================================
-// ELASTIC METHOD (beam on elastic foundation)
+// ELASTIC METHOD
 // ============================================================
-function calcElastic(H, hw, n_support, supportPos, layers, epMethod, delta, epFactor, Z_cm3, fb, E_kNcm2, I_cm4, kh, alpha) {
-  // Simplified 1D finite difference: pile as beam on Winkler foundation
-  const nDiv = 200;
-  const totalD = H + 8;
-  const dz = totalD / nDiv;
-  const n = nDiv + 1;
-  const depths = Array.from({length:n},(_,i)=>i*dz);
-
-  const {pa, pp_embed} = buildPressureProfile(depths, H, hw, layers, epMethod, delta, epFactor);
-
-  // Soil spring: only in embedment zone
-  const k_spring = depths.map(z => z>H ? kh*dz : 0); // kN/m per node
-
-  // Applied load: active earth pressure above H
-  const q = pa.map((p,i) => depths[i]<H ? p*dz : 0);
-
-  // Finite difference for beam on elastic foundation
-  // EI * y'''' + k*y = q(z)
-  // Using standard FD stiffness
-  const EI = E_kNcm2 * 1e4 * I_cm4 * 1e-8; // convert to kN·m²
-  // I in cm4 → m4: *1e-8; E in kN/cm2 → kN/m2: *1e4
-  const EI_m = E_kNcm2 * 1e4 * I_cm4 * 1e-8;
-
-  // Simplified: iterate deflection using stiffness matrix (tridiagonal)
-  // For brevity, use direct FD assembly (band matrix approach)
-  const {y, M, V} = solveBEF(n, dz, EI_m, k_spring, q, supportPos, H, depths, alpha);
-
-  const Mmax = Math.max(...M.map(Math.abs));
-  const sig_b = (Mmax * 100) / Z_cm3 * 10;
-  const ratio = sig_b / fb;
-  const Z_req = (Mmax * 100) / fb * 10;
-
-  // Net pressure (for diagram)
-  const pnet2 = pa.map((p,i)=>{
-    if(depths[i]<H) return p;
-    return Math.max(0, pp_embed[i]-p);
-  });
-
-  return {
-    D_req: totalD-H, Mmax, sig_b, ratio, Z_req, Z_cm3,
-    depths, pa, pp: pp_embed, pnet: pnet2,
-    sfd: V, bmd: M, reactions: [], H, hw, totalDepth: totalD,
-    method: '弾塑性法', maxDeflection: Math.max(...y.map(Math.abs))
-  };
+function calcElastic(H,hw,n_sup,supportPos,layers,epMethod,delta,epFactor,Z_cm3,fb,E_kNcm2,I_cm4,kh,alpha){
+  const nDiv=200,totalD=H+8,dz=totalD/nDiv,n=nDiv+1;
+  const depths=Array.from({length:n},(_,i)=>i*dz);
+  const{pa,pp_embed}=buildPressureProfile(depths,H,hw,layers,epMethod,delta,epFactor);
+  const k_spring=depths.map(z=>z>H?kh*dz:0);
+  const q=pa.map((p,i)=>depths[i]<H?p*dz:0);
+  const EI_m=E_kNcm2*1e4*I_cm4*1e-8;
+  const{y,M,V}=solveBEF(n,dz,EI_m,k_spring,q,supportPos,H,depths,alpha);
+  const Mmax=Math.max(...M.map(Math.abs));
+  const sig_b=(Mmax*100)/Z_cm3*10;
+  const pnet=pa.map((p,i)=>depths[i]<H?p:Math.max(0,pp_embed[i]-p));
+  return{D_req:totalD-H,Mmax,sig_b,ratio:sig_b/fb,Z_req:(Mmax*100)/fb*10,Z_cm3,
+    depths,pa,pp:pp_embed,pnet,sfd:V,bmd:M,reactions:[],H,hw,totalDepth:totalD,
+    method:'弾塑性法',maxDeflection:Math.max(...y.map(Math.abs))};
 }
 
-function solveBEF(n, dz, EI, k_spring, q, supportPos, H, depths, alpha) {
-  // Simple: solve using Gaussian elimination (banded)
-  // 5-diagonal system: EI * (y_{i-2} - 4y_{i-1} + 6y_i - 4y_{i+1} + y_{i+2})/dz4 + k_i*y_i = q_i
-  const dz4 = dz**4;
-  const coef = EI/dz4;
-
-  // Build full matrix (n x n) — for small n this is ok
-  const A = Array.from({length:n},()=>new Float64Array(n));
-  const b = new Float64Array(n);
-
+function solveBEF(n,dz,EI,k_spring,q,supportPos,H,depths,alpha){
+  const dz4=dz**4,coef=EI/dz4;
+  const A=Array.from({length:n},()=>new Float64Array(n));
+  const b=new Float64Array(n);
   for(let i=0;i<n;i++){
-    const ki = k_spring[i] * alpha;
-    A[i][i] = 6*coef + ki;
-    if(i>0)    A[i][i-1] = -4*coef;
-    if(i<n-1)  A[i][i+1] = -4*coef;
-    if(i>1)    A[i][i-2] =  coef;
-    if(i<n-2)  A[i][i+2] =  coef;
-    b[i] = q[i];
+    A[i][i]=6*coef+k_spring[i]*alpha;
+    if(i>0)   A[i][i-1]=-4*coef;
+    if(i<n-1) A[i][i+1]=-4*coef;
+    if(i>1)   A[i][i-2]= coef;
+    if(i<n-2) A[i][i+2]= coef;
+    b[i]=q[i];
   }
-
-  // BCs: free top (M=0, V=0), fixed bottom (y=0, y'=0)
-  // Top (i=0): M=0 → y_{-1}-2y_0+y_1=0 → y_{-1}=2y_0-y_1
-  // V=0 → y_{-2}-2y_{-1}+2y_1-y_2=0
-  // Apply via penalty for supports
-  supportPos.forEach(sp => {
-    let best=0;
-    depths.forEach((z,i)=>{if(Math.abs(z-sp)<Math.abs(depths[best]-sp))best=i;});
-    A[best][best] += 1e10; // penalty for y=0 at support
+  supportPos.forEach(sp=>{
+    let best=0;depths.forEach((z,i)=>{if(Math.abs(z-sp)<Math.abs(depths[best]-sp))best=i;});
+    A[best][best]+=1e10;
   });
-
-  // Fixed at bottom: y[n-1]=0, y[n-2]=y[n-1] approx
-  const penalty = 1e12;
-  A[n-1][n-1] += penalty;
-  A[n-2][n-2] += penalty;
-
-  // Solve by Gaussian elimination
-  const y = gaussElim(A, b, n);
-
-  // Compute M and V from y
-  const M = new Array(n).fill(0);
-  const V = new Array(n).fill(0);
-  for(let i=1;i<n-1;i++){
-    M[i] = EI*(y[i-1]-2*y[i]+y[i+1])/dz**2;
-  }
-  for(let i=1;i<n-2;i++){
-    V[i] = EI*(y[i+2]-2*y[i+1]+2*y[i-1]-y[i-2])/(2*dz**3);
-  }
-
-  return {y:Array.from(y), M:Array.from(M), V:Array.from(V)};
+  A[n-1][n-1]+=1e12;A[n-2][n-2]+=1e12;
+  const y=gaussElim(A,b,n);
+  const M=new Array(n).fill(0),V=new Array(n).fill(0);
+  for(let i=1;i<n-1;i++) M[i]=EI*(y[i-1]-2*y[i]+y[i+1])/dz**2;
+  for(let i=1;i<n-2;i++) V[i]=EI*(y[i+2]-2*y[i+1]+2*y[i-1]-y[i-2])/(2*dz**3);
+  return{y:Array.from(y),M:Array.from(M),V:Array.from(V)};
 }
 
-function gaussElim(A, b, n) {
-  // Forward elimination
+function gaussElim(A,b,n){
   for(let col=0;col<n;col++){
-    // Partial pivot
-    let maxRow=col;
-    for(let r=col+1;r<n;r++) if(Math.abs(A[r][col])>Math.abs(A[maxRow][col])) maxRow=r;
-    [A[col],A[maxRow]]=[A[maxRow],A[col]];
-    [b[col],b[maxRow]]=[b[maxRow],b[col]];
-
-    const pivot=A[col][col];
-    if(Math.abs(pivot)<1e-15) continue;
-    for(let r=col+1;r<n;r++){
-      const f=A[r][col]/pivot;
-      for(let c=col;c<n;c++) A[r][c]-=f*A[col][c];
-      b[r]-=f*b[col];
-    }
+    let mxR=col;
+    for(let r=col+1;r<n;r++) if(Math.abs(A[r][col])>Math.abs(A[mxR][col]))mxR=r;
+    [A[col],A[mxR]]=[A[mxR],A[col]];[b[col],b[mxR]]=[b[mxR],b[col]];
+    const piv=A[col][col];if(Math.abs(piv)<1e-15) continue;
+    for(let r=col+1;r<n;r++){const f=A[r][col]/piv;for(let c=col;c<n;c++)A[r][c]-=f*A[col][c];b[r]-=f*b[col];}
   }
-  // Back substitution
   const x=new Float64Array(n);
-  for(let i=n-1;i>=0;i--){
-    x[i]=b[i];
-    for(let j=i+1;j<n;j++) x[i]-=A[i][j]*x[j];
-    x[i]/=A[i][i];
-  }
+  for(let i=n-1;i>=0;i--){x[i]=b[i];for(let j=i+1;j<n;j++)x[i]-=A[i][j]*x[j];x[i]/=A[i][i];}
   return x;
 }
 
 // ============================================================
-// MAIN CALCULATE
+// CALCULATE
 // ============================================================
-function calculate() {
-  try {
-    const H = +document.getElementById('H').value;
-    const hw = +document.getElementById('hw').value;
-    const n_sup = +document.getElementById('n_support').value;
-    const supportPos = [];
+function calculate(){
+  try{
+    const H=+document.getElementById('H').value;
+    const hw=+document.getElementById('hw').value;
+    const n_sup=+document.getElementById('n_support').value;
+    const supportPos=[];
     for(let i=0;i<n_sup;i++) supportPos.push(+document.getElementById(`sp_${i}`).value);
+    const epMethod=document.getElementById('earth_press_method').value;
+    const delta=+document.getElementById('delta_wall').value;
+    const epFactor=+document.getElementById('ep_factor').value;
+    const Z_cm3=+document.getElementById('Z_val').value;
+    const I_cm4=+document.getElementById('I_val').value;
+    const fb=+document.getElementById('fb').value;
+    const E_kNcm2=+document.getElementById('E_val').value;
 
-    const epMethod = document.getElementById('earth_press_method').value;
-    const delta = +document.getElementById('delta_wall').value;
-    const epFactor = +document.getElementById('ep_factor').value;
-
-    const Z_cm3 = +document.getElementById('Z_val').value;
-    const I_cm4 = +document.getElementById('I_val').value;
-    const fb = +document.getElementById('fb').value;
-    const E_kNcm2 = +document.getElementById('E_val').value;
-
-    let result;
+    let r;
     if(currentMethod==='conventional'){
-      result = calcConventional(H,hw,n_sup,supportPos,layers,epMethod,delta,epFactor,Z_cm3,fb,E_kNcm2,I_cm4);
+      r=calcConventional(H,hw,n_sup,supportPos,layers,epMethod,delta,epFactor,Z_cm3,fb,E_kNcm2,I_cm4);
     } else {
-      const kh = +document.getElementById('kh').value;
-      const alpha = +document.getElementById('alpha_ep').value;
-      result = calcElastic(H,hw,n_sup,supportPos,layers,epMethod,delta,epFactor,Z_cm3,fb,E_kNcm2,I_cm4,kh,alpha);
+      r=calcElastic(H,hw,n_sup,supportPos,layers,epMethod,delta,epFactor,Z_cm3,fb,E_kNcm2,I_cm4,
+        +document.getElementById('kh').value,+document.getElementById('alpha_ep').value);
     }
-
-    lastResult = result;
-    displayResults(result);
-    setStatus('計算完了 — 根入れ長 ' + result.D_req.toFixed(2) + ' m', result.ratio<=1 ? 'ok' : 'err');
-  } catch(e) {
-    setStatus('計算エラー: ' + e.message, 'err');
+    lastResult=r;
+    displayResults(r);
+    setStatus(`計算完了 — 根入れ長 ${r.D_req.toFixed(2)} m | Mmax ${r.Mmax.toFixed(1)} kN·m/m`,r.ratio<=1?'ok':'err');
+  } catch(e){
+    setStatus('計算エラー: '+e.message,'err');
     console.error(e);
   }
 }
@@ -779,146 +716,105 @@ function calculate() {
 // ============================================================
 // DISPLAY
 // ============================================================
-function displayResults(r) {
-  const cls = r.ratio<=0.8 ? 'ok' : r.ratio<=1.0 ? 'warn' : 'err';
-
-  document.getElementById('sec-summary').style.display='';
-  document.getElementById('result-cards').innerHTML = `
-    <div class="result-card">
-      <div class="label">計算手法</div>
-      <div class="value" style="font-size:1.1rem">${r.method}</div>
-    </div>
+function displayResults(r){
+  const cls=r.ratio<=0.8?'ok':r.ratio<=1.0?'warn':'err';
+  document.getElementById('sec-summary-wrap').style.display='';
+  document.getElementById('result-cards').innerHTML=`
+    <div class="result-card"><div class="label">計算手法</div><div class="value" style="font-size:1rem">${r.method}</div></div>
     <div class="result-card">
       <div class="label">必要根入れ長 D</div>
-      <div class="value">${r.D_req.toFixed(2)}<span style="font-size:1rem"> m</span></div>
-      <div class="sub">（根切り深さ H = ${r.H.toFixed(1)} m）</div>
+      <div class="value">${r.D_req.toFixed(2)}<span style="font-size:.9rem"> m</span></div>
+      <div class="sub">根切り深さ H = ${r.H.toFixed(1)} m</div>
     </div>
     <div class="result-card">
       <div class="label">最大曲げモーメント</div>
-      <div class="value">${r.Mmax.toFixed(2)}<span style="font-size:1rem"> kN·m/m</span></div>
+      <div class="value">${r.Mmax.toFixed(2)}<span style="font-size:.9rem"> kN·m/m</span></div>
     </div>
     <div class="result-card ${cls}">
       <div class="label">最大曲げ応力度 σ</div>
-      <div class="value">${r.sig_b.toFixed(1)}<span style="font-size:1rem"> N/mm²</span></div>
-      <div class="sub">許容 fb = ${document.getElementById('fb').value} N/mm²　比率 = ${r.ratio.toFixed(3)}</div>
+      <div class="value">${r.sig_b.toFixed(1)}<span style="font-size:.9rem"> N/mm²</span></div>
+      <div class="sub">fb = ${document.getElementById('fb').value} N/mm² | 比率 ${r.ratio.toFixed(3)}</div>
     </div>
     <div class="result-card">
       <div class="label">必要断面係数</div>
-      <div class="value">${r.Z_req.toFixed(0)}<span style="font-size:1rem"> cm³</span></div>
-      <div class="sub">採用 Z = ${r.Z_cm3} cm³　${r.Z_cm3>=r.Z_req?'✓ OK':'✗ NG'}</div>
+      <div class="value">${r.Z_req.toFixed(0)}<span style="font-size:.9rem"> cm³</span></div>
+      <div class="sub">採用 Z = ${r.Z_cm3} cm³　${r.Z_cm3>=r.Z_req?'✅ OK':'❌ NG'}</div>
     </div>
-    ${r.maxDeflection!=null?`<div class="result-card"><div class="label">最大変位量</div><div class="value">${(r.maxDeflection*1000).toFixed(1)}<span style="font-size:1rem"> mm</span></div></div>`:''}
+    ${r.maxDeflection!=null?`<div class="result-card"><div class="label">最大変位量</div><div class="value">${(r.maxDeflection*1000).toFixed(1)}<span style="font-size:.9rem"> mm</span></div></div>`:''}
   `;
-
-  // Charts
   document.getElementById('charts-area').style.display='';
   drawCharts(r);
-
-  // Table
   document.getElementById('calc-table').style.display='';
-  const tbody = document.getElementById('detail-tbody');
-  tbody.innerHTML = '';
-  const step = Math.max(1, Math.floor(r.depths.length/50));
+  const tbody=document.getElementById('detail-tbody');
+  tbody.innerHTML='';
+  const step=Math.max(1,Math.floor(r.depths.length/60));
   r.depths.forEach((z,i)=>{
     if(i%step!==0) return;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${z.toFixed(2)}</td><td>${r.pa[i].toFixed(2)}</td><td>${(r.pp[i]||0).toFixed(2)}</td><td>${r.pnet[i].toFixed(2)}</td><td>${r.sfd[i].toFixed(3)}</td><td>${r.bmd[i].toFixed(3)}</td>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${z.toFixed(2)}</td><td>${r.pa[i].toFixed(2)}</td><td>${(r.pp[i]||0).toFixed(2)}</td><td>${r.pnet[i].toFixed(2)}</td><td>${r.sfd[i].toFixed(2)}</td><td>${r.bmd[i].toFixed(2)}</td>`;
     tbody.appendChild(tr);
   });
 }
 
-function setStatus(msg, type='info') {
-  const el = document.getElementById('status-msg');
-  el.textContent = msg;
-  el.className = 'status-bar ' + type;
+function setStatus(msg,type='info'){
+  const el=document.getElementById('status-msg');
+  el.textContent=msg;el.className='status-bar '+type;
 }
 
 // ============================================================
 // CHARTS
 // ============================================================
-function drawCharts(r) {
-  const depths = r.depths;
-  const decimStep = Math.max(1, Math.floor(depths.length/80));
-  const dIdx = depths.map((_,i)=>i).filter(i=>i%decimStep===0);
-
-  const labels = dIdx.map(i=>(-depths[i]).toFixed(2));
-
-  // Destroy old
-  [chartEP, chartSFD, chartBMD].forEach(c=>{if(c)c.destroy();});
-
-  const baseOpts = (xLabel) => ({
-    responsive:true, maintainAspectRatio:true,
-    indexAxis:'y',
-    plugins:{legend:{labels:{color:'#a0a0b0',font:{size:11}}}},
+function drawCharts(r){
+  const step=Math.max(1,Math.floor(r.depths.length/80));
+  const idx=r.depths.map((_,i)=>i).filter(i=>i%step===0);
+  const labels=idx.map(i=>(-r.depths[i]).toFixed(1));
+  [chartEP,chartSFD,chartBMD].forEach(c=>{if(c)c.destroy();});
+  const baseOpt=(xLabel)=>({
+    responsive:true,maintainAspectRatio:true,indexAxis:'y',
+    plugins:{legend:{labels:{color:'#a0a0b0',font:{size:10}}}},
     scales:{
-      y:{ticks:{color:'#a0a0b0',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'}, reverse:false,
-         title:{display:true,text:'深度 (m)', color:'#a0a0b0'}},
-      x:{ticks:{color:'#a0a0b0',font:{size:10}}, grid:{color:'rgba(255,255,255,.08)'},
-         title:{display:true,text:xLabel,color:'#a0a0b0'}}
+      y:{ticks:{color:'#a0a0b0',font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},
+         title:{display:true,text:'深度 m',color:'#a0a0b0',font:{size:10}}},
+      x:{ticks:{color:'#a0a0b0',font:{size:9}},grid:{color:'rgba(255,255,255,.07)'},
+         title:{display:true,text:xLabel,color:'#a0a0b0',font:{size:10}}}
     }
   });
-
-  chartEP = new Chart(document.getElementById('chart-ep'), {
-    type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'主働土圧 Pa',data:dIdx.map(i=>r.pa[i]),borderColor:'#e94560',backgroundColor:'rgba(233,69,96,.15)',fill:true,tension:.2,pointRadius:0,borderWidth:2},
-        {label:'受動土圧 Pp',data:dIdx.map(i=>r.pp[i]||0),borderColor:'#4cc9f0',backgroundColor:'rgba(76,201,240,.1)',fill:true,tension:.2,pointRadius:0,borderWidth:2},
-      ]
-    },
-    options: baseOpts('土圧 (kN/m²)')
-  });
-
-  chartSFD = new Chart(document.getElementById('chart-sfd'), {
-    type:'line',
-    data:{
-      labels,
-      datasets:[{label:'せん断力 Q',data:dIdx.map(i=>r.sfd[i]),borderColor:'#ffd166',backgroundColor:'rgba(255,209,102,.1)',fill:true,tension:.2,pointRadius:0,borderWidth:2}]
-    },
-    options: baseOpts('せん断力 (kN/m)')
-  });
-
-  chartBMD = new Chart(document.getElementById('chart-bmd'), {
-    type:'line',
-    data:{
-      labels,
-      datasets:[{label:'曲げモーメント M',data:dIdx.map(i=>r.bmd[i]),borderColor:'#06d6a0',backgroundColor:'rgba(6,214,160,.1)',fill:true,tension:.2,pointRadius:0,borderWidth:2}]
-    },
-    options: baseOpts('曲げモーメント (kN·m/m)')
-  });
+  chartEP=new Chart(document.getElementById('chart-ep'),{type:'line',data:{labels,datasets:[
+    {label:'主働 Pa',data:idx.map(i=>r.pa[i]),borderColor:'#e94560',backgroundColor:'rgba(233,69,96,.15)',fill:true,tension:.2,pointRadius:0,borderWidth:2},
+    {label:'受動 Pp',data:idx.map(i=>r.pp[i]||0),borderColor:'#4cc9f0',backgroundColor:'rgba(76,201,240,.1)',fill:true,tension:.2,pointRadius:0,borderWidth:2},
+  ]},options:baseOpt('土圧 kN/m²')});
+  chartSFD=new Chart(document.getElementById('chart-sfd'),{type:'line',data:{labels,datasets:[
+    {label:'Q',data:idx.map(i=>r.sfd[i]),borderColor:'#ffd166',backgroundColor:'rgba(255,209,102,.1)',fill:true,tension:.2,pointRadius:0,borderWidth:2}
+  ]},options:baseOpt('せん断力 kN/m')});
+  chartBMD=new Chart(document.getElementById('chart-bmd'),{type:'line',data:{labels,datasets:[
+    {label:'M',data:idx.map(i=>r.bmd[i]),borderColor:'#06d6a0',backgroundColor:'rgba(6,214,160,.1)',fill:true,tension:.2,pointRadius:0,borderWidth:2}
+  ]},options:baseOpt('曲げM kN·m/m')});
 }
 
 // ============================================================
 // EXPORT
 // ============================================================
-function exportCSV() {
+function exportCSV(){
   if(!lastResult){alert('先に計算を実行してください');return;}
-  const r = lastResult;
-  let csv = '深度(m),主働土圧(kN/m2),受動土圧(kN/m2),正味土圧(kN/m2),せん断力(kN/m),曲げM(kN.m/m)\n';
+  const r=lastResult;
+  let csv='深度(m),主働土圧(kN/m2),受動土圧(kN/m2),正味土圧(kN/m2),せん断力(kN/m),曲げM(kN.m/m)\n';
   r.depths.forEach((z,i)=>{
-    csv += `${z.toFixed(3)},${r.pa[i].toFixed(3)},${(r.pp[i]||0).toFixed(3)},${r.pnet[i].toFixed(3)},${r.sfd[i].toFixed(4)},${r.bmd[i].toFixed(4)}\n`;
+    csv+=`${z.toFixed(3)},${r.pa[i].toFixed(3)},${(r.pp[i]||0).toFixed(3)},${r.pnet[i].toFixed(3)},${r.sfd[i].toFixed(4)},${r.bmd[i].toFixed(4)}\n`;
   });
-  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '土留め親ぐい計算結果.csv';
-  a.click();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='土留め親ぐい計算結果.csv';a.click();
 }
 
-async function exportPDF() {
+async function exportPDF(){
   if(!lastResult){alert('先に計算を実行してください');return;}
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
-
-  // Use canvas snapshot for charts
-  doc.setFontSize(16);
-  doc.text('土留め親ぐい計算書', 105, 20, {align:'center'});
-
-  doc.setFontSize(10);
-  const r = lastResult;
-  let y = 35;
-  const lines = [
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  doc.setFontSize(16);doc.text('土留め親ぐい計算書',105,18,{align:'center'});
+  doc.setFontSize(9);doc.text(`計算日: ${new Date().toLocaleDateString('ja-JP')}`,105,25,{align:'center'});
+  const r=lastResult;
+  let y=34;
+  [
     `計算手法: ${r.method}`,
     `根切り深さ H = ${r.H.toFixed(1)} m`,
     `地下水位 hw = ${r.hw.toFixed(1)} m`,
@@ -928,23 +824,14 @@ async function exportPDF() {
     `許容曲げ応力度 fb = ${document.getElementById('fb').value} N/mm²`,
     `応力比 = ${r.ratio.toFixed(3)}  ${r.ratio<=1?'OK':'NG'}`,
     `必要断面係数 = ${r.Z_req.toFixed(0)} cm³`,
-    `採用断面係数 = ${r.Z_cm3} cm³`,
-  ];
-  lines.forEach(l=>{doc.text(l,20,y);y+=7;});
-
-  // Charts as image
-  const chartIds = ['chart-ep','chart-sfd','chart-bmd'];
-  const chartTitles = ['土圧分布図','せん断力図','曲げモーメント図'];
-  let cx = 15, cy = y+5;
-  for(let idx=0;idx<chartIds.length;idx++){
-    const canvas = document.getElementById(chartIds[idx]);
-    const img = canvas.toDataURL('image/png');
-    doc.setFontSize(9);
-    doc.text(chartTitles[idx], cx+25, cy);
-    doc.addImage(img,'PNG',cx,cy+3,55,45);
-    cx += 62;
+    `採用断面係数 Z = ${r.Z_cm3} cm³`,
+  ].forEach(l=>{doc.text(l,18,y);y+=6;});
+  let cx=14,cy=y+4;
+  for(const [id,title] of [['chart-ep','土圧分布'],['chart-sfd','せん断力'],['chart-bmd','曲げM']]){
+    doc.setFontSize(8);doc.text(title,cx+28,cy);
+    doc.addImage(document.getElementById(id).toDataURL('image/png'),'PNG',cx,cy+2,58,50);
+    cx+=62;
   }
-
   doc.save('土留め親ぐい計算書.pdf');
 }
 </script>
