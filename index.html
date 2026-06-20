@@ -160,6 +160,21 @@ tr:hover td{background:rgba(76,201,240,.04)}
 <!-- SIDEBAR -->
 <div class="sidebar spa" id="sidebar">
 
+  <!-- プロジェクト情報 -->
+  <div>
+    <div class="ah open" onclick="toggleAcc(this)"><h3>📁 プロジェクト情報</h3><span class="aarr">▼</span></div>
+    <div class="ab open">
+      <label>工事名</label>
+      <input type="text" id="proj_name" placeholder="例：〇〇地区土留め工事" style="font-size:0.88rem">
+      <div class="r2">
+        <div><label>作成者</label>
+          <input type="text" id="proj_author" placeholder="氏名"></div>
+        <div><label>確認者</label>
+          <input type="text" id="proj_checker" placeholder="氏名"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- 基本条件 -->
   <div>
     <div class="ah open" onclick="toggleAcc(this)"><h3>📐 基本条件</h3><span class="aarr">▼</span></div>
@@ -313,8 +328,8 @@ tr:hover td{background:rgba(76,201,240,.04)}
   <div style="margin-top:6px">
     <button class="cbtn" onclick="calculate()">▶ 計算実行</button>
     <div class="exrow">
+      <button class="exbtn" onclick="exportReport()" style="border-color:var(--accent2);color:var(--accent2)">📋 計算書</button>
       <button class="exbtn" onclick="exportCSV()">📄 CSV</button>
-      <button class="exbtn" onclick="exportPDF()">📑 PDF</button>
       <button class="exbtn" onclick="window.print()">🖨 印刷</button>
     </div>
   </div>
@@ -1124,6 +1139,311 @@ function setStatus(msg,type){
 // ============================================================
 // EXPORT
 // ============================================================
+// ============================================================
+// REPORT
+// ============================================================
+function exportReport(){
+  if(!lastResult){alert('先に計算を実行してください');return;}
+  const r=lastResult;
+  const projName=document.getElementById('proj_name').value||'　';
+  const projAuthor=document.getElementById('proj_author').value||'　';
+  const projChecker=document.getElementById('proj_checker').value||'　';
+  const date=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'});
+  const methodLabel=r.method==='conv'?'慣用法（静的釣合法）':'弾塑性法（弾性床上の梁）';
+  const epMethodLabel=document.getElementById('ep_method').value==='rankine'?'ランキン式':'クーロン式';
+
+  // Chart images
+  const getImg=id=>{const c=document.getElementById(id);return c?c.toDataURL('image/png'):'';};
+  const epImg=getImg('chart-ep'),sfdImg=getImg('chart-sfd'),bmdImg=getImg('chart-bmd');
+
+  // Soil layers table rows
+  const layerRows=layers.map((l,i)=>`
+    <tr><td>${i+1}</td><td>${l.name}</td><td class="num">${l.thick.toFixed(2)}</td>
+    <td class="num">${l.gamma.toFixed(1)}</td><td class="num">${l.gsat.toFixed(1)}</td>
+    <td class="num">${l.phi.toFixed(0)}</td><td class="num">${l.c.toFixed(0)}</td></tr>`).join('');
+
+  // Stage rows
+  const stageRows=stages.map((s,i)=>{
+    const sr=r.stageResults[i];
+    const strutTxt=s.strut?`切梁設置 @ ${s.spos}m`:'なし';
+    const rxnTxt=sr.reactions.length>0?sr.reactions.map(rx=>`${rx.R.toFixed(2)} kN/m`).join('<br>'):'－';
+    return `<tr><td>${i+1}</td><td class="num">${s.depth.toFixed(2)}</td><td>${strutTxt}</td>
+      <td class="num">${sr.D.toFixed(2)}</td><td class="num">${sr.Mmax.toFixed(2)}</td>
+      <td class="num">${sr.Qmax.toFixed(2)}</td><td class="num">${rxnTxt}</td></tr>`;
+  }).join('');
+
+  // Stability section
+  const hv=r.heaving,bl=r.boiling,bh=r.baseheave;
+  const fsOk=(v,req)=>v>=req?`<span class="ok">✅ OK</span>`:`<span class="ng">❌ NG</span>`;
+
+  const hvSection=hv.applicable?`
+    <tr class="sh"><td colspan="4">ヒービング照査（Terzaghi 法）</td></tr>
+    <tr><td>平均粘着力 cu</td><td colspan="3" class="num">${hv.cu.toFixed(1)} kN/m²</td></tr>
+    <tr><td>上載荷重強度 q₀ = γH + q</td><td colspan="3" class="num">${hv.q0.toFixed(1)} kN/m²</td></tr>
+    <tr><td>支持力係数 Nc (π+2)</td><td colspan="3" class="num">${hv.Nc_t.toFixed(2)}</td></tr>
+    <tr><td>qf = Nc·cu</td><td colspan="3" class="num">${hv.qf_t.toFixed(1)} kN/m²</td></tr>
+    <tr class="result"><td>安全率 Fs = qf / (q₀ - cu√2/B)</td>
+      <td class="num">${hv.Fs_t.toFixed(2)}</td><td>≥ ${hv.required}</td><td>${fsOk(hv.Fs_t,hv.required)}</td></tr>
+    <tr class="sh"><td colspan="4">ヒービング照査（Bjerrum-Eide 法）</td></tr>
+    <tr><td>H/B = ${hv.H.toFixed(1)}/${hv.B.toFixed(1)}</td><td colspan="3" class="num">${(hv.H/hv.B).toFixed(3)}</td></tr>
+    <tr><td>支持力係数 Nc(H/B)</td><td colspan="3" class="num">${hv.NcBE.toFixed(2)}</td></tr>
+    <tr class="result"><td>安全率 Fs = Nc·cu / q₀</td>
+      <td class="num">${hv.Fs_be.toFixed(2)}</td><td>≥ ${hv.required}</td><td>${fsOk(hv.Fs_be,hv.required)}</td></tr>`
+    :`<tr><td colspan="4">${hv.reason}</td></tr>`;
+
+  const blSection=bl.applicable?`
+    <tr class="sh"><td colspan="4">ボイリング照査（Terzaghi 法）</td></tr>
+    <tr><td>水頭差 Δh = H - hw</td><td colspan="3" class="num">${bl.dh.toFixed(2)} m</td></tr>
+    <tr><td>水中単位重量 γ' = γsat - γw</td><td colspan="3" class="num">${bl.gp.toFixed(2)} kN/m³</td></tr>
+    <tr><td>根入れ長 D</td><td colspan="3" class="num">${bl.D.toFixed(2)} m</td></tr>
+    <tr class="result"><td>安全率 Fs = 2γ'D / (γw·Δh)</td>
+      <td class="num">${bl.Fs.toFixed(2)}</td><td>≥ ${bl.required}</td><td>${fsOk(bl.Fs,bl.required)}</td></tr>`
+    :`<tr><td colspan="4">${bl.reason}</td></tr>`;
+
+  const bhSection=bh.applicable?`
+    <tr class="sh"><td colspan="4">盤ぶくれ照査（粘性土）</td></tr>
+    <tr><td>平均粘着力 cu</td><td colspan="3" class="num">${bh.cu.toFixed(1)} kN/m²</td></tr>
+    <tr><td>支持力係数 Nc</td><td colspan="3" class="num">${bh.Nc.toFixed(2)}</td></tr>
+    <tr><td>上載荷重強度 q₀</td><td colspan="3" class="num">${bh.q0.toFixed(1)} kN/m²</td></tr>
+    <tr class="result"><td>安全率 Fs = Nc·cu / q₀</td>
+      <td class="num">${bh.Fs.toFixed(2)}</td><td>≥ ${bh.required}</td><td>${fsOk(bh.Fs,bh.required)}</td></tr>`
+    :`<tr><td colspan="4">${bh.reason}</td></tr>`;
+
+  // Support section
+  const sup=r.support;
+  const supSection=sup.rows.length===0?`<p style="margin:4mm 0">切梁なし（支保工計算省略）</p>`:`
+    <p class="sec-note">腹起し H形鋼：${document.getElementById('w_size').value}　Zw = ${sup.Zw} cm³　fb = ${sup.fb_w} N/mm²</p>
+    <table><thead><tr><th>St.</th><th>位置 m</th><th>支保反力 R<br>kN/m</th><th>曲げM<br>kN·m</th><th>σ<br>N/mm²</th><th>fb<br>N/mm²</th><th>判定</th></tr></thead><tbody>
+    ${sup.rows.map(row=>`<tr><td>${row.stage}</td><td class="num">${row.pos}</td><td class="num">${row.R}</td>
+      <td class="num">${row.Mw}</td><td class="num">${row.sig_w}</td><td class="num">${row.fb_w}</td>
+      <td>${row.ok_w?'<span class="ok">OK</span>':'<span class="ng">NG</span>'}</td></tr>`).join('')}
+    </tbody></table>
+    <p class="sec-note" style="margin-top:4mm">切梁 H形鋼：${document.getElementById('s_size').value}　As = ${sup.As} cm²　Is = ${sup.Is} cm⁴　Ls = ${sup.Ls} m　μ = ${sup.mu}</p>
+    <table><thead><tr><th>St.</th><th>位置 m</th><th>軸力 P<br>kN</th><th>有効細長比 λ</th><th>fa_buck<br>N/mm²</th><th>σ<br>N/mm²</th><th>fa<br>N/mm²</th><th>判定</th></tr></thead><tbody>
+    ${sup.rows.map(row=>`<tr><td>${row.stage}</td><td class="num">${row.pos}</td><td class="num">${row.Ps}</td>
+      <td class="num">${row.lambda}</td><td class="num">${row.fa_buck}</td><td class="num">${row.sig_s}</td>
+      <td class="num">${row.fa}</td>
+      <td>${row.ok_s?'<span class="ok">OK</span>':'<span class="ng">NG</span>'}</td></tr>`).join('')}
+    </tbody></table>`;
+
+  // Pile section info
+  const pileTypeLabel=document.getElementById('pile_type').value==='H'?
+    `H形鋼 ${document.getElementById('h_size').value}`:'任意断面';
+  const Z_cm3=r.Z_cm3,I_cm4=+document.getElementById('I_val').value,fb=r.fb;
+  const E_val=document.getElementById('E_val').value;
+
+  // Detail table (sampled)
+  const step=Math.max(1,Math.floor(r.final.depths.length/40));
+  const detailRows=r.final.depths
+    .filter((_,i)=>i%step===0)
+    .map((z,i)=>{const j=i*step;return`<tr>
+      <td class="num">${z.toFixed(2)}</td>
+      <td class="num">${r.final.pa[j]?.toFixed(2)||'0.00'}</td>
+      <td class="num">${(r.final.pp[j]||0).toFixed(2)}</td>
+      <td class="num">${r.final.pnet[j]?.toFixed(2)||'0.00'}</td>
+      <td class="num">${r.final.sfd[j]?.toFixed(2)||'0.00'}</td>
+      <td class="num">${r.final.bmd[j]?.toFixed(2)||'0.00'}</td></tr>`;}).join('');
+
+  const html=`<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>土留め親ぐい計算書</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'MS Gothic','Hiragino Sans',sans-serif;font-size:9pt;color:#000;background:#fff}
+@media print{
+  @page{size:A4 portrait;margin:15mm 15mm 15mm 20mm}
+  .no-print{display:none!important}
+  h2{page-break-before:always}
+  h2:first-of-type{page-break-before:avoid}
+  .no-break{page-break-inside:avoid}
+}
+.page{max-width:180mm;margin:0 auto;padding:10mm 0}
+/* Print toolbar */
+.toolbar{background:#f0f0f0;border-bottom:1px solid #ccc;padding:8px 12px;display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:10}
+.toolbar button{padding:6px 16px;border:1px solid #999;border-radius:4px;background:#fff;cursor:pointer;font-size:9pt}
+.toolbar button.primary{background:#0066cc;color:#fff;border-color:#0066cc}
+.toolbar span{font-size:8.5pt;color:#666}
+/* Cover */
+.cover{text-align:center;padding:10mm 0 8mm;border-bottom:2.5pt solid #000;margin-bottom:5mm}
+.cover h1{font-size:18pt;font-weight:bold;letter-spacing:0.15em;margin-bottom:3mm}
+.cover .subtitle{font-size:10pt;color:#444;margin-bottom:6mm}
+.info-grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:1.5mm 3mm;font-size:9pt;text-align:left;width:100%;max-width:150mm;margin:0 auto}
+.info-grid .lbl{color:#444;white-space:nowrap;padding-right:2mm}
+.info-grid .val{border-bottom:0.5pt solid #888;padding:0 2mm 0.5mm;min-width:40mm}
+/* Section headings */
+h2{font-size:11pt;font-weight:bold;border-left:3.5pt solid #003080;padding:1mm 0 1mm 3mm;margin:5mm 0 2.5mm;background:#f5f8ff}
+h3{font-size:9.5pt;font-weight:bold;margin:3mm 0 1.5mm;padding-bottom:0.5mm;border-bottom:0.5pt solid #aaa}
+.sec-note{font-size:8.5pt;color:#444;margin:1.5mm 0}
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:2mm}
+th{background:#003080;color:#fff;padding:1.5mm 2mm;text-align:center;font-weight:bold;border:0.5pt solid #001050;line-height:1.4}
+td{padding:1.2mm 2mm;border:0.5pt solid #bbb;vertical-align:middle;line-height:1.4}
+td.num{text-align:right;font-family:'Courier New',monospace}
+tr.sh td{background:#dde8ff;font-weight:bold;text-align:left;padding:1mm 2mm}
+tr.result td{background:#f0fff0;font-weight:bold}
+tr:nth-child(even):not(.sh):not(.result) td{background:#fafafa}
+/* Status */
+.ok{color:#006600;font-weight:bold}
+.ng{color:#cc0000;font-weight:bold}
+.result-banner{display:flex;gap:4mm;margin:3mm 0;flex-wrap:wrap}
+.rb-card{border:1pt solid #888;border-radius:2mm;padding:2mm 4mm;min-width:35mm;text-align:center}
+.rb-card .rb-label{font-size:7.5pt;color:#555}
+.rb-card .rb-val{font-size:12pt;font-weight:bold;color:#003080}
+.rb-card .rb-sub{font-size:7.5pt;color:#555}
+.rb-card.ok-card{border-color:#006600;background:#f0fff0}
+.rb-card.ng-card{border-color:#cc0000;background:#fff0f0}
+/* Charts */
+.chart-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm;margin:3mm 0}
+.chart-box{border:0.5pt solid #ccc;padding:2mm;text-align:center}
+.chart-box p{font-size:7.5pt;color:#555;margin-bottom:1mm;font-weight:bold}
+.chart-box img{width:100%;height:auto}
+.chart-row-2{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin:3mm 0}
+/* Signature box */
+.sig-box{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3mm;margin-top:5mm}
+.sig-cell{border:0.5pt solid #888;padding:2mm;text-align:center;min-height:12mm}
+.sig-cell .sig-label{font-size:8pt;color:#555;margin-bottom:2mm}
+/* Footer */
+.footer{text-align:center;font-size:7.5pt;color:#888;margin-top:6mm;border-top:0.5pt solid #ccc;padding-top:2mm}
+</style>
+</head>
+<body>
+<div class="toolbar no-print">
+  <button class="primary" onclick="window.print()">🖨 印刷 / PDF保存</button>
+  <button onclick="window.close()">閉じる</button>
+  <span>印刷ダイアログで「送信先」→「PDFに保存」を選択するとPDFとして保存できます</span>
+</div>
+
+<div class="page">
+
+<!-- COVER -->
+<div class="cover no-break">
+  <h1>土留め親ぐい計算書</h1>
+  <div class="subtitle">Earth Retaining Parent Pile Calculation Report</div>
+  <div class="info-grid">
+    <span class="lbl">工 事 名</span><span class="val">${projName}</span>
+    <span class="lbl">計 算 日</span><span class="val">${date}</span>
+    <span class="lbl">作 成 者</span><span class="val">${projAuthor}</span>
+    <span class="lbl">確 認 者</span><span class="val">${projChecker}</span>
+    <span class="lbl">計算手法</span><span class="val" style="grid-column:span 3">${methodLabel}</span>
+  </div>
+</div>
+
+<!-- SECTION 1 -->
+<h2>1. 設計条件</h2>
+<table class="no-break">
+<thead><tr><th>項目</th><th>記号</th><th>値</th><th>単位</th><th>項目</th><th>記号</th><th>値</th><th>単位</th></tr></thead>
+<tbody>
+<tr><td>根切り深さ</td><td>H</td><td class="num">${r.H.toFixed(2)}</td><td>m</td>
+    <td>掘削幅</td><td>B</td><td class="num">${r.B.toFixed(2)}</td><td>m</td></tr>
+<tr><td>地下水位</td><td>hw</td><td class="num">${r.hw.toFixed(2)}</td><td>m</td>
+    <td>親ぐい間隔</td><td>lp</td><td class="num">${document.getElementById('l_pile').value}</td><td>m</td></tr>
+<tr><td>上載荷重</td><td>q</td><td class="num">${document.getElementById('surcharge').value}</td><td>kN/m²</td>
+    <td>土圧公式</td><td>—</td><td colspan="2">${epMethodLabel}</td></tr>
+<tr><td>土圧割増係数</td><td>α</td><td class="num">${document.getElementById('ep_fac').value}</td><td>—</td>
+    <td>壁面摩擦角 δ</td><td>δ</td><td class="num">${document.getElementById('delta_w').value}</td><td>°</td></tr>
+${r.method==='elastic'?`<tr><td>地盤反力係数</td><td>kh</td><td class="num">${document.getElementById('kh').value}</td><td>kN/m³</td>
+    <td>受動土圧低減係数</td><td>α</td><td class="num">${document.getElementById('alpha_ep').value}</td><td>—</td></tr>`:''}
+</tbody>
+</table>
+
+<!-- SECTION 2 -->
+<h2>2. 地層条件</h2>
+<table class="no-break">
+<thead><tr><th>No.</th><th>土質名称</th><th>層厚<br>m</th><th>γt<br>kN/m³</th><th>γsat<br>kN/m³</th><th>内部摩擦角 φ<br>°</th><th>粘着力 c/cu<br>kN/m²</th></tr></thead>
+<tbody>${layerRows}</tbody>
+</table>
+
+<!-- SECTION 3 -->
+<h2>3. 施工ステージ</h2>
+<table class="no-break">
+<thead><tr><th>ｽﾃｰｼﾞ</th><th>掘削深さ<br>m</th><th>切梁設置</th><th>根入れ長 D<br>m</th><th>最大M<br>kN·m/m</th><th>最大Q<br>kN/m</th><th>支保反力<br>kN/m</th></tr></thead>
+<tbody>${stageRows}</tbody>
+</table>
+
+<!-- SECTION 4 -->
+<h2>4. 土圧分布・断面力図</h2>
+<p class="sec-note">最終ステージ（掘削深さ H = ${r.H.toFixed(2)} m、根入れ長 D = ${r.D.toFixed(2)} m）</p>
+<div class="chart-row no-break">
+  <div class="chart-box"><p>土圧分布図</p>${epImg?`<img src="${epImg}" alt="土圧">`:'（グラフなし）'}</div>
+  <div class="chart-box"><p>せん断力図 SFD</p>${sfdImg?`<img src="${sfdImg}" alt="SFD">`:'（グラフなし）'}</div>
+  <div class="chart-box"><p>曲げモーメント図 BMD</p>${bmdImg?`<img src="${bmdImg}" alt="BMD">`:'（グラフなし）'}</div>
+</div>
+
+<!-- SECTION 5 -->
+<h2>5. 根入れ長の計算結果</h2>
+<table class="no-break">
+<thead><tr><th>項目</th><th>記号</th><th>値</th><th>単位</th><th>備考</th></tr></thead>
+<tbody>
+<tr><td>必要根入れ長</td><td>D</td><td class="num">${r.D.toFixed(2)}</td><td>m</td><td>安全率 Fs=1.5 により決定</td></tr>
+<tr><td>最大曲げモーメント</td><td>Mmax</td><td class="num">${r.Mmax.toFixed(2)}</td><td>kN·m/m</td><td>全ステージ最大値</td></tr>
+<tr><td>最大せん断力</td><td>Qmax</td><td class="num">${r.Qmax.toFixed(2)}</td><td>kN/m</td><td>全ステージ最大値</td></tr>
+${r.maxDisp!=null?`<tr><td>最大変位量</td><td>δmax</td><td class="num">${(r.maxDisp*1000).toFixed(1)}</td><td>mm</td><td>弾塑性解析結果</td></tr>`:''}
+</tbody>
+</table>
+
+<!-- SECTION 6 -->
+<h2>6. 断面照査</h2>
+<p class="sec-note">使用部材：${pileTypeLabel}　E = ${E_val} kN/cm²</p>
+<table class="no-break">
+<thead><tr><th>項目</th><th>記号</th><th>計算値</th><th>許容値</th><th>単位</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>断面係数（採用）</td><td>Z</td><td class="num">${Z_cm3}</td><td>—</td><td>cm³</td><td>—</td></tr>
+<tr><td>断面二次モーメント（採用）</td><td>I</td><td class="num">${I_cm4}</td><td>—</td><td>cm⁴</td><td>—</td></tr>
+<tr><td>必要断面係数</td><td>Z_req = Mmax×10³/fb</td><td class="num">${r.Z_req.toFixed(0)}</td><td>≤ ${Z_cm3}</td><td>cm³</td>
+    <td>${Z_cm3>=r.Z_req?'<span class="ok">✅ OK</span>':'<span class="ng">❌ NG</span>'}</td></tr>
+<tr><td>曲げ応力度</td><td>σ = Mmax×10³/Z</td><td class="num">${r.sig_b.toFixed(2)}</td><td>${fb}</td><td>N/mm²</td>
+    <td>${r.sig_b<=fb?'<span class="ok">✅ OK</span>':'<span class="ng">❌ NG</span>'}</td></tr>
+<tr class="result"><td colspan="2"><strong>応力比 σ/fb</strong></td>
+    <td class="num" colspan="2"><strong>${r.ratio.toFixed(4)}</strong></td><td>—</td>
+    <td>${r.ratio<=1?'<span class="ok">✅ OK</span>':'<span class="ng">❌ NG</span>'}</td></tr>
+</tbody>
+</table>
+
+<!-- SECTION 7 -->
+<h2>7. 掘削底面安定照査</h2>
+<table class="no-break">
+<thead><tr><th style="width:45%">項目</th><th style="width:15%">計算値</th><th style="width:15%">必要安全率</th><th style="width:25%">判定</th></tr></thead>
+<tbody>
+${hvSection}
+${blSection}
+${bhSection}
+</tbody>
+</table>
+
+<!-- SECTION 8 -->
+<h2>8. 支保工計算</h2>
+${supSection}
+
+<!-- SECTION 9 -->
+<h2>9. 詳細計算表（最終ステージ抜粋）</h2>
+<table>
+<thead><tr><th>深度<br>m</th><th>Pa<br>kN/m²</th><th>Pp<br>kN/m²</th><th>正味荷重<br>kN/m²</th><th>Q<br>kN/m</th><th>M<br>kN·m/m</th></tr></thead>
+<tbody>${detailRows}</tbody>
+</table>
+
+<!-- SIGNATURE -->
+<div class="sig-box no-break" style="margin-top:8mm">
+  <div class="sig-cell"><div class="sig-label">作　成</div></div>
+  <div class="sig-cell"><div class="sig-label">確　認</div></div>
+  <div class="sig-cell"><div class="sig-label">承　認</div></div>
+</div>
+
+<div class="footer">
+  土留め親ぐい計算ソフト — 計算日: ${date} — 本計算書は参考値です。設計に際しては専門技術者による検証を行ってください。
+</div>
+
+</div><!-- .page -->
+</body>
+</html>`;
+
+  const win=window.open('','_blank','width=900,height=750');
+  if(!win){alert('ポップアップがブロックされました。ブラウザの設定でポップアップを許可してください。');return;}
+  win.document.write(html);
+  win.document.close();
+}
+
 function exportCSV(){
   if(!lastResult){alert('先に計算を実行');return;}
   const r=lastResult.final;
