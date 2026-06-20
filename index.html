@@ -120,14 +120,14 @@ tr:hover td{background:rgba(76,201,240,.04)}
 .stage-badge.warn{background:rgba(255,152,0,.15);color:var(--warn);border-color:var(--warn)}
 /* mobile */
 @media(max-width:768px){
-  .app{display:flex;flex-direction:column;height:100vh;padding-bottom:var(--bot)}
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-bottom:var(--bot)}
   header{flex-shrink:0}header .hs{display:block}
   header h1{font-size:0.95rem}
   .sidebar{flex:1;overflow-y:auto;border-right:none;display:none}
   .sidebar.spa{display:flex}
   .main{flex:1;overflow-y:auto;display:none}
   .main.spa{display:flex}
-  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;height:var(--bot);background:var(--surface);border-top:1px solid var(--border);z-index:100}
+  .bnav{display:flex;position:fixed;bottom:0;left:0;right:0;height:calc(var(--bot) + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
   .bnav button{flex:1;background:none;border:none;color:var(--text2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:0.62rem;padding:6px 0;transition:.2s}
   .bnav button .ic{font-size:1.25rem}
   .bnav button.active{color:var(--accent2)}
@@ -430,7 +430,10 @@ function spTab(t){
   if(t==='in'){sb.classList.add('spa');mn.classList.remove('spa');bi.classList.add('active');bo.classList.remove('active');}
   else{sb.classList.remove('spa');mn.classList.add('spa');bi.classList.remove('active');bo.classList.add('active');}
 }
-function spCalc(){calculate();if(window.innerWidth<=768)spTab('out');}
+function spCalc(){
+  if(window.innerWidth<=768) spTab('out');
+  requestAnimationFrame(()=>calculate());
+}
 
 // ============================================================
 // ACCORDION
@@ -443,6 +446,7 @@ function toggleAcc(h){h.classList.toggle('open');h.nextElementSibling.classList.
 function switchRTab(i){
   document.querySelectorAll('.rtab').forEach((b,j)=>b.classList.toggle('active',j===i));
   document.querySelectorAll('.rpanel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  if(i===0) requestAnimationFrame(()=>Object.values(charts).forEach(c=>{try{c.resize();}catch(e){}}));
 }
 
 // ============================================================
@@ -928,8 +932,8 @@ function calculate(){
       maxDisp:final.maxDisp
     };
 
-    displayAll(lastResult);
     document.getElementById('result-wrap').style.display='';
+    requestAnimationFrame(()=>displayAll(lastResult));
     const ok=ratio<=1&&(!heaving.applicable||heaving.Fs_t>=heaving.required)&&(!boiling.applicable||boiling.Fs>=boiling.required);
     setStatus(`計算完了 — D=${D.toFixed(2)}m | Mmax=${Mmax_all.toFixed(1)}kN·m/m | 応力比=${ratio.toFixed(3)} ${ratio<=1?'✅ OK':'❌ NG'}`, ok?'ok':'err');
   }catch(e){setStatus('エラー: '+e.message,'err');console.error(e);}
