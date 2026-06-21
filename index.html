@@ -262,9 +262,9 @@ tr:hover td{background:rgba(76,201,240,.04)}
     </div>
   </div>
 
-  <!-- 腹起し・切梁 -->
+  <!-- 腹起し・切ばり -->
   <div>
-    <div class="ah" onclick="toggleAcc(this)"><h3>🏗 腹起し・切梁</h3><span class="aarr">▼</span></div>
+    <div class="ah" onclick="toggleAcc(this)"><h3>🏗 腹起し・切ばり</h3><span class="aarr">▼</span></div>
     <div class="ab">
       <label>腹起し材 H形鋼規格</label>
       <select id="w_size" onchange="updateWalingProps()">
@@ -279,7 +279,7 @@ tr:hover td{background:rgba(76,201,240,.04)}
         <div><label>許容曲げ応力度 fb <span class="unit">N/mm²</span></label>
           <input type="number" id="fb_w" value="190" step="5" inputmode="numeric"></div>
       </div>
-      <label>切梁材 H形鋼規格</label>
+      <label>切ばり材 H形鋼規格</label>
       <select id="s_size" onchange="updateStrutProps()">
         <option value="250x250x9x14">H-250×250×9×14</option>
         <option value="300x300x10x15" selected>H-300×300×10×15</option>
@@ -293,13 +293,13 @@ tr:hover td{background:rgba(76,201,240,.04)}
           <input type="number" id="Is" value="20400" step="100" inputmode="numeric"></div>
       </div>
       <div class="r2">
-        <div><label>切梁長さ Ls <span class="unit">m</span></label>
+        <div><label>切ばり長さ Ls <span class="unit">m</span></label>
           <input type="number" id="L_strut" value="10.0" step="0.5" inputmode="decimal"></div>
         <div><label>座屈有効長係数 μ</label>
           <input type="number" id="mu" value="0.7" step="0.1" min="0.3" max="1.0" inputmode="decimal"></div>
       </div>
       <div class="r2">
-        <div><label>切梁水平支点間距離 <span class="unit">m</span></label>
+        <div><label>切ばり水平支点間距離 <span class="unit">m</span></label>
           <input type="number" id="l_strut_h" value="5.0" step="0.5" inputmode="decimal"></div>
         <div><label>許容圧縮応力度 fa <span class="unit">N/mm²</span></label>
           <input type="number" id="fa_strut" value="160" step="5" inputmode="numeric"></div>
@@ -372,7 +372,7 @@ tr:hover td{background:rgba(76,201,240,.04)}
 
     <!-- Tab 3: Support -->
     <div class="rpanel" id="tab3">
-      <div class="shd" style="margin-top:4px">腹起し・切梁 断面計算</div>
+      <div class="shd" style="margin-top:4px">腹起し・切ばり 断面計算</div>
       <div id="support-results"></div>
     </div>
 
@@ -503,9 +503,9 @@ function renderStages(){
       <label style="margin-top:7px;display:flex;align-items:center;gap:12px;cursor:pointer;min-height:44px">
         <input type="checkbox" ${s.strut?'checked':''} style="width:24px;height:24px;min-height:unset;cursor:pointer"
           onchange="stages[${i}].strut=this.checked;stages[${i}].spos=this.checked?1.0:null;renderStages()">
-        <span>切梁設置（このステージ開始時）</span>
+        <span>切ばり設置（このステージ開始時）</span>
       </label>
-      ${s.strut?`<label>切梁位置 <span class="unit">m（GL-）</span></label>
+      ${s.strut?`<label>切ばり位置 <span class="unit">m（GL-）</span></label>
         <input type="number" value="${s.spos??1.0}" step="0.1" min="0" inputmode="decimal"
           oninput="stages[${i}].spos=+this.value">`:''}
     `;
@@ -984,7 +984,7 @@ function displayStages(srs){
   srs.forEach((sr,i)=>{
     const div=document.createElement('div');
     div.className='stage-strip';
-    const strutInfo=stages[i].strut?`切梁設置 @ ${stages[i].spos}m`:'切梁なし';
+    const strutInfo=stages[i].strut?`切ばり設置 @ ${stages[i].spos}m`:'切ばりなし';
     div.innerHTML=`
       <h5>ステージ ${i+1}：掘削深さ ${sr.H.toFixed(1)} m ／ ${strutInfo}</h5>
       <div class="stage-row"><span class="stage-label">根入れ長 D</span><span class="stage-val">${sr.D.toFixed(2)} m</span></div>
@@ -1071,17 +1071,17 @@ Fs = Nc·cu/q₀ = ${bh.Fs.toFixed(2)}</div>`;
 function displaySupport(sup){
   const el=document.getElementById('support-results');
   if(sup.rows.length===0){
-    el.innerHTML='<div class="sbar info" style="margin-top:10px">切梁が設定されていません。施工ステージで「切梁を設置」にチェックしてください。</div>';
+    el.innerHTML='<div class="sbar info" style="margin-top:10px">切ばりが設定されていません。施工ステージで「切ばりを設置」にチェックしてください。</div>';
     return;
   }
-  let html=`<div class="rtable"><h4>腹起し断面計算（水平切梁間隔 ${sup.ls_h}m）</h4>
+  let html=`<div class="rtable"><h4>腹起しの計算（切ばり水平支点間距離 ${sup.ls_h}m）</h4>
   <table><thead><tr><th>ｽﾃｰｼﾞ</th><th>位置 m</th><th>支保反力 kN/m</th><th>M kN·m</th><th>σ N/mm²</th><th>fb N/mm²</th><th>判定</th></tr></thead><tbody>`;
   sup.rows.forEach(r=>{
     html+=`<tr><td>St.${r.stage}</td><td>${r.pos}</td><td>${r.R}</td><td>${r.Mw}</td>
       <td>${r.sig_w}</td><td>${r.fb_w}</td><td>${r.ok_w?'✅ OK':'❌ NG'}</td></tr>`;
   });
   html+=`</tbody></table></div>`;
-  html+=`<div class="rtable" style="margin-top:12px"><h4>切梁断面計算（長さ ${sup.Ls}m、有効長係数 μ=${sup.mu}）</h4>
+  html+=`<div class="rtable" style="margin-top:12px"><h4>切ばりの計算（切ばり長さ ${sup.Ls}m、座屈有効長係数 μ=${sup.mu}）</h4>
   <table><thead><tr><th>ｽﾃｰｼﾞ</th><th>位置 m</th><th>軸力 kN</th><th>λ</th><th>fa_buck N/mm²</th><th>σ N/mm²</th><th>fa N/mm²</th><th>判定</th></tr></thead><tbody>`;
   sup.rows.forEach(r=>{
     html+=`<tr><td>St.${r.stage}</td><td>${r.pos}</td><td>${r.Ps}</td><td>${r.lambda}</td>
@@ -1165,7 +1165,7 @@ function exportReport(){
   // Stage rows
   const stageRows=stages.map((s,i)=>{
     const sr=r.stageResults[i];
-    const strutTxt=s.strut?`切梁設置 @ ${s.spos}m`:'なし';
+    const strutTxt=s.strut?`切ばり設置 @ ${s.spos}m`:'なし';
     const rxnTxt=sr.reactions.length>0?sr.reactions.map(rx=>`${rx.R.toFixed(2)} kN/m`).join('<br>'):'－';
     return `<tr><td>${i+1}</td><td class="num">${s.depth.toFixed(2)}</td><td>${strutTxt}</td>
       <td class="num">${sr.D.toFixed(2)}</td><td class="num">${sr.Mmax.toFixed(2)}</td>
@@ -1211,14 +1211,14 @@ function exportReport(){
 
   // Support section
   const sup=r.support;
-  const supSection=sup.rows.length===0?`<p style="margin:4mm 0">切梁なし（支保工計算省略）</p>`:`
-    <p class="sec-note">腹起し H形鋼：${document.getElementById('w_size').value}　Zw = ${sup.Zw} cm³　fb = ${sup.fb_w} N/mm²</p>
-    <table><thead><tr><th>St.</th><th>位置 m</th><th>支保反力 R<br>kN/m</th><th>曲げM<br>kN·m</th><th>σ<br>N/mm²</th><th>fb<br>N/mm²</th><th>判定</th></tr></thead><tbody>
+  const supSection=sup.rows.length===0?`<p style="margin:4mm 0">切ばりなし（支保工計算省略）</p>`:`
+    <p class="sec-note">●腹起しの計算　H形鋼：${document.getElementById('w_size').value}　Zw = ${sup.Zw} cm³　fb = ${sup.fb_w} N/mm²</p>
+    <table><thead><tr><th>St.</th><th>位置 m</th><th>支保工反力 R<br>kN/m</th><th>曲げM<br>kN·m</th><th>σ<br>N/mm²</th><th>fb<br>N/mm²</th><th>判定</th></tr></thead><tbody>
     ${sup.rows.map(row=>`<tr><td>${row.stage}</td><td class="num">${row.pos}</td><td class="num">${row.R}</td>
       <td class="num">${row.Mw}</td><td class="num">${row.sig_w}</td><td class="num">${row.fb_w}</td>
       <td>${row.ok_w?'<span class="ok">OK</span>':'<span class="ng">NG</span>'}</td></tr>`).join('')}
     </tbody></table>
-    <p class="sec-note" style="margin-top:4mm">切梁 H形鋼：${document.getElementById('s_size').value}　As = ${sup.As} cm²　Is = ${sup.Is} cm⁴　Ls = ${sup.Ls} m　μ = ${sup.mu}</p>
+    <p class="sec-note" style="margin-top:4mm">●切ばりの計算　H形鋼：${document.getElementById('s_size').value}　As = ${sup.As} cm²　Is = ${sup.Is} cm⁴　Ls = ${sup.Ls} m　μ = ${sup.mu}</p>
     <table><thead><tr><th>St.</th><th>位置 m</th><th>軸力 P<br>kN</th><th>有効細長比 λ</th><th>fa_buck<br>N/mm²</th><th>σ<br>N/mm²</th><th>fa<br>N/mm²</th><th>判定</th></tr></thead><tbody>
     ${sup.rows.map(row=>`<tr><td>${row.stage}</td><td class="num">${row.pos}</td><td class="num">${row.Ps}</td>
       <td class="num">${row.lambda}</td><td class="num">${row.fa_buck}</td><td class="num">${row.sig_s}</td>
@@ -1358,7 +1358,7 @@ ${r.method==='elastic'?`<tr><td>地盤反力係数</td><td>kh</td><td class="num
 <!-- SECTION 3 -->
 <h2>3. 施工ステージ</h2>
 <table class="no-break">
-<thead><tr><th>ｽﾃｰｼﾞ</th><th>掘削深さ<br>m</th><th>切梁設置</th><th>根入れ長 D<br>m</th><th>最大M<br>kN·m/m</th><th>最大Q<br>kN/m</th><th>支保反力<br>kN/m</th></tr></thead>
+<thead><tr><th>ｽﾃｰｼﾞ</th><th>掘削深さ<br>m</th><th>切ばり設置</th><th>根入れ長 D<br>m</th><th>最大M<br>kN·m/m</th><th>最大Q<br>kN/m</th><th>支保工反力<br>kN/m</th></tr></thead>
 <tbody>${stageRows}</tbody>
 </table>
 
@@ -1372,7 +1372,7 @@ ${r.method==='elastic'?`<tr><td>地盤反力係数</td><td>kh</td><td class="num
 </div>
 
 <!-- SECTION 5 -->
-<h2>5. 根入れ長の計算結果</h2>
+<h2>5. 根入れ長に対する照査結果</h2>
 <table class="no-break">
 <thead><tr><th>項目</th><th>記号</th><th>値</th><th>単位</th><th>備考</th></tr></thead>
 <tbody>
@@ -1384,7 +1384,7 @@ ${r.maxDisp!=null?`<tr><td>最大変位量</td><td>δmax</td><td class="num">${(
 </table>
 
 <!-- SECTION 6 -->
-<h2>6. 断面照査</h2>
+<h2>6. 壁体断面照査結果一覧</h2>
 <p class="sec-note">使用部材：${pileTypeLabel}　E = ${E_val} kN/cm²</p>
 <table class="no-break">
 <thead><tr><th>項目</th><th>記号</th><th>計算値</th><th>許容値</th><th>単位</th><th>判定</th></tr></thead>
@@ -1402,7 +1402,7 @@ ${r.maxDisp!=null?`<tr><td>最大変位量</td><td>δmax</td><td class="num">${(
 </table>
 
 <!-- SECTION 7 -->
-<h2>7. 掘削底面安定照査</h2>
+<h2>7. 掘削底面の安定照査結果一覧</h2>
 <table class="no-break">
 <thead><tr><th style="width:45%">項目</th><th style="width:15%">計算値</th><th style="width:15%">必要安全率</th><th style="width:25%">判定</th></tr></thead>
 <tbody>
@@ -1413,7 +1413,7 @@ ${bhSection}
 </table>
 
 <!-- SECTION 8 -->
-<h2>8. 支保工計算</h2>
+<h2>8. 支保工の照査結果一覧</h2>
 ${supSection}
 
 <!-- SECTION 9 -->
