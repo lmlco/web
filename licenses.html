@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>許可・資格管理 — Office Workspace</title>
+<style>
+:root{--bg:#fbfaf7;--sidebar:#f1f0ec;--panel:#ffffff;--soft:#f6f4ef;--line:#e2dfd8;--text:#24231f;--muted:#756f66;--blue:#356c8a;--green:#3f6b5b;--orange:#a9622a;--red:#b64f4f;--shadow:0 18px 45px rgba(34,31,26,.14);--shadow-soft:0 10px 24px rgba(34,31,26,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Inter,"Yu Gothic UI","Hiragino Sans",Meiryo,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:text}
+select{cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(53,108,138,.16)}
+
+/* Layout */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:224px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-head{padding:14px 14px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.sidebar-head strong{font-size:13px}
+.icon-btn{width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:grid;place-items:center;font-size:12px}
+.icon-btn:hover{background:var(--soft)}
+.cmd-hint{display:flex;align-items:center;gap:8px;margin:10px 8px 4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:12px}
+.cmd-hint b{flex:1;font-weight:600}
+.cmd-hint kbd{border:1px solid var(--line);border-radius:5px;padding:1px 5px;background:var(--soft);font-size:10px}
+.nav{flex:1;overflow:auto;padding:7px 6px}
+.nav a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:13px;margin:1px 0}
+.nav a:hover{background:var(--soft)}
+.nav a.active{background:var(--panel);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.nav a span{width:18px;text-align:center;color:var(--green);flex-shrink:0}
+.nav a b{flex:1;font-weight:600;white-space:nowrap}
+.nav-badge{background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px}
+.sidebar-user{display:flex;align-items:center;gap:9px;padding:12px 14px;border-top:1px solid var(--line)}
+.sidebar-user strong{display:block;font-size:13px}
+.sidebar-user small{display:block;color:var(--muted);font-size:11px}
+
+/* Main area */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.app-header{position:sticky;top:0;z-index:120;display:flex;align-items:center;gap:16px;padding:13px 28px;background:rgba(255,255,255,.88);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
+.header-title{flex:1}
+.breadcrumb{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;margin-bottom:3px}
+.title-row{display:flex;align-items:center;gap:10px}
+.view-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--green);font-weight:800;font-size:14px;flex-shrink:0}
+.title-row h1{font-size:17px;font-weight:800}
+.header-actions{display:flex;gap:8px;flex-shrink:0}
+.content{flex:1;overflow:auto;padding:22px 28px 40px}
+
+/* Summary metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 16px;box-shadow:var(--shadow-soft);cursor:default}
+.metric-label{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.metric-value{font-size:28px;font-weight:800;line-height:1}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.metric.c-danger .metric-value{color:var(--red)}
+.metric.c-warn .metric-value{color:var(--orange)}
+.metric.c-blue .metric-value{color:var(--blue)}
+.metric.c-ok .metric-value{color:var(--green)}
+.metric.clickable{cursor:pointer}
+.metric.clickable:hover{background:var(--soft)}
+.metric.active-filter{box-shadow:inset 0 0 0 2px var(--blue)}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.tab-group{display:flex;gap:3px;background:var(--soft);padding:3px;border-radius:9px;border:1px solid var(--line)}
+.tab{padding:5px 14px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:700}
+.tab.active{background:var(--panel);color:var(--text);box-shadow:var(--shadow-soft)}
+.search-box{flex:1;min-width:160px;max-width:240px;font-size:12px}
+.ghost-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:12px;font-weight:700;white-space:nowrap}
+.ghost-btn:hover{background:var(--soft)}
+.ghost-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.ghost-btn.primary:hover{background:#325c4a}
+.ghost-btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+select.filter-select{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px}
+
+/* Sub-toolbar (chips + secondary filters) */
+.sub-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.chip{padding:3px 11px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:11px;font-weight:700;color:var(--muted)}
+.chip:hover{background:var(--soft)}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* Body layout */
+.body-layout{display:grid;grid-template-columns:1fr 296px;gap:16px;align-items:start}
+
+/* Panel */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-soft)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0;margin-bottom:12px}
+.panel-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.panel-count{font-size:11px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0}
+
+/* Table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 10px;font-size:11px;font-weight:800;color:var(--muted);border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--text)}
+th.sort-asc::after{content:" ↑"}
+th.sort-desc::after{content:" ↓"}
+th.no-sort{cursor:default}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr{transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--soft)}
+tbody tr.selected{background:#eff6f2;box-shadow:inset 3px 0 0 var(--green)}
+.group-row td{padding:7px 10px;background:var(--soft);font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;cursor:default}
+.group-row:hover{background:var(--soft) !important}
+
+/* Badges */
+.avatar{width:26px;height:26px;display:inline-grid;place-items:center;flex-shrink:0;border:1px solid var(--line);border-radius:50%;background:var(--soft);color:var(--green);font-size:11px;font-weight:800}
+.person-cell{display:flex;align-items:center;gap:7px;white-space:nowrap}
+
+.status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.status::before{content:"";width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.status.s-ok{background:#dceee5;color:#2d684f}.status.s-ok::before{background:#3f6b5b}
+.status.s-warn{background:#fae5d1;color:#8d4b18}.status.s-warn::before{background:#a9622a}
+.status.s-danger{background:#f5dddd;color:#973f3f}.status.s-danger::before{background:#b64f4f}
+.status.s-expired{background:#3c1a1a;color:#f5a5a5}.status.s-expired::before{background:#f5a5a5}
+.status.s-blue{background:#dcebf2;color:#285f75}.status.s-blue::before{background:#356c8a}
+.status.s-gray{background:var(--soft);color:var(--muted)}.status.s-gray::before{background:var(--line)}
+
+.days-chip{font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;white-space:nowrap;display:inline-block}
+.days-chip.ok{background:#dceee5;color:#2d684f}
+.days-chip.warn{background:#fae5d1;color:#8d4b18}
+.days-chip.danger{background:#f5dddd;color:#973f3f}
+.days-chip.expired{background:#3c1a1a;color:#f5a5a5}
+.days-chip.none{background:var(--soft);color:var(--muted)}
+
+.wf-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;white-space:nowrap}
+.wf-badge.wf-none{background:var(--soft);color:var(--muted)}
+.wf-badge.wf-in-progress{background:#dcebf2;color:#285f75}
+.wf-badge.wf-approved{background:#dceee5;color:#2d684f}
+.wf-badge.wf-rejected{background:#f5dddd;color:#973f3f}
+
+.file-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);font-weight:700}
+
+.notify-icon{font-size:13px;opacity:.5}
+.notify-icon.on{color:var(--blue);opacity:1}
+
+/* Right panel */
+.right-panel{display:flex;flex-direction:column;gap:14px;position:sticky;top:0;max-height:calc(100vh - 130px);overflow-y:auto}
+.rp-section{padding:14px 16px}
+.rp-section+.rp-section{border-top:1px solid var(--line)}
+.rp-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.alert-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--line)}
+.alert-row:last-child{border-bottom:0}
+.alert-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.alert-dot.red{background:var(--red)}
+.alert-dot.orange{background:var(--orange)}
+.alert-dot.blue{background:var(--blue)}
+.alert-info{flex:1;min-width:0}
+.alert-info strong{display:block;font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alert-info small{color:var(--muted);font-size:11px}
+.alert-days{font-size:11px;font-weight:800;flex-shrink:0;padding-top:1px}
+.alert-days.red{color:var(--red)}
+.alert-days.orange{color:var(--orange)}
+
+/* Detail panel */
+.detail-kv{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.detail-kv:last-child{border-bottom:0}
+.detail-kv dt{color:var(--muted);font-weight:600}
+.detail-kv dd{font-weight:700;text-align:right}
+
+/* Progress */
+.progress-wrap{margin-top:12px}
+.progress-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px}
+.progress-bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px}
+.progress-fill.ok{background:var(--green)}
+.progress-fill.warn{background:var(--orange)}
+.progress-fill.danger{background:var(--red)}
+
+/* Timeline */
+.timeline{padding:0;list-style:none}
+.tl-item{display:flex;gap:10px;padding:0 0 14px}
+.tl-item:last-child{padding-bottom:0}
+.tl-spine{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:14px}
+.tl-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--panel);flex-shrink:0}
+.tl-dot.filled{background:var(--green);border-color:var(--green)}
+.tl-dot.future{background:var(--panel);border-color:var(--orange);border-style:dashed}
+.tl-line{flex:1;width:2px;background:var(--line);margin-top:3px}
+.tl-content{flex:1;padding-top:0}
+.tl-date{font-size:11px;font-weight:800;color:var(--muted)}
+.tl-label{font-size:12px;font-weight:700;margin-top:1px}
+.tl-label.future{color:var(--orange)}
+
+/* Matrix */
+.matrix-wrap{overflow-x:auto;padding-bottom:4px}
+.mtx{border-collapse:collapse;font-size:11px;white-space:nowrap}
+.mtx th,.mtx td{padding:5px 8px;border:1px solid var(--line);text-align:center}
+.mtx th{background:var(--soft);font-weight:800;color:var(--muted);position:sticky;top:0}
+.mtx th.col-head{cursor:pointer;min-width:58px;line-height:1.3}
+.mtx th.col-head:hover{background:var(--line)}
+.mtx th.row-label{text-align:left;min-width:90px;cursor:default}
+.mtx td.row-label{text-align:left;font-weight:700;white-space:nowrap}
+.mtx .dept-row td{background:#f0f6f3;font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.05em;cursor:default;text-align:left}
+.mtx .summary-row td{background:var(--soft);font-weight:800;font-size:11px}
+.mtx .summary-row td.row-label{color:var(--muted)}
+.cell-ok{background:#dceee5;color:#2d684f;font-weight:800;border-radius:3px;padding:1px 4px;display:inline-block}
+.cell-warn{background:#fae5d1;color:#8d4b18;font-weight:800;border-radius:3px;padding:1px 4px;display:inline-block}
+.cell-exp{background:#f5dddd;color:#973f3f;font-weight:800;border-radius:3px;padding:1px 4px;display:inline-block}
+.cell-none{color:var(--line)}
+.required-star{color:var(--red);font-size:10px}
+
+/* Quick actions */
+.qa-list{display:flex;flex-direction:column;gap:6px}
+
+/* Tooltip */
+.tooltip-wrap{position:relative}
+.tooltip-wrap:hover .tooltip{display:block}
+.tooltip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#24231f;color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:200;pointer-events:none}
+.tooltip::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#24231f}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .15s ease both}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.35);align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--panel);border-radius:14px;padding:28px;width:580px;max-width:92vw;max-height:86vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-head h2{font-size:15px;font-weight:800}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid.cols-1{grid-template-columns:1fr}
+.form-field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700}
+.form-field.full{grid-column:1/-1}
+.form-field input,.form-field select,.form-field textarea{font-size:13px}
+
+/* Empty */
+.empty-state{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty-state .ei{font-size:34px;margin-bottom:10px}
+.empty-state p{font-size:13px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-head"><strong>Office Workspace</strong><button class="icon-btn">暗</button></div>
+  <div class="cmd-hint"><span>検</span><b>検索・コマンド</b><kbd>Ctrl K</kbd></div>
+  <nav class="nav">
+    <a href="#"><span>家</span><b>ホーム</b></a>
+    <a href="#"><span>封</span><b>メール管理</b></a>
+    <a href="#"><span>予</span><b>スケジュール管理</b></a>
+    <a href="#"><span>掲</span><b>社内掲示板</b></a>
+    <a href="#"><span>承</span><b>ワークフロー</b></a>
+    <a href="#"><span>済</span><b>ToDo管理</b></a>
+    <a href="#" class="active"><span>許</span><b>許可・資格管理</b><span class="nav-badge">5</span></a>
+    <a href="#"><span>書</span><b>ファイル管理</b></a>
+    <a href="#"><span>室</span><b>設備予約</b></a>
+    <a href="#"><span>勤</span><b>タイムカード</b></a>
+    <a href="#"><span>知</span><b>ナレッジ</b></a>
+    <a href="#"><span>板</span><b>ホワイトボード</b></a>
+  </nav>
+  <div class="sidebar-user">
+    <span class="avatar">田</span>
+    <div><strong>田中 一郎</strong><small>工務部</small></div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="app-header">
+    <div class="header-title">
+      <div class="breadcrumb"><span>Office Workspace</span> › <span>許可・資格管理</span></div>
+      <div class="title-row">
+        <span class="view-icon">許</span>
+        <h1>許可・資格管理</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="ghost-btn primary" onclick="openModal()">＋ 新規登録</button>
+      <button class="ghost-btn" onclick="alert('CSV出力')">CSV 出力</button>
+      <button class="ghost-btn" onclick="alert('通知設定')">🔔 通知設定</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric c-danger clickable" onclick="setMetricFilter('expired')">
+        <div class="metric-label">🔴 失効・期限切れ</div>
+        <div class="metric-value" id="cnt-expired">5</div>
+        <div class="metric-sub">即時対応が必要</div>
+      </div>
+      <div class="metric c-warn clickable" onclick="setMetricFilter('danger')">
+        <div class="metric-label">🟠 30日以内</div>
+        <div class="metric-value" id="cnt-danger">3</div>
+        <div class="metric-sub">更新手続き開始を</div>
+      </div>
+      <div class="metric c-blue clickable" onclick="setMetricFilter('warn')">
+        <div class="metric-label">🔵 90日以内</div>
+        <div class="metric-value" id="cnt-warn">5</div>
+        <div class="metric-sub">準備開始の目安</div>
+      </div>
+      <div class="metric c-ok clickable" onclick="setMetricFilter('ok')">
+        <div class="metric-label">🟢 有効</div>
+        <div class="metric-value" id="cnt-ok">25</div>
+        <div class="metric-sub">問題なし</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="toolbar">
+      <div class="tab-group">
+        <button class="tab active" onclick="switchTab('permit',this)">建設業許可</button>
+        <button class="tab" onclick="switchTab('license',this)">社員資格</button>
+        <button class="tab" onclick="switchTab('matrix',this)">資格マトリクス</button>
+      </div>
+      <input id="search-box" class="search-box" type="search" placeholder="名称・番号・担当者で検索…" oninput="onSearch(this.value)">
+      <select class="filter-select" id="dept-filter" onchange="onDeptChange(this.value)">
+        <option value="all">全部署</option>
+        <option value="工務部">工務部</option>
+        <option value="設計部">設計部</option>
+        <option value="現場部">現場部</option>
+      </select>
+    </div>
+
+    <!-- Sub toolbar (chips) -->
+    <div class="sub-toolbar" id="permit-chips">
+      <button class="chip active" onclick="setChip(this,'all')">すべて</button>
+      <button class="chip" onclick="setChip(this,'expired')">🔴 失効</button>
+      <button class="chip" onclick="setChip(this,'danger')">🟠 30日以内</button>
+      <button class="chip" onclick="setChip(this,'warn')">🔵 90日以内</button>
+      <button class="chip" onclick="setChip(this,'ok')">🟢 有効</button>
+    </div>
+    <div class="sub-toolbar" id="license-chips" style="display:none">
+      <button class="chip active" onclick="setLicChip(this,'all')">すべて</button>
+      <button class="chip" onclick="setLicChip(this,'construction-management')">施工管理</button>
+      <button class="chip" onclick="setLicChip(this,'design')">設計・建築</button>
+      <button class="chip" onclick="setLicChip(this,'electrical')">電気・危険物</button>
+      <button class="chip" onclick="setLicChip(this,'field')">現場作業</button>
+    </div>
+    <div class="sub-toolbar" id="matrix-chips" style="display:none">
+      <button class="chip active" onclick="setMtxChip(this,'all')">全員</button>
+      <button class="chip" onclick="setMtxChip(this,'工務部')">工務部</button>
+      <button class="chip" onclick="setMtxChip(this,'設計部')">設計部</button>
+      <button class="chip" onclick="setMtxChip(this,'現場部')">現場部</button>
+      <button class="ghost-btn" style="margin-left:auto" onclick="window.print()">🖨 印刷</button>
+    </div>
+
+    <!-- Body -->
+    <div class="body-layout">
+
+      <!-- ══ PERMIT TAB ══ -->
+      <section id="tab-permit">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">建設業許可一覧 <span class="panel-count" id="permit-count"></span></span>
+          </div>
+          <div class="tbl-wrap">
+            <table id="permit-table">
+              <thead>
+                <tr>
+                  <th onclick="sortPermit('type')">業種</th>
+                  <th class="no-sort">許可番号</th>
+                  <th onclick="sortPermit('kubun')">区分</th>
+                  <th onclick="sortPermit('acquired')">取得日</th>
+                  <th onclick="sortPermit('expires')">有効期限</th>
+                  <th onclick="sortPermit('days')">残日数</th>
+                  <th onclick="sortPermit('person')">担当者</th>
+                  <th class="no-sort">申請状況</th>
+                  <th class="no-sort">添付</th>
+                  <th onclick="sortPermit('status')">状態</th>
+                </tr>
+              </thead>
+              <tbody id="permit-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ LICENSE TAB ══ -->
+      <section id="tab-license" style="display:none">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">社員資格一覧 <span class="panel-count" id="license-count"></span></span>
+          </div>
+          <div class="tbl-wrap">
+            <table id="license-table">
+              <thead>
+                <tr>
+                  <th class="no-sort">資格名</th>
+                  <th onclick="sortLicense('person')">保有者</th>
+                  <th onclick="sortLicense('dept')">部署</th>
+                  <th onclick="sortLicense('acquired')">取得日</th>
+                  <th onclick="sortLicense('expires')">有効期限</th>
+                  <th onclick="sortLicense('days')">残日数</th>
+                  <th class="no-sort">更新区分</th>
+                  <th class="no-sort">通知</th>
+                  <th onclick="sortLicense('status')">状態</th>
+                </tr>
+              </thead>
+              <tbody id="license-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ MATRIX TAB ══ -->
+      <section id="tab-matrix" style="display:none">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">社員 × 資格 保有マトリクス</span>
+            <span style="font-size:11px;color:var(--muted)">
+              <span style="background:#dceee5;color:#2d684f;font-weight:800;padding:1px 5px;border-radius:3px">✓</span> 有効
+              <span style="background:#fae5d1;color:#8d4b18;font-weight:800;padding:1px 5px;border-radius:3px">⚠</span> 期限間近
+              <span style="background:#f5dddd;color:#973f3f;font-weight:800;padding:1px 5px;border-radius:3px">✗</span> 失効
+              <span class="required-star">★</span> 必須資格
+            </span>
+          </div>
+          <div class="matrix-wrap" id="matrix-wrap"></div>
+        </div>
+      </section>
+
+      <!-- ══ RIGHT PANEL ══ -->
+      <aside class="right-panel">
+
+        <!-- Alert summary -->
+        <div class="panel fade-up" id="rp-alerts">
+          <div class="rp-section">
+            <div class="rp-title">🔔 要対応アラート</div>
+            <div class="alert-row"><div class="alert-dot red"></div><div class="alert-info"><strong>舗装工事業許可 失効</strong><small>知事-般-01第901234号</small></div><div class="alert-days red">失効中</div></div>
+            <div class="alert-row"><div class="alert-dot red"></div><div class="alert-info"><strong>足場組立等作業主任者</strong><small>伊藤 四郎</small></div><div class="alert-days red">失効中</div></div>
+            <div class="alert-row"><div class="alert-dot red"></div><div class="alert-info"><strong>職長教育 期限切れ</strong><small>田中 一郎</small></div><div class="alert-days red">失効中</div></div>
+            <div class="alert-row"><div class="alert-dot red"></div><div class="alert-info"><strong>管工事業許可 期限切迫</strong><small>知事-般-02第789012号</small></div><div class="alert-days red">残 9日</div></div>
+            <div class="alert-row"><div class="alert-dot red"></div><div class="alert-info"><strong>危険物取扱者（甲種）</strong><small>鈴木 次郎</small></div><div class="alert-days red">残 19日</div></div>
+            <div class="alert-row"><div class="alert-dot orange"></div><div class="alert-info"><strong>防水工事業許可</strong><small>知事-般-02第334455号</small></div><div class="alert-days orange">残 24日</div></div>
+            <div class="alert-row"><div class="alert-dot orange"></div><div class="alert-info"><strong>一級建築士 定期講習</strong><small>佐藤 花子</small></div><div class="alert-days orange">残 71日</div></div>
+          </div>
+          <div class="rp-section">
+            <div class="rp-title">今週のアクション</div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" style="width:14px;height:14px;min-height:unset;cursor:pointer"> <span>管工事業許可 更新書類提出</span></label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" style="width:14px;height:14px;min-height:unset;cursor:pointer"> <span>危険物講習 申込み（鈴木）</span></label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input type="checkbox" style="width:14px;height:14px;min-height:unset;cursor:pointer"> <span>舗装工事業 再申請ワークフロー起票</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail panel (hidden by default) -->
+        <div class="panel fade-up" id="rp-detail" style="display:none">
+          <div class="rp-section" id="rp-detail-header">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+              <div>
+                <div id="rp-detail-title" style="font-size:14px;font-weight:800;margin-bottom:4px"></div>
+                <div id="rp-detail-sub" style="font-size:11px;color:var(--muted)"></div>
+              </div>
+              <button class="icon-btn" onclick="closeDetail()" title="閉じる">✕</button>
+            </div>
+          </div>
+          <div class="rp-section">
+            <dl id="rp-detail-kv"></dl>
+            <div class="progress-wrap" id="rp-progress-wrap">
+              <div class="progress-labels"><span>有効期間の経過</span><span id="rp-progress-label"></span></div>
+              <div class="progress-bar"><div class="progress-fill" id="rp-progress-fill"></div></div>
+            </div>
+          </div>
+          <div class="rp-section" id="rp-timeline-section">
+            <div class="rp-title">更新履歴</div>
+            <ul class="timeline" id="rp-timeline"></ul>
+          </div>
+          <div class="rp-section" style="padding-bottom:14px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="ghost-btn primary" style="flex:1;justify-content:center" onclick="alert('ワークフロー起票')">更新申請を起票</button>
+              <button class="ghost-btn" style="flex:1;justify-content:center" onclick="alert('編集')">編集</button>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button class="ghost-btn" style="flex:1;justify-content:center;font-size:11px" onclick="alert('カレンダー追加')">📅 カレンダー追加</button>
+              <button class="ghost-btn" style="flex:1;justify-content:center;font-size:11px" onclick="alert('ファイル')">📎 添付ファイル</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matrix right panel -->
+        <div class="panel fade-up" id="rp-matrix" style="display:none">
+          <div class="rp-section">
+            <div class="rp-title">必須資格カバー率</div>
+            <div style="display:flex;flex-direction:column;gap:10px" id="rp-matrix-coverage"></div>
+          </div>
+          <div class="rp-section">
+            <div class="rp-title">クイックアクション</div>
+            <div class="qa-list">
+              <button class="ghost-btn primary" style="justify-content:center" onclick="openModal()">＋ 資格を登録</button>
+              <button class="ghost-btn" style="justify-content:center" onclick="window.print()">🖨 マトリクスを印刷</button>
+              <button class="ghost-btn" style="justify-content:center" onclick="alert('CSV')">📊 CSV 出力</button>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>許可・資格を登録</h2>
+      <button class="icon-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="tab-group" style="margin-bottom:20px;display:inline-flex">
+      <button class="tab active" onclick="switchModalType('permit',this)">建設業許可</button>
+      <button class="tab" onclick="switchModalType('license',this)">社員資格</button>
+    </div>
+
+    <!-- Permit form -->
+    <div id="modal-permit">
+      <div class="form-grid">
+        <div class="form-field"><label>業種 <span style="color:var(--red)">*</span></label>
+          <select><option>土木工事業</option><option>建築工事業</option><option>電気工事業</option><option>管工事業</option><option>とび・土工工事業</option><option>舗装工事業</option><option>鋼構造物工事業</option><option>塗装工事業</option><option>造園工事業</option><option>機械器具設置工事業</option><option>防水工事業</option><option>内装仕上工事業</option><option>その他</option></select>
+        </div>
+        <div class="form-field"><label>許可区分 <span style="color:var(--red)">*</span></label>
+          <select><option>知事・一般</option><option>知事・特定</option><option>大臣・一般</option><option>大臣・特定</option></select>
+        </div>
+        <div class="form-field full"><label>許可番号 <span style="color:var(--red)">*</span></label>
+          <input type="text" placeholder="例: 知事-般-04第 xxxxxx 号">
+        </div>
+        <div class="form-field"><label>担当者 <span style="color:var(--red)">*</span></label>
+          <select><option>田中 一郎</option><option>佐藤 花子</option><option>鈴木 次郎</option><option>高橋 三郎</option><option>伊藤 四郎</option><option>中村 五郎</option></select>
+        </div>
+        <div class="form-field"><label>部署</label>
+          <select><option>工務部</option><option>設計部</option><option>現場部</option></select>
+        </div>
+        <div class="form-field"><label>取得日 <span style="color:var(--red)">*</span></label>
+          <input type="date">
+        </div>
+        <div class="form-field"><label>有効期限 <span style="color:var(--red)">*</span></label>
+          <input type="date">
+        </div>
+        <div class="form-field full"><label>備考</label>
+          <textarea rows="3" placeholder="申請の経緯・注意点など…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+        <input type="checkbox" id="m-notify" checked style="width:15px;height:15px;min-height:unset;cursor:pointer">
+        <label for="m-notify" style="font-size:12px;font-weight:700;cursor:pointer">期限の 90日・30日・7日前に通知する</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <input type="checkbox" id="m-calendar" checked style="width:15px;height:15px;min-height:unset;cursor:pointer">
+        <label for="m-calendar" style="font-size:12px;font-weight:700;cursor:pointer">スケジュールカレンダーに自動登録する</label>
+      </div>
+    </div>
+
+    <!-- License form -->
+    <div id="modal-license" style="display:none">
+      <div class="form-grid">
+        <div class="form-field full"><label>資格名 <span style="color:var(--red)">*</span></label>
+          <input type="text" placeholder="例: 一級施工管理技士（土木）">
+        </div>
+        <div class="form-field"><label>カテゴリ</label>
+          <select><option>施工管理系</option><option>設計・建築系</option><option>電気・危険物系</option><option>現場作業系</option><option>その他</option></select>
+        </div>
+        <div class="form-field"><label>更新区分 <span style="color:var(--red)">*</span></label>
+          <select><option>更新不要（永続）</option><option>定期講習</option><option>保安講習</option><option>法定講習</option><option>再試験・再取得</option><option>再講習</option></select>
+        </div>
+        <div class="form-field"><label>保有者 <span style="color:var(--red)">*</span></label>
+          <select><option>田中 一郎</option><option>佐藤 花子</option><option>鈴木 次郎</option><option>高橋 三郎</option><option>伊藤 四郎</option><option>中村 五郎</option><option>山本 六郎</option><option>木村 七郎</option></select>
+        </div>
+        <div class="form-field"><label>部署</label>
+          <select><option>工務部</option><option>設計部</option><option>現場部</option></select>
+        </div>
+        <div class="form-field"><label>取得日 <span style="color:var(--red)">*</span></label>
+          <input type="date">
+        </div>
+        <div class="form-field"><label>有効期限 <small style="font-weight:400;color:var(--muted)">(更新不要の場合は空欄)</small></label>
+          <input type="date">
+        </div>
+        <div class="form-field full"><label>取得費用 (円)</label>
+          <input type="number" placeholder="0" min="0">
+        </div>
+        <div class="form-field full"><label>備考</label>
+          <textarea rows="2" placeholder="資格証番号、取得機関など…"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+        <input type="checkbox" id="m-notify-l" checked style="width:15px;height:15px;min-height:unset;cursor:pointer">
+        <label for="m-notify-l" style="font-size:12px;font-weight:700;cursor:pointer">期限の 90日・30日・7日前に通知する</label>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <input type="checkbox" id="m-req" style="width:15px;height:15px;min-height:unset;cursor:pointer">
+        <label for="m-req" style="font-size:12px;font-weight:700;cursor:pointer">資格マトリクスで「必須」としてマーク</label>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;border-top:1px solid var(--line);padding-top:18px">
+      <button class="ghost-btn" onclick="closeModal()">キャンセル</button>
+      <button class="ghost-btn primary" onclick="closeModal()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────────────
+const PERMITS = [
+  {id:'p1',  type:'土木工事業',       num:'大臣-般-04第123456号', kubun:'大臣・一般', kubunC:'blue', acquired:'2021/10/01', expires:'2026/09/30', days:97,   person:'田中 一郎', dept:'工務部', wf:'申請中', files:2, status:'warn'},
+  {id:'p2',  type:'建築工事業',       num:'大臣-般-04第123457号', kubun:'大臣・一般', kubunC:'blue', acquired:'2021/10/01', expires:'2026/09/30', days:97,   person:'田中 一郎', dept:'工務部', wf:'未起票', files:1, status:'warn'},
+  {id:'p3',  type:'電気工事業',       num:'知事-般-04第654321号', kubun:'知事・一般', kubunC:'',     acquired:'2023/04/15', expires:'2028/04/14', days:663,  person:'佐藤 花子', dept:'設計部', wf:'未起票', files:1, status:'ok'},
+  {id:'p4',  type:'管工事業',         num:'知事-般-02第789012号', kubun:'知事・一般', kubunC:'',     acquired:'2021/07/01', expires:'2026/06/30', days:9,    person:'鈴木 次郎', dept:'工務部', wf:'申請中', files:0, status:'danger'},
+  {id:'p5',  type:'とび・土工工事業', num:'知事-特-03第345678号', kubun:'知事・特定', kubunC:'blue', acquired:'2022/01/20', expires:'2027/01/19', days:578,  person:'高橋 三郎', dept:'現場部', wf:'未起票', files:2, status:'ok'},
+  {id:'p6',  type:'舗装工事業',       num:'知事-般-01第901234号', kubun:'知事・一般', kubunC:'',     acquired:'2021/03/10', expires:'2026/03/09', days:-103, person:'伊藤 四郎', dept:'現場部', wf:'申請中', files:1, status:'expired'},
+  {id:'p7',  type:'鋼構造物工事業',   num:'知事-般-03第456789号', kubun:'知事・一般', kubunC:'',     acquired:'2022/06/15', expires:'2027/06/14', days:358,  person:'田中 一郎', dept:'工務部', wf:'未起票', files:1, status:'ok'},
+  {id:'p8',  type:'塗装工事業',       num:'知事-般-04第234567号', kubun:'知事・一般', kubunC:'',     acquired:'2021/10/20', expires:'2026/08/10', days:50,   person:'中村 五郎', dept:'現場部', wf:'未起票', files:0, status:'warn'},
+  {id:'p9',  type:'造園工事業',       num:'知事-般-05第678901号', kubun:'知事・一般', kubunC:'',     acquired:'2024/01/10', expires:'2029/01/09', days:932,  person:'佐藤 花子', dept:'設計部', wf:'未起票', files:1, status:'ok'},
+  {id:'p10', type:'機械器具設置工事業',num:'大臣-特-04第112233号',kubun:'大臣・特定', kubunC:'blue', acquired:'2022/09/01', expires:'2027/08/31', days:435,  person:'田中 一郎', dept:'工務部', wf:'未起票', files:3, status:'ok'},
+  {id:'p11', type:'防水工事業',       num:'知事-般-02第334455号', kubun:'知事・一般', kubunC:'',     acquired:'2021/08/05', expires:'2026/07/15', days:24,   person:'鈴木 次郎', dept:'工務部', wf:'未起票', files:0, status:'danger'},
+  {id:'p12', type:'内装仕上工事業',   num:'知事-般-03第556677号', kubun:'知事・一般', kubunC:'',     acquired:'2024/06/01', expires:'2029/05/31', days:1074, person:'高橋 三郎', dept:'現場部', wf:'未起票', files:1, status:'ok'},
+];
+
+const PERMIT_DETAIL = {
+  p1:{ history:[{date:'2011/10/01',label:'新規取得',filled:true},{date:'2016/10/01',label:'第1回更新',filled:true},{date:'2021/10/01',label:'第2回更新（現在）',filled:true},{date:'2026/09/30',label:'次回更新期限',filled:false}], progress:82 },
+  p2:{ history:[{date:'2011/10/01',label:'新規取得',filled:true},{date:'2016/10/01',label:'第1回更新',filled:true},{date:'2021/10/01',label:'第2回更新（現在）',filled:true},{date:'2026/09/30',label:'次回更新期限',filled:false}], progress:82 },
+  p3:{ history:[{date:'2023/04/15',label:'新規取得（現在）',filled:true},{date:'2028/04/14',label:'次回更新期限',filled:false}], progress:18 },
+  p4:{ history:[{date:'2016/07/01',label:'新規取得',filled:true},{date:'2021/07/01',label:'第1回更新（現在）',filled:true},{date:'2026/06/30',label:'次回更新期限',filled:false}], progress:98 },
+  p5:{ history:[{date:'2022/01/20',label:'新規取得（現在）',filled:true},{date:'2027/01/19',label:'次回更新期限',filled:false}], progress:32 },
+  p6:{ history:[{date:'2016/03/10',label:'新規取得',filled:true},{date:'2021/03/10',label:'第1回更新',filled:true},{date:'2026/03/09',label:'有効期限（失効）',filled:false}], progress:100 },
+  p7:{ history:[{date:'2022/06/15',label:'新規取得（現在）',filled:true},{date:'2027/06/14',label:'次回更新期限',filled:false}], progress:36 },
+  p8:{ history:[{date:'2016/10/20',label:'新規取得',filled:true},{date:'2021/10/20',label:'第1回更新（現在）',filled:true},{date:'2026/08/10',label:'次回更新期限',filled:false}], progress:90 },
+  p9:{ history:[{date:'2024/01/10',label:'新規取得（現在）',filled:true},{date:'2029/01/09',label:'次回更新期限',filled:false}], progress:10 },
+  p10:{history:[{date:'2022/09/01',label:'新規取得（現在）',filled:true},{date:'2027/08/31',label:'次回更新期限',filled:false}], progress:42 },
+  p11:{history:[{date:'2021/08/05',label:'新規取得（現在）',filled:true},{date:'2026/07/15',label:'次回更新期限',filled:false}], progress:95 },
+  p12:{history:[{date:'2024/06/01',label:'新規取得（現在）',filled:true},{date:'2029/05/31',label:'次回更新期限',filled:false}], progress:5 },
+};
+
+const LICENSE_CATS = [
+  { id:'construction-management', label:'施工管理系', items:[
+    {id:'l1',  name:'一級施工管理技士（土木）',   person:'田中 一郎', dept:'工務部', acquired:'2018/03/15', expires:'2028/03/14', days:997,  renewal:'講習更新', status:'ok',      notify:true},
+    {id:'l2',  name:'一級施工管理技士（建築）',   person:'佐藤 花子', dept:'設計部', acquired:'2019/06/20', expires:'2029/06/19', days:1094, renewal:'講習更新', status:'ok',      notify:true},
+    {id:'l3',  name:'一級施工管理技士（土木）',   person:'鈴木 次郎', dept:'工務部', acquired:'2020/03/10', expires:'2027/09/30', days:466,  renewal:'講習更新', status:'ok',      notify:true},
+    {id:'l4',  name:'二級施工管理技士（土木）',   person:'高橋 三郎', dept:'現場部', acquired:'2017/11/25', expires:'2027/11/24', days:521,  renewal:'講習更新', status:'ok',      notify:false},
+    {id:'l5',  name:'一級施工管理技士（建築）',   person:'伊藤 四郎', dept:'現場部', acquired:'2021/06/15', expires:'2028/06/14', days:724,  renewal:'講習更新', status:'ok',      notify:true},
+    {id:'l6',  name:'二級施工管理技士（造園）',   person:'中村 五郎', dept:'現場部', acquired:'2022/12/01', expires:'2029/11/30', days:1257, renewal:'講習更新', status:'ok',      notify:false},
+  ]},
+  { id:'design', label:'設計・建築系', items:[
+    {id:'l7',  name:'一級建築士',                  person:'佐藤 花子', dept:'設計部', acquired:'2015/06/01', expires:'2026/08/31', days:71,   renewal:'定期講習（5年）', status:'warn',    notify:true},
+    {id:'l8',  name:'二級建築士',                  person:'山本 六郎', dept:'設計部', acquired:'2018/09/10', expires:'2028/09/09', days:812,  renewal:'定期講習',      status:'ok',      notify:true},
+    {id:'l9',  name:'宅地建物取引士',              person:'田中 一郎', dept:'工務部', acquired:'2014/03/20', expires:'2027/03/31', days:283,  renewal:'法定講習',      status:'ok',      notify:false},
+    {id:'l10', name:'建設業経理士 1級',            person:'佐藤 花子', dept:'設計部', acquired:'2020/03/15', expires:'2025/03/14', days:-99,  renewal:'再試験',        status:'expired', notify:true},
+    {id:'l11', name:'建設業経理士 2級',            person:'山本 六郎', dept:'設計部', acquired:'2019/03/20', expires:null,         days:null, renewal:'更新不要',      status:'ok',      notify:false},
+  ]},
+  { id:'electrical', label:'電気・危険物系', items:[
+    {id:'l12', name:'危険物取扱者（甲種）',        person:'鈴木 次郎', dept:'工務部', acquired:'2020/11/20', expires:'2026/07/10', days:19,   renewal:'保安講習',      status:'danger',  notify:true},
+    {id:'l13', name:'第一種電気工事士',             person:'高橋 三郎', dept:'現場部', acquired:'2019/01/15', expires:'2029/01/14', days:937,  renewal:'定期講習',      status:'ok',      notify:true},
+    {id:'l14', name:'第二種電気工事士',             person:'中村 五郎', dept:'現場部', acquired:'2020/07/22', expires:null,         days:null, renewal:'更新不要',      status:'ok',      notify:false},
+    {id:'l15', name:'電気主任技術者（三種）',       person:'田中 一郎', dept:'工務部', acquired:'2012/11/10', expires:null,         days:null, renewal:'更新不要',      status:'ok',      notify:false},
+    {id:'l16', name:'危険物取扱者（乙4類）',       person:'木村 七郎', dept:'現場部', acquired:'2022/05/18', expires:'2027/05/17', days:330,  renewal:'保安講習',      status:'ok',      notify:true},
+  ]},
+  { id:'field', label:'現場作業系', items:[
+    {id:'l17', name:'玉掛け技能講習',              person:'高橋 三郎', dept:'現場部', acquired:'2019/08/05', expires:null,         days:null, renewal:'更新不要',      status:'ok',      notify:false},
+    {id:'l18', name:'足場組立等作業主任者',        person:'伊藤 四郎', dept:'現場部', acquired:'2017/09/12', expires:'2026/05/31', days:-21,  renewal:'再講習',        status:'expired', notify:true},
+    {id:'l19', name:'クレーン・デリック運転士',    person:'中村 五郎', dept:'現場部', acquired:'2021/05/18', expires:'2026/09/10', days:81,   renewal:'定期点検',      status:'warn',    notify:true},
+    {id:'l20', name:'職長・安全衛生責任者教育',    person:'高橋 三郎', dept:'現場部', acquired:'2022/04/01', expires:'2027/03/31', days:283,  renewal:'再教育（5年）', status:'ok',      notify:true},
+    {id:'l21', name:'職長・安全衛生責任者教育',    person:'田中 一郎', dept:'工務部', acquired:'2021/05/10', expires:'2026/05/09', days:-43,  renewal:'再教育（5年）', status:'expired', notify:true},
+    {id:'l22', name:'玉掛け技能講習',              person:'鈴木 次郎', dept:'工務部', acquired:'2018/03/22', expires:null,         days:null, renewal:'更新不要',      status:'ok',      notify:false},
+    {id:'l23', name:'移動式クレーン運転士',        person:'木村 七郎', dept:'現場部', acquired:'2022/09/14', expires:'2027/09/13', days:449,  renewal:'定期点検',      status:'ok',      notify:true},
+    {id:'l24', name:'高所作業車運転技能講習',      person:'中村 五郎', dept:'現場部', acquired:'2020/10/30', expires:null,         days:null, renewal:'更新不要',      status:'ok',      notify:false},
+    {id:'l25', name:'酸素欠乏危険作業主任者',      person:'木村 七郎', dept:'現場部', acquired:'2023/03/05', expires:'2028/03/04', days:622,  renewal:'再講習',        status:'ok',      notify:true},
+    {id:'l26', name:'有機溶剤作業主任者',          person:'伊藤 四郎', dept:'現場部', acquired:'2021/08/20', expires:'2031/08/19', days:1885, renewal:'再講習',        status:'ok',      notify:false},
+  ]},
+];
+
+// matrix: [person, dept, {qualId: 'ok'|'warn'|'expired'|null}]
+const MTX_QUALS = [
+  {id:'m1', short:'一施管\n(土木)', full:'一施管（土木）', required:true},
+  {id:'m2', short:'一施管\n(建築)', full:'一施管（建築）', required:true},
+  {id:'m3', short:'一級\n建築士',  full:'一級建築士',     required:false},
+  {id:'m4', short:'危険物\n甲種',  full:'危険物甲種',     required:false},
+  {id:'m5', short:'第一種\n電工',  full:'第一種電工',     required:false},
+  {id:'m6', short:'玉掛け',        full:'玉掛け技能',     required:true},
+  {id:'m7', short:'足場\n主任者',  full:'足場主任者',     required:true},
+  {id:'m8', short:'クレーン\n運転', full:'クレーン運転士', required:false},
+  {id:'m9', short:'職長\n教育',    full:'職長・安全衛生', required:true},
+  {id:'m10',short:'移動式\nクレーン',full:'移動式クレーン', required:false},
+];
+const MTX_PEOPLE = [
+  {name:'田中 一郎', dept:'工務部', cells:{m1:'ok',m2:null,m3:null,m4:null,m5:null,m6:'ok',m7:'ok',m8:null,m9:'expired',m10:null}},
+  {name:'鈴木 次郎', dept:'工務部', cells:{m1:'ok',m2:null,m3:null,m4:'warn',m5:null,m6:'ok',m7:null,m8:null,m9:'ok',m10:null}},
+  {name:'佐藤 花子', dept:'設計部', cells:{m1:null,m2:'ok',m3:'warn',m4:null,m5:null,m6:null,m7:null,m8:null,m9:null,m10:null}},
+  {name:'山本 六郎', dept:'設計部', cells:{m1:null,m2:null,m3:'ok',m4:null,m5:null,m6:null,m7:null,m8:null,m9:null,m10:null}},
+  {name:'高橋 三郎', dept:'現場部', cells:{m1:null,m2:null,m3:null,m4:null,m5:'ok',m6:'ok',m7:'ok',m8:'ok',m9:'ok',m10:null}},
+  {name:'伊藤 四郎', dept:'現場部', cells:{m1:null,m2:'ok',m3:null,m4:'ok',m5:null,m6:'ok',m7:'expired',m8:null,m9:'ok',m10:null}},
+  {name:'中村 五郎', dept:'現場部', cells:{m1:null,m2:null,m3:null,m4:null,m5:null,m6:'ok',m7:'ok',m8:'warn',m9:'ok',m10:null}},
+  {name:'木村 七郎', dept:'現場部', cells:{m1:null,m2:null,m3:null,m4:'ok',m5:null,m6:null,m7:null,m8:null,m9:null,m10:'ok'}},
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let currentTab = 'permit';
+let pSort = {col:null, dir:1};
+let lSort = {col:null, dir:1};
+let statusFilter = 'all';
+let licCatFilter = 'all';
+let mtxDeptFilter = 'all';
+let searchQ = '';
+let deptFilter = 'all';
+let selectedId = null;
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+function statusLabel(s) {
+  return {ok:'有効', warn:'更新準備', danger:'至急更新', expired:'失効'}[s] || s;
+}
+function statusClass(s) {
+  return {ok:'s-ok', warn:'s-warn', danger:'s-danger', expired:'s-expired'}[s] || 's-gray';
+}
+function daysChipHtml(days, status) {
+  if (days === null) return `<span class="days-chip none">期限なし</span>`;
+  if (status === 'expired') return `<span class="days-chip expired">期限切れ</span>`;
+  const cls = status === 'danger' ? 'danger' : status === 'warn' ? 'warn' : 'ok';
+  return `<span class="days-chip ${cls}">残 ${days}日</span>`;
+}
+function wfHtml(wf) {
+  const map = {'申請中':'wf-in-progress','承認済':'wf-approved','差戻し':'wf-rejected','未起票':'wf-none'};
+  const icon = {'申請中':'⟳','承認済':'✓','差戻し':'!','未起票':'—'}[wf] || '';
+  return `<span class="wf-badge ${map[wf]||'wf-none'}">${icon} ${wf}</span>`;
+}
+function avatarHtml(name) {
+  return `<span class="avatar">${name.charAt(0)}</span>`;
+}
+
+function matchStatus(status, filter) {
+  if (filter === 'all') return true;
+  return status === filter;
+}
+function matchSearch(text, q) {
+  if (!q) return true;
+  return text.toLowerCase().includes(q.toLowerCase());
+}
+
+// ── PERMIT RENDER ──────────────────────────────────────────────────────
+function renderPermits() {
+  let data = PERMITS.filter(p =>
+    matchStatus(p.status, statusFilter) &&
+    (deptFilter === 'all' || p.dept === deptFilter) &&
+    matchSearch(p.type + p.num + p.person, searchQ)
+  );
+  if (pSort.col) {
+    data = [...data].sort((a,b) => {
+      let va = a[pSort.col], vb = b[pSort.col];
+      if (va === null) va = -99999;
+      if (vb === null) vb = -99999;
+      if (typeof va === 'string') return pSort.dir * va.localeCompare(vb,'ja');
+      return pSort.dir * (va - vb);
+    });
+  }
+  const tbody = document.getElementById('permit-tbody');
+  tbody.innerHTML = data.length === 0
+    ? `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">該当するデータがありません</td></tr>`
+    : data.map(p => `
+      <tr onclick="selectPermit('${p.id}')" class="${selectedId===p.id?'selected':''}">
+        <td><strong>${p.type}</strong></td>
+        <td><code style="font-size:10px;color:var(--muted)">${p.num}</code></td>
+        <td><span class="status s-${p.kubunC||'gray'}">${p.kubun}</span></td>
+        <td style="color:var(--muted);font-size:12px">${p.acquired}</td>
+        <td><strong>${p.expires}</strong></td>
+        <td>${daysChipHtml(p.days, p.status)}</td>
+        <td><div class="person-cell">${avatarHtml(p.person)} ${p.person}</div></td>
+        <td>${wfHtml(p.wf)}</td>
+        <td>${p.files > 0 ? `<span class="file-chip">📎 ${p.files}</span>` : `<span style="color:var(--line)">—</span>`}</td>
+        <td><span class="status ${statusClass(p.status)}">${statusLabel(p.status)}</span></td>
+      </tr>`).join('');
+  document.getElementById('permit-count').textContent = `全 ${data.length} 件`;
+  updateSortHeaders('permit-table', pSort);
+}
+
+// ── LICENSE RENDER ─────────────────────────────────────────────────────
+function renderLicenses() {
+  const tbody = document.getElementById('license-tbody');
+  let rows = [];
+  LICENSE_CATS.forEach(cat => {
+    if (licCatFilter !== 'all' && cat.id !== licCatFilter) return;
+    let items = cat.items.filter(l =>
+      matchStatus(l.status, statusFilter) &&
+      (deptFilter === 'all' || l.dept === deptFilter) &&
+      matchSearch(l.name + l.person, searchQ)
+    );
+    if (lSort.col) {
+      items = [...items].sort((a,b) => {
+        let va = a[lSort.col], vb = b[lSort.col];
+        if (va === null) va = lSort.dir > 0 ? 99999 : -99999;
+        if (vb === null) vb = lSort.dir > 0 ? 99999 : -99999;
+        if (typeof va === 'string') return lSort.dir * va.localeCompare(vb,'ja');
+        return lSort.dir * (va - vb);
+      });
+    }
+    if (items.length === 0) return;
+    rows.push(`<tr class="group-row"><td colspan="9">${cat.label} (${items.length}件)</td></tr>`);
+    items.forEach(l => {
+      const expTxt = l.expires ? `<strong>${l.expires}</strong>` : `<span style="color:var(--muted)">—</span>`;
+      rows.push(`<tr onclick="selectLicense('${l.id}')" class="${selectedId===l.id?'selected':''}">
+        <td><strong>${l.name}</strong></td>
+        <td><div class="person-cell">${avatarHtml(l.person)} ${l.person}</div></td>
+        <td style="color:var(--muted);font-size:12px">${l.dept}</td>
+        <td style="color:var(--muted);font-size:12px">${l.acquired}</td>
+        <td>${expTxt}</td>
+        <td>${daysChipHtml(l.days, l.status)}</td>
+        <td><span class="status s-${l.renewal==='更新不要'?'gray':'blue'}">${l.renewal}</span></td>
+        <td><span class="notify-icon ${l.notify?'on':''}">🔔</span></td>
+        <td><span class="status ${statusClass(l.status)}">${statusLabel(l.status)}</span></td>
+      </tr>`);
+    });
+  });
+  tbody.innerHTML = rows.length ? rows.join('') : `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">該当するデータがありません</td></tr>`;
+  const total = LICENSE_CATS.flatMap(c=>c.items).filter(l=>
+    matchStatus(l.status,statusFilter)&&(deptFilter==='all'||l.dept===deptFilter)&&matchSearch(l.name+l.person,searchQ)
+  ).length;
+  document.getElementById('license-count').textContent = `全 ${total} 件`;
+  updateSortHeaders('license-table', lSort);
+}
+
+// ── MATRIX RENDER ──────────────────────────────────────────────────────
+function renderMatrix() {
+  const people = MTX_PEOPLE.filter(p => mtxDeptFilter === 'all' || p.dept === mtxDeptFilter);
+  const depts = [...new Set(people.map(p=>p.dept))];
+
+  // column counts for summary row
+  const counts = {};
+  MTX_QUALS.forEach(q => {
+    counts[q.id] = people.filter(p => p.cells[q.id] === 'ok' || p.cells[q.id] === 'warn').length;
+  });
+
+  let html = `<table class="mtx">
+    <thead><tr>
+      <th class="row-label">社員 / 部署</th>
+      ${MTX_QUALS.map(q=>`<th class="col-head tooltip-wrap" onclick="showColDetail('${q.id}')">
+        ${q.short.replace('\n','<br>')}
+        ${q.required?`<div class="required-star">★必須</div>`:''}
+        <div class="tooltip">${q.full}</div>
+      </th>`).join('')}
+    </tr></thead>
+    <tbody>`;
+
+  depts.forEach(dept => {
+    const deptPeople = people.filter(p => p.dept === dept);
+    html += `<tr class="dept-row"><td colspan="${MTX_QUALS.length+1}">▸ ${dept} (${deptPeople.length}名)</td></tr>`;
+    deptPeople.forEach(p => {
+      html += `<tr onclick="showPersonDetail('${p.name}')">
+        <td class="row-label">${p.name}</td>
+        ${MTX_QUALS.map(q => {
+          const v = p.cells[q.id];
+          if (v === 'ok')      return `<td><span class="cell-ok">✓</span></td>`;
+          if (v === 'warn')    return `<td><span class="cell-warn">⚠</span></td>`;
+          if (v === 'expired') return `<td><span class="cell-exp">✗</span></td>`;
+          return `<td><span class="cell-none">—</span></td>`;
+        }).join('')}
+      </tr>`;
+    });
+  });
+
+  // Summary row
+  html += `<tr class="summary-row">
+    <td class="row-label">保有数</td>
+    ${MTX_QUALS.map(q => `<td>${counts[q.id]}/${people.length}</td>`).join('')}
+  </tr>`;
+
+  // Required coverage
+  html += `</tbody></table>`;
+  document.getElementById('matrix-wrap').innerHTML = html;
+
+  // Update right panel coverage
+  renderMatrixCoverage(people);
+}
+
+function renderMatrixCoverage(people) {
+  const required = MTX_QUALS.filter(q => q.required);
+  const wrap = document.getElementById('rp-matrix-coverage');
+  wrap.innerHTML = required.map(q => {
+    const have = people.filter(p => p.cells[q.id]==='ok'||p.cells[q.id]==='warn').length;
+    const pct = people.length ? Math.round(have/people.length*100) : 0;
+    const cls = pct >= 80 ? 'ok' : pct >= 50 ? 'warn' : 'danger';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:4px">
+        <span>${q.full}</span><span style="color:var(--${cls==='danger'?'red':cls==='warn'?'orange':'green'})">${pct}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${have} / ${people.length} 名保有</div>
+    </div>`;
+  }).join('');
+}
+
+// ── SORT ───────────────────────────────────────────────────────────────
+function updateSortHeaders(tableId, sort) {
+  const ths = document.querySelectorAll(`#${tableId} thead th`);
+  ths.forEach(th => { th.classList.remove('sort-asc','sort-desc'); });
+  if (sort.col) {
+    const colMap = {permit:['type','num','kubun','acquired','expires','days','person','wf','files','status'],
+                    license:['name','person','dept','acquired','expires','days','renewal','notify','status']};
+    const id = tableId.replace('-table','');
+    const idx = (colMap[id]||[]).indexOf(sort.col);
+    if (idx >= 0 && ths[idx]) {
+      ths[idx].classList.add(sort.dir > 0 ? 'sort-asc' : 'sort-desc');
+    }
+  }
+}
+
+function sortPermit(col) {
+  if (pSort.col === col) pSort.dir *= -1; else { pSort.col = col; pSort.dir = 1; }
+  renderPermits();
+}
+function sortLicense(col) {
+  if (lSort.col === col) lSort.dir *= -1; else { lSort.col = col; lSort.dir = 1; }
+  renderLicenses();
+}
+
+// ── SELECT / DETAIL ────────────────────────────────────────────────────
+function selectPermit(id) {
+  selectedId = id;
+  renderPermits();
+  const p = PERMITS.find(x=>x.id===id);
+  const d = PERMIT_DETAIL[id];
+  if (!p||!d) return;
+  const statusColorMap = {ok:'var(--green)',warn:'var(--orange)',danger:'var(--red)',expired:'var(--red)'};
+
+  document.getElementById('rp-detail-title').textContent = p.type;
+  document.getElementById('rp-detail-sub').textContent = p.num + ' ／ ' + p.kubun;
+  document.getElementById('rp-detail-kv').innerHTML = [
+    ['担当者', `<div class="person-cell" style="justify-content:flex-end">${avatarHtml(p.person)} ${p.person}（${p.dept}）</div>`],
+    ['取得日', p.acquired],
+    ['有効期限', `<span style="color:${statusColorMap[p.status]};font-weight:800">${p.expires}</span>`],
+    ['残日数', daysChipHtml(p.days, p.status)],
+    ['更新区分', '5年ごと更新'],
+    ['申請状況', wfHtml(p.wf)],
+    ['状態', `<span class="status ${statusClass(p.status)}">${statusLabel(p.status)}</span>`],
+  ].map(([k,v])=>`<div class="detail-kv"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+
+  const pf = document.getElementById('rp-progress-fill');
+  pf.style.width = d.progress + '%';
+  pf.className = 'progress-fill ' + (p.status === 'ok' ? 'ok' : p.status === 'warn' ? 'warn' : 'danger');
+  document.getElementById('rp-progress-label').textContent =
+    p.days !== null && p.days >= 0 ? `残 ${p.days}日` : '失効';
+  document.getElementById('rp-progress-wrap').style.display = '';
+
+  const tl = document.getElementById('rp-timeline');
+  tl.innerHTML = d.history.map((h,i) => `
+    <li class="tl-item">
+      <div class="tl-spine">
+        <div class="tl-dot ${h.filled?'filled':'future'}"></div>
+        ${i<d.history.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-content">
+        <div class="tl-date">${h.date}</div>
+        <div class="tl-label ${h.filled?'':'future'}">${h.label}</div>
+      </div>
+    </li>`).join('');
+
+  showDetailPanel();
+}
+
+function selectLicense(id) {
+  selectedId = id;
+  renderLicenses();
+  const l = LICENSE_CATS.flatMap(c=>c.items).find(x=>x.id===id);
+  if (!l) return;
+
+  document.getElementById('rp-detail-title').textContent = l.name;
+  document.getElementById('rp-detail-sub').textContent = l.person + ' ／ ' + l.dept;
+  document.getElementById('rp-detail-kv').innerHTML = [
+    ['保有者', `<div class="person-cell" style="justify-content:flex-end">${avatarHtml(l.person)} ${l.person}</div>`],
+    ['部署', l.dept],
+    ['取得日', l.acquired],
+    ['有効期限', l.expires ? `<span style="color:${l.status==='ok'?'var(--green)':l.status==='warn'?'var(--orange)':'var(--red)'};font-weight:800">${l.expires}</span>` : '—（永続）'],
+    ['残日数', daysChipHtml(l.days, l.status)],
+    ['更新区分', l.renewal],
+    ['通知', l.notify ? '<span style="color:var(--blue)">🔔 ON</span>' : '<span style="color:var(--muted)">🔕 OFF</span>'],
+    ['状態', `<span class="status ${statusClass(l.status)}">${statusLabel(l.status)}</span>`],
+  ].map(([k,v])=>`<div class="detail-kv"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+
+  const pf = document.getElementById('rp-progress-fill');
+  if (l.days !== null && l.expires) {
+    const maxDays = 1825;
+    const pct = Math.min(100, Math.max(0, Math.round((maxDays - Math.max(l.days,0)) / maxDays * 100)));
+    pf.style.width = pct + '%';
+    pf.className = 'progress-fill ' + (l.status==='ok'?'ok':l.status==='warn'?'warn':'danger');
+    document.getElementById('rp-progress-label').textContent = l.days >= 0 ? `残 ${l.days}日` : '失効';
+    document.getElementById('rp-progress-wrap').style.display = '';
+  } else {
+    document.getElementById('rp-progress-wrap').style.display = 'none';
+  }
+
+  document.getElementById('rp-timeline').innerHTML = '';
+  document.getElementById('rp-timeline-section').style.display = 'none';
+  showDetailPanel();
+}
+
+function showDetailPanel() {
+  document.getElementById('rp-alerts').style.display = 'none';
+  document.getElementById('rp-detail').style.display = '';
+  document.getElementById('rp-matrix').style.display = 'none';
+  document.getElementById('rp-timeline-section').style.display = document.getElementById('rp-timeline').innerHTML ? '' : 'none';
+}
+
+function closeDetail() {
+  selectedId = null;
+  if (currentTab==='permit') renderPermits();
+  if (currentTab==='license') renderLicenses();
+  document.getElementById('rp-alerts').style.display = '';
+  document.getElementById('rp-detail').style.display = 'none';
+  document.getElementById('rp-matrix').style.display = 'none';
+}
+
+function showColDetail(qualId) {
+  const q = MTX_QUALS.find(x=>x.id===qualId);
+  if (!q) return;
+  const people = MTX_PEOPLE.filter(p => mtxDeptFilter==='all'||p.dept===mtxDeptFilter);
+  const holders = people.filter(p=>p.cells[qualId]);
+  document.getElementById('rp-detail-title').textContent = q.full;
+  document.getElementById('rp-detail-sub').textContent = `${q.required?'必須資格':'任意資格'} ／ 保有 ${holders.length}/${people.length} 名`;
+  document.getElementById('rp-detail-kv').innerHTML = holders.map(p=>{
+    const v = p.cells[qualId];
+    const icon = v==='ok'?'✓':v==='warn'?'⚠':'✗';
+    const ic = v==='ok'?'cell-ok':v==='warn'?'cell-warn':'cell-exp';
+    return `<div class="detail-kv"><dt><div class="person-cell">${avatarHtml(p.name)} ${p.name}</div></dt><dd><span class="${ic}" style="padding:2px 7px;border-radius:4px">${icon}</span></dd></div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:12px;padding:8px 0">保有者なし</div>';
+  document.getElementById('rp-progress-wrap').style.display = 'none';
+  document.getElementById('rp-timeline-section').style.display = 'none';
+  document.getElementById('rp-alerts').style.display = 'none';
+  document.getElementById('rp-detail').style.display = '';
+  document.getElementById('rp-matrix').style.display = 'none';
+}
+
+function showPersonDetail(name) {
+  const p = MTX_PEOPLE.find(x=>x.name===name);
+  if (!p) return;
+  document.getElementById('rp-detail-title').textContent = p.name;
+  document.getElementById('rp-detail-sub').textContent = p.dept + ' ／ 保有資格一覧';
+  document.getElementById('rp-detail-kv').innerHTML = MTX_QUALS.map(q=>{
+    const v = p.cells[q.id];
+    if (!v) return `<div class="detail-kv"><dt>${q.full}</dt><dd><span class="cell-none">—</span></dd></div>`;
+    const icon = v==='ok'?'✓':v==='warn'?'⚠':'✗';
+    const ic = v==='ok'?'cell-ok':v==='warn'?'cell-warn':'cell-exp';
+    return `<div class="detail-kv"><dt>${q.full}${q.required?'<span class="required-star"> ★</span>':''}</dt><dd><span class="${ic}" style="padding:2px 7px;border-radius:4px">${icon}</span></dd></div>`;
+  }).join('');
+  document.getElementById('rp-progress-wrap').style.display = 'none';
+  document.getElementById('rp-timeline-section').style.display = 'none';
+  document.getElementById('rp-alerts').style.display = 'none';
+  document.getElementById('rp-detail').style.display = '';
+  document.getElementById('rp-matrix').style.display = 'none';
+}
+
+// ── TAB SWITCH ─────────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  currentTab = id;
+  ['permit','license','matrix'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t===id?'':'none';
+  });
+  btn.closest('.tab-group').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['permit','license','matrix'].forEach(t=>{
+    document.getElementById(t+'-chips').style.display = t===id?'flex':'none';
+  });
+  document.getElementById('search-box').value = '';
+  searchQ = '';
+  selectedId = null;
+  document.getElementById('rp-alerts').style.display = id==='matrix'?'none':'';
+  document.getElementById('rp-detail').style.display = 'none';
+  document.getElementById('rp-matrix').style.display = id==='matrix'?'':'none';
+  if (id==='matrix') { renderMatrix(); }
+  else if (id==='permit') renderPermits();
+  else renderLicenses();
+}
+
+// ── FILTERS ────────────────────────────────────────────────────────────
+function setChip(el, key) {
+  document.querySelectorAll('#permit-chips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  statusFilter = key;
+  renderPermits();
+}
+function setLicChip(el, key) {
+  document.querySelectorAll('#license-chips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  licCatFilter = key;
+  renderLicenses();
+}
+function setMtxChip(el, key) {
+  document.querySelectorAll('#matrix-chips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  mtxDeptFilter = key;
+  renderMatrix();
+}
+function setMetricFilter(key) {
+  document.querySelectorAll('.metric').forEach(m=>m.classList.remove('active-filter'));
+  statusFilter = statusFilter===key?'all':key;
+  if (statusFilter !== 'all') event.currentTarget.classList.add('active-filter');
+  if (currentTab==='permit') {
+    setChipActive('permit-chips', statusFilter);
+    renderPermits();
+  } else if (currentTab==='license') {
+    setChipActive('license-chips', statusFilter);
+    renderLicenses();
+  }
+}
+function setChipActive(groupId, key) {
+  document.querySelectorAll(`#${groupId} .chip`).forEach(c=>{
+    c.classList.toggle('active', c.getAttribute('onclick').includes(`'${key}'`));
+  });
+}
+function onDeptChange(val) {
+  deptFilter = val;
+  if (currentTab==='permit') renderPermits();
+  else if (currentTab==='license') renderLicenses();
+}
+function onSearch(val) {
+  searchQ = val;
+  if (currentTab==='permit') renderPermits();
+  else if (currentTab==='license') renderLicenses();
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function switchModalType(id, btn) {
+  document.getElementById('modal-permit').style.display = id==='permit'?'':'none';
+  document.getElementById('modal-license').style.display = id==='license'?'':'none';
+  btn.closest('.tab-group').querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+renderPermits();
+</script>
+</body>
+</html>
