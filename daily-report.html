@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>日報・作業報告書 — Office Workspace</title>
+<script src="jspdf.umd.min.js"></script>
+<style>
+:root{--bg:#fbfaf7;--sidebar:#f1f0ec;--panel:#fff;--soft:#f6f4ef;--line:#e2dfd8;--text:#24231f;--muted:#756f66;--blue:#356c8a;--green:#3f6b5b;--orange:#a9622a;--red:#b64f4f;--shadow:0 18px 45px rgba(34,31,26,.14);--shadow-soft:0 10px 24px rgba(34,31,26,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Inter,"Yu Gothic UI","Hiragino Sans",Meiryo,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:14px}
+button,input,select,textarea{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:text}
+select{cursor:pointer}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(53,108,138,.16)}
+
+/* Layout */
+.shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:224px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.sidebar-head{padding:14px 14px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+.sidebar-head strong{font-size:13px}
+.icon-btn{width:30px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:grid;place-items:center}
+.icon-btn:hover{background:var(--soft)}
+.cmd-hint{display:flex;align-items:center;gap:8px;margin:10px 8px 4px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:12px}
+.cmd-hint b{flex:1;font-weight:600}
+.cmd-hint kbd{border:1px solid var(--line);border-radius:5px;padding:1px 5px;background:var(--soft);font-size:10px}
+.nav{flex:1;overflow-y:auto;padding:7px 6px}
+.nav a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:13px;margin:1px 0}
+.nav a:hover{background:var(--soft)}
+.nav a.active{background:var(--panel);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.nav a span{width:18px;text-align:center;color:var(--green);flex-shrink:0}
+.nav a b{flex:1;font-weight:600;white-space:nowrap}
+.nav-badge{background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px}
+.sidebar-user{display:flex;align-items:center;gap:9px;padding:12px 14px;border-top:1px solid var(--line)}
+.sidebar-user strong{font-size:13px}
+.sidebar-user small{display:block;color:var(--muted);font-size:11px}
+.avatar{width:28px;height:28px;display:inline-grid;place-items:center;flex-shrink:0;border:1px solid var(--line);border-radius:50%;background:var(--soft);color:var(--green);font-size:11px;font-weight:800}
+
+/* Main */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.app-header{display:flex;align-items:center;gap:14px;padding:12px 28px;background:rgba(255,255,255,.9);border-bottom:1px solid var(--line);backdrop-filter:blur(16px);flex-shrink:0;z-index:10}
+.header-title{flex:1}
+.breadcrumb{font-size:11px;color:var(--muted);margin-bottom:2px}
+.title-row{display:flex;align-items:center;gap:10px}
+.view-icon{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--green);font-weight:800;font-size:14px;display:grid;place-items:center;flex-shrink:0}
+.title-row h1{font-size:17px;font-weight:800}
+.header-actions{display:flex;gap:8px}
+
+/* Body */
+.body-wrap{flex:1;display:flex;overflow:hidden}
+.content{flex:1;overflow-y:auto;padding:22px 24px 80px}
+
+/* Tabs */
+.tab-bar{display:flex;gap:3px;background:var(--soft);padding:3px;border-radius:9px;border:1px solid var(--line);margin-bottom:16px;width:fit-content}
+.tb{padding:6px 16px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:13px;font-weight:700}
+.tb.active{background:var(--panel);color:var(--text);box-shadow:var(--shadow-soft)}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.ghost-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:12px;font-weight:700;white-space:nowrap}
+.ghost-btn:hover{background:var(--soft)}
+.ghost-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.ghost-btn.primary:hover{background:#325c4a}
+.ghost-btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+.ghost-btn.danger:hover{background:#963f3f}
+
+/* Status chips */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:11px;font-weight:700;color:var(--muted)}
+.chip:hover{background:var(--soft)}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* Status badge */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-draft{background:var(--soft);color:var(--muted)}.b-draft::before{background:var(--muted)}
+.b-submitted{background:#dcebf2;color:#285f75}.b-submitted::before{background:var(--blue)}
+.b-approved{background:#dceee5;color:#2d684f}.b-approved::before{background:var(--green)}
+.b-returned{background:#f5dddd;color:#973f3f}.b-returned::before{background:var(--red)}
+
+/* Panel */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-soft)}
+.panel-inner{padding:16px}
+.panel-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+
+/* Report Cards */
+.report-card{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .1s}
+.report-card:last-child{border-bottom:0}
+.report-card:hover{background:var(--soft)}
+.report-card.selected{background:#eff6f2;box-shadow:inset 3px 0 0 var(--green)}
+.rc-date{font-size:11px;font-weight:800;color:var(--muted);text-align:center;line-height:1.3;min-width:38px}
+.rc-date strong{display:block;font-size:20px;font-weight:800;color:var(--text)}
+.rc-info{min-width:0}
+.rc-site{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.rc-weather{font-size:20px;flex-shrink:0}
+
+/* Right panel */
+.right-panel{width:290px;flex-shrink:0;border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;display:flex;flex-direction:column}
+.rp-head{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.rp-head h3{font-size:13px;font-weight:800;margin-bottom:2px}
+.rp-head small{font-size:11px;color:var(--muted)}
+.rp-section{padding:14px 16px;border-bottom:1px solid var(--line)}
+.rp-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.rp-kv{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
+.rp-kv:last-child{border-bottom:0}
+.rp-kv dt{color:var(--muted);font-weight:600}
+.rp-kv dd{font-weight:700;text-align:right}
+
+/* Timeline */
+.tl{list-style:none}
+.tl-item{display:flex;gap:10px;padding-bottom:14px}
+.tl-item:last-child{padding-bottom:0}
+.tl-spine{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0}
+.tl-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--line);background:var(--panel);flex-shrink:0}
+.tl-dot.done{background:var(--green);border-color:var(--green)}
+.tl-dot.current{background:var(--blue);border-color:var(--blue)}
+.tl-dot.future{border-color:var(--line);border-style:dashed}
+.tl-line{flex:1;width:2px;background:var(--line);margin-top:3px}
+.tl-body{flex:1;padding-top:0}
+.tl-label{font-size:12px;font-weight:700}
+.tl-time{font-size:10px;color:var(--muted);margin-top:1px}
+
+/* ── FORM ── */
+.form-wrap{max-width:740px}
+.form-section{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-soft);margin-bottom:14px;overflow:hidden}
+.form-section-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none}
+.form-section-head:hover{background:var(--soft)}
+.fs-icon{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:14px;flex-shrink:0}
+.fs-icon.blue{background:#dcebf2;color:var(--blue)}
+.fs-icon.green{background:#dceee5;color:var(--green)}
+.fs-icon.orange{background:#fae5d1;color:var(--orange)}
+.fs-icon.red{background:#f5dddd;color:var(--red)}
+.fs-icon.purple{background:#eadcee;color:#6b3f6b}
+.fs-label{flex:1;font-size:13px;font-weight:800}
+.fs-check{font-size:12px;color:var(--green);font-weight:700}
+.fs-toggle{color:var(--muted);font-size:11px;transition:transform .15s}
+.fs-toggle.open{transform:rotate(180deg)}
+.form-body{padding:16px}
+
+/* Form fields */
+.fg{display:grid;gap:12px;margin-bottom:12px}
+.fg.cols2{grid-template-columns:1fr 1fr}
+.fg.cols3{grid-template-columns:1fr 1fr 1fr}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:700;color:var(--muted)}
+.field label .req{color:var(--red)}
+.field input,.field select,.field textarea{font-size:14px;width:100%}
+.field textarea{resize:vertical;min-height:72px}
+
+/* Weather selector */
+.weather-btns{display:flex;gap:8px;flex-wrap:wrap}
+.w-btn{flex:1;min-width:64px;padding:10px 6px;border:2px solid var(--line);border-radius:10px;background:var(--panel);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted);transition:all .12s}
+.w-btn:hover{border-color:var(--blue);background:var(--soft)}
+.w-btn.active{border-color:var(--blue);background:#dcebf2;color:var(--blue)}
+.w-btn span{font-size:24px;line-height:1}
+
+/* Worker counter */
+.counter-row{display:flex;align-items:center;gap:8px}
+.count-btn{width:34px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:18px;font-weight:700;display:grid;place-items:center;color:var(--text)}
+.count-btn:hover{background:var(--soft)}
+.count-val{font-size:18px;font-weight:800;min-width:36px;text-align:center}
+
+/* Dynamic table */
+.dyn-table{width:100%;border-collapse:collapse;margin-bottom:8px}
+.dyn-table th{text-align:left;font-size:11px;font-weight:800;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--line)}
+.dyn-table td{padding:5px 4px;vertical-align:middle}
+.dyn-table td input,.dyn-table td select{font-size:12px;padding:6px 8px;min-height:0}
+.dyn-table td input.sm{width:68px}
+.dyn-table td input.xs{width:52px}
+.del-btn{width:26px;height:26px;border:1px solid var(--line);border-radius:6px;background:transparent;color:var(--muted);font-size:14px;display:grid;place-items:center}
+.del-btn:hover{background:#f5dddd;color:var(--red);border-color:var(--red)}
+.add-row-btn{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--muted);font-size:12px;font-weight:700;width:100%}
+.add-row-btn:hover{border-color:var(--green);color:var(--green);background:var(--soft)}
+
+/* Safety checklist */
+.safety-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.check-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .1s}
+.check-item:hover{background:var(--soft)}
+.check-item.checked{background:#dceee5;border-color:#a8d4be;color:#2d684f}
+.check-item input[type=checkbox]{width:16px;height:16px;min-height:0;cursor:pointer;accent-color:var(--green)}
+
+/* Photo upload */
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.photo-slot{aspect-ratio:4/3;border:2px dashed var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;overflow:hidden;position:relative}
+.photo-slot:hover{border-color:var(--blue);background:var(--soft);color:var(--blue)}
+.photo-slot .photo-icon{font-size:24px}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.photo-slot .remove-photo{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,.5);color:#fff;border-radius:50%;border:0;font-size:12px;display:none;place-items:center}
+.photo-slot:hover .remove-photo{display:grid}
+
+/* Progress indicator (PC right panel) */
+.prog-list{display:flex;flex-direction:column;gap:6px}
+.prog-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700}
+.prog-item .pi-icon{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;flex-shrink:0}
+.prog-item .pi-icon.done{background:#dceee5;color:#2d684f}
+.prog-item .pi-icon.todo{background:var(--soft);color:var(--muted)}
+.prog-item .pi-icon.warn{background:#fae5d1;color:var(--orange)}
+
+/* Form footer (sticky) */
+.form-footer{position:sticky;bottom:0;background:rgba(255,255,255,.95);border-top:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:10px;backdrop-filter:blur(12px);z-index:50}
+.auto-save{font-size:11px;color:var(--muted);flex:1}
+.auto-save strong{color:var(--green)}
+
+/* Approval tab */
+.approval-card{padding:16px;border-bottom:1px solid var(--line)}
+.approval-card:last-child{border-bottom:0}
+.ac-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.ac-actions{display:flex;gap:8px;margin-top:10px}
+
+/* PDF Modal */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--panel);border-radius:14px;width:min(640px,94vw);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.modal-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-head h2{font-size:15px;font-weight:800}
+.modal-body{overflow-y:auto;flex:1}
+
+/* PDF preview */
+.pdf-preview{background:#525659;padding:20px;min-height:400px;display:flex;justify-content:center}
+.pdf-page{background:#fff;width:100%;max-width:540px;padding:24px 28px;font-size:11px;line-height:1.5;color:#000;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.pdf-title{text-align:center;font-size:16px;font-weight:800;margin-bottom:4px;border-bottom:2px solid #000;padding-bottom:8px}
+.pdf-sub{text-align:right;font-size:10px;color:#555;margin-bottom:12px}
+.pdf-section{margin-bottom:12px}
+.pdf-section-title{font-weight:800;font-size:11px;background:#f0f0f0;padding:3px 6px;margin-bottom:6px;border-left:3px solid #3f6b5b}
+.pdf-table{width:100%;border-collapse:collapse}
+.pdf-table th,.pdf-table td{border:1px solid #ccc;padding:4px 6px;font-size:10px}
+.pdf-table th{background:#f5f5f5;font-weight:800;text-align:left}
+.pdf-sign{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.pdf-sign-box{border:1px solid #ccc;padding:8px;text-align:center;min-height:50px}
+.pdf-sign-label{font-size:9px;color:#555;margin-bottom:4px}
+
+/* Mobile overrides */
+@media(max-width:768px){
+  .shell{display:block;height:auto;overflow:auto}
+  .sidebar{display:none}
+  .main{height:auto}
+  .body-wrap{flex-direction:column;overflow:visible}
+  .content{padding:12px 12px 100px;overflow:visible}
+  .right-panel{display:none}
+  .app-header{padding:10px 14px;position:sticky;top:0;z-index:100}
+  .title-row h1{font-size:15px}
+  .fg.cols2,.fg.cols3{grid-template-columns:1fr}
+  .safety-grid{grid-template-columns:1fr}
+  .photo-grid{grid-template-columns:repeat(3,1fr)}
+  .weather-btns .w-btn{min-width:52px;padding:8px 4px}
+  .w-btn span{font-size:20px}
+  .dyn-table th:nth-child(3),.dyn-table td:nth-child(3),
+  .dyn-table th:nth-child(5),.dyn-table td:nth-child(5){display:none}
+  .dyn-table td input.sm{width:52px}
+  .form-footer{position:fixed;bottom:0;left:0;right:0;padding:10px 14px;gap:8px}
+  .auto-save{display:none}
+  .ghost-btn{min-height:42px;font-size:13px}
+  input,select,textarea{font-size:16px!important} /* prevent iOS zoom */
+  .tab-bar{width:100%}
+  .tb{flex:1;text-align:center;font-size:12px;padding:6px 8px}
+  .report-card{grid-template-columns:auto 1fr auto}
+  .rc-weather{display:none}
+  .mobile-only{display:block!important}
+  .pc-only{display:none!important}
+  /* Mobile bottom nav */
+  .mobile-nav{display:flex!important}
+}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:58px;background:var(--panel);border-top:1px solid var(--line);z-index:200;align-items:stretch}
+.mobile-nav button{flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);font-size:9px;font-weight:700}
+.mobile-nav button.active{color:var(--green)}
+.mobile-nav button .mn-icon{font-size:18px;line-height:1}
+.mobile-only{display:none}
+.pc-only{display:block}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .15s ease both}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Sidebar (PC) -->
+<aside class="sidebar">
+  <div class="sidebar-head"><strong>Office Workspace</strong><button class="icon-btn">暗</button></div>
+  <div class="cmd-hint"><span>検</span><b>検索・コマンド</b><kbd>Ctrl K</kbd></div>
+  <nav class="nav">
+    <a href="#"><span>家</span><b>ホーム</b></a>
+    <a href="#"><span>予</span><b>スケジュール管理</b></a>
+    <a href="#"><span>承</span><b>ワークフロー</b></a>
+    <a href="#"><span>済</span><b>ToDo管理</b></a>
+    <a href="#"><span>掲</span><b>社内掲示板</b></a>
+    <a href="#" class="active"><span>日</span><b>日報・作業報告書</b><span class="nav-badge">3</span></a>
+    <a href="#"><span>許</span><b>許可・資格管理</b></a>
+    <a href="#"><span>書</span><b>ファイル管理</b></a>
+    <a href="#"><span>勤</span><b>タイムカード</b></a>
+    <a href="#"><span>知</span><b>ナレッジ</b></a>
+  </nav>
+  <div class="sidebar-user">
+    <span class="avatar">田</span>
+    <div><strong>田中 一郎</strong><small>工務部</small></div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="app-header">
+    <div class="header-title">
+      <div class="breadcrumb">Office Workspace › 日報・作業報告書</div>
+      <div class="title-row">
+        <span class="view-icon">日</span>
+        <h1>日報・作業報告書</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="ghost-btn primary" onclick="showTab('form');initNewForm()">＋ 新規作成</button>
+      <button class="ghost-btn pc-only">📊 集計</button>
+    </div>
+  </header>
+
+  <div class="body-wrap">
+    <div class="content">
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tb active" id="tb-list"  onclick="showTab('list')">一覧</button>
+        <button class="tb"        id="tb-form"  onclick="showTab('form');initNewForm()">新規作成</button>
+        <button class="tb"        id="tb-approval" onclick="showTab('approval')">承認管理 <span class="nav-badge" style="margin-left:4px">3</span></button>
+      </div>
+
+      <!-- ══ LIST ══ -->
+      <div id="view-list" class="fade-up">
+        <div class="toolbar">
+          <input type="search" style="flex:1;max-width:240px;font-size:12px" placeholder="現場名・報告者で検索…" oninput="filterReports(this.value)">
+          <select style="font-size:12px;padding:6px 10px;border-radius:999px" onchange="filterByMonth(this.value)">
+            <option>2026年06月</option><option>2026年05月</option><option>2026年04月</option>
+          </select>
+        </div>
+        <div class="chips">
+          <button class="chip active" onclick="setStatusFilter('all',this)">すべて</button>
+          <button class="chip" onclick="setStatusFilter('draft',this)">下書き</button>
+          <button class="chip" onclick="setStatusFilter('submitted',this)">提出済</button>
+          <button class="chip" onclick="setStatusFilter('approved',this)">承認済</button>
+          <button class="chip" onclick="setStatusFilter('returned',this)">差戻し</button>
+        </div>
+        <div class="panel">
+          <div id="report-list"></div>
+        </div>
+      </div>
+
+      <!-- ══ FORM ══ -->
+      <div id="view-form" style="display:none" class="fade-up">
+        <div class="form-wrap">
+
+          <!-- A: 基本情報 -->
+          <div class="form-section">
+            <div class="form-section-head" onclick="toggleSection('sec-a')">
+              <span class="fs-icon blue">📋</span>
+              <span class="fs-label">基本情報</span>
+              <span class="fs-check" id="check-a">✓</span>
+              <span class="fs-toggle open" id="tog-a">▲</span>
+            </div>
+            <div class="form-body" id="sec-a">
+              <div class="fg cols2">
+                <div class="field"><label>日付 <span class="req">*</span></label><input type="date" id="f-date" value="2026-06-21"></div>
+                <div class="field"><label>現場名 <span class="req">*</span></label>
+                  <select id="f-site">
+                    <option>○○ビル新築工事</option><option>△△橋梁補修工事</option>
+                    <option>□□マンション外壁改修</option><option>××道路舗装工事</option><option>その他（直接入力）</option>
+                  </select>
+                </div>
+                <div class="field"><label>作業開始時刻</label><input type="time" id="f-start" value="08:00"></div>
+                <div class="field"><label>作業終了時刻</label><input type="time" id="f-end" value="17:30"></div>
+              </div>
+              <div class="field" style="margin-bottom:12px">
+                <label>天気 <span class="req">*</span></label>
+                <div class="weather-btns" id="weather-btns">
+                  <button class="w-btn active" onclick="selectWeather('☀️',this)"><span>☀️</span>晴れ</button>
+                  <button class="w-btn" onclick="selectWeather('⛅',this)"><span>⛅</span>晴曇</button>
+                  <button class="w-btn" onclick="selectWeather('☁️',this)"><span>☁️</span>曇り</button>
+                  <button class="w-btn" onclick="selectWeather('🌧',this)"><span>🌧</span>雨</button>
+                  <button class="w-btn" onclick="selectWeather('❄️',this)"><span>❄️</span>雪</button>
+                  <button class="w-btn" onclick="selectWeather('💨',this)"><span>💨</span>強風</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>作業員数</label>
+                <div class="counter-row">
+                  <button class="count-btn" onclick="changeCount(-1)">−</button>
+                  <span class="count-val" id="f-workers">8</span>
+                  <button class="count-btn" onclick="changeCount(1)">＋</button>
+                  <span style="color:var(--muted);font-size:13px">名</span>
+                  <input type="text" placeholder="氏名（任意）" style="flex:1;font-size:12px" id="f-worker-names">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- B: 作業内容 -->
+          <div class="form-section">
+            <div class="form-section-head" onclick="toggleSection('sec-b')">
+              <span class="fs-icon green">🔨</span>
+              <span class="fs-label">作業内容</span>
+              <span class="fs-check" id="check-b"></span>
+              <span class="fs-toggle open" id="tog-b">▲</span>
+            </div>
+            <div class="form-body" id="sec-b">
+              <div style="overflow-x:auto">
+                <table class="dyn-table" id="work-table">
+                  <thead><tr>
+                    <th style="min-width:160px">作業内容 <span class="req">*</span></th>
+                    <th style="min-width:100px">場所・区画</th>
+                    <th style="width:64px">数量</th>
+                    <th style="width:72px">単位</th>
+                    <th style="width:64px">進捗%</th>
+                    <th style="width:30px"></th>
+                  </tr></thead>
+                  <tbody id="work-tbody"></tbody>
+                </table>
+              </div>
+              <button class="add-row-btn" onclick="addWorkRow()">＋ 作業を追加</button>
+            </div>
+          </div>
+
+          <!-- C: 使用機械・資材 -->
+          <div class="form-section">
+            <div class="form-section-head" onclick="toggleSection('sec-c')">
+              <span class="fs-icon orange">🚧</span>
+              <span class="fs-label">使用機械・資材</span>
+              <span class="fs-check" id="check-c"></span>
+              <span class="fs-toggle open" id="tog-c">▲</span>
+            </div>
+            <div class="form-body" id="sec-c">
+              <div style="overflow-x:auto">
+                <table class="dyn-table" id="equip-table">
+                  <thead><tr>
+                    <th style="min-width:160px">機械名・資材名</th>
+                    <th style="width:64px">数量</th>
+                    <th style="width:72px">単位</th>
+                    <th style="min-width:120px">備考</th>
+                    <th style="width:30px"></th>
+                  </tr></thead>
+                  <tbody id="equip-tbody"></tbody>
+                </table>
+              </div>
+              <button class="add-row-btn" onclick="addEquipRow()">＋ 機械・資材を追加</button>
+            </div>
+          </div>
+
+          <!-- D: 安全管理 -->
+          <div class="form-section">
+            <div class="form-section-head" onclick="toggleSection('sec-d')">
+              <span class="fs-icon red">⛑</span>
+              <span class="fs-label">安全管理</span>
+              <span class="fs-check" id="check-d"></span>
+              <span class="fs-toggle open" id="tog-d">▲</span>
+            </div>
+            <div class="form-body" id="sec-d">
+              <div class="safety-grid" id="safety-checks">
+                <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" checked> 朝礼・KY活動実施</label>
+                <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" checked> 安全帯着用確認</label>
+                <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" checked> ヘルメット着用確認</label>
+                <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox" checked> 整理整頓・清掃実施</label>
+                <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"> 重機・機械の始業点検</label>
+                <label class="check-item" onclick="toggleCheck(this)"><input type="checkbox"> 危険予知活動記録</label>
+              </div>
+              <div class="field" style="margin-top:12px">
+                <label>ヒヤリハット・事故報告（なければ空欄）</label>
+                <textarea id="f-hazard" placeholder="例：資材搬入時に足場端部に接近しそうになった。注意喚起済み。"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- E: 写真 -->
+          <div class="form-section">
+            <div class="form-section-head" onclick="toggleSection('sec-e')">
+              <span class="fs-icon purple">📷</span>
+              <span class="fs-label">現場写真</span>
+              <span class="fs-check" id="check-e"></span>
+              <span class="fs-toggle open" id="tog-e">▲</span>
+            </div>
+            <div class="form-body" id="sec-e">
+              <div class="photo-grid">
+                <div class="photo-slot" onclick="triggerPhoto(0)" id="photo-0"><span class="photo-icon">📷</span><span>写真を追加</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,0)"></div>
+                <div class="photo-slot" onclick="triggerPhoto(1)" id="photo-1"><span class="photo-icon">📷</span><span>写真を追加</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,1)"></div>
+                <div class="photo-slot" onclick="triggerPhoto(2)" id="photo-2"><span class="photo-icon">📷</span><span>写真を追加</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,2)"></div>
+                <div class="photo-slot" onclick="triggerPhoto(3)" id="photo-3"><span class="photo-icon">📷</span><span>写真を追加</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,3)"></div>
+              </div>
+              <p style="font-size:11px;color:var(--muted);margin-top:8px">スマートフォンからはカメラで直接撮影できます。最大8枚。</p>
+            </div>
+          </div>
+
+          <!-- F: 翌日予定・特記事項 -->
+          <div class="form-section">
+            <div class="form-section-head" onclick="toggleSection('sec-f')">
+              <span class="fs-icon blue">📝</span>
+              <span class="fs-label">翌日の作業予定・特記事項</span>
+              <span class="fs-check" id="check-f"></span>
+              <span class="fs-toggle open" id="tog-f">▲</span>
+            </div>
+            <div class="form-body" id="sec-f">
+              <div class="field" style="margin-bottom:12px">
+                <label>翌日の作業予定 <span class="req">*</span></label>
+                <textarea id="f-tomorrow" placeholder="例：型枠組立（B棟 2F）、コンクリート打設準備" rows="3"></textarea>
+              </div>
+              <div class="field">
+                <label>特記事項・連絡事項</label>
+                <textarea id="f-notes" placeholder="例：明日は資材搬入のため7:30作業開始。搬入ルート確認要。" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="form-footer">
+            <div class="auto-save">最終保存: <strong>自動保存済み 18:22</strong></div>
+            <button class="ghost-btn" onclick="saveDraft()">下書き保存</button>
+            <button class="ghost-btn" onclick="showPdfModal()">👁 PDF プレビュー</button>
+            <button class="ghost-btn primary" onclick="submitReport()">提出する →</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══ APPROVAL ══ -->
+      <div id="view-approval" style="display:none" class="fade-up">
+        <div style="margin-bottom:12px;color:var(--muted);font-size:13px">承認待ち <strong style="color:var(--text)">3件</strong> あります</div>
+        <div class="panel" id="approval-list"></div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- Right Panel (PC only) -->
+    <aside class="right-panel pc-only">
+      <div id="rp-list">
+        <div class="rp-head"><h3>今月のサマリー</h3><small>2026年06月</small></div>
+        <div class="rp-section">
+          <div class="rp-title">提出状況</div>
+          <dl>
+            <div class="rp-kv"><dt>提出済</dt><dd>12件</dd></div>
+            <div class="rp-kv"><dt>承認済</dt><dd>9件</dd></div>
+            <div class="rp-kv"><dt>差戻し</dt><dd>1件</dd></div>
+            <div class="rp-kv"><dt>下書き</dt><dd>2件</dd></div>
+          </dl>
+        </div>
+        <div class="rp-section" id="rp-detail-area" style="display:none">
+          <div class="rp-title">選択中の報告書</div>
+          <dl id="rp-detail-kv"></dl>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px" id="rp-detail-actions"></div>
+        </div>
+        <div class="rp-section">
+          <div class="rp-title">承認フロー</div>
+          <ul class="tl" id="rp-timeline">
+            <li class="tl-item"><div class="tl-spine"><div class="tl-dot done"></div><div class="tl-line"></div></div><div class="tl-body"><div class="tl-label">作成・提出</div><div class="tl-time">報告者が入力・送信</div></div></li>
+            <li class="tl-item"><div class="tl-spine"><div class="tl-dot current"></div><div class="tl-line"></div></div><div class="tl-body"><div class="tl-label">一次確認</div><div class="tl-time">現場監督が確認</div></div></li>
+            <li class="tl-item"><div class="tl-spine"><div class="tl-dot future"></div></div><div class="tl-body"><div class="tl-label">承認</div><div class="tl-time">部長が最終承認</div></div></li>
+          </ul>
+        </div>
+      </div>
+      <div id="rp-form" style="display:none">
+        <div class="rp-head"><h3>入力チェックリスト</h3><small>全項目を埋めて提出してください</small></div>
+        <div class="rp-section">
+          <div class="prog-list" id="prog-list">
+            <div class="prog-item"><span class="pi-icon done">✓</span>基本情報</div>
+            <div class="prog-item"><span class="pi-icon todo">○</span>作業内容</div>
+            <div class="prog-item"><span class="pi-icon todo">○</span>使用機械・資材</div>
+            <div class="prog-item"><span class="pi-icon todo">○</span>安全管理</div>
+            <div class="prog-item"><span class="pi-icon todo">○</span>現場写真</div>
+            <div class="prog-item"><span class="pi-icon todo">○</span>翌日予定</div>
+          </div>
+        </div>
+        <div class="rp-section">
+          <div class="rp-title">送信先</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span class="avatar" style="width:24px;height:24px;font-size:10px">山</span> 山田 部長（承認者）</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span class="avatar" style="width:24px;height:24px;font-size:10px">佐</span> 佐藤 主任（確認者）</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div><!-- /body-wrap -->
+</div><!-- /main -->
+
+</div><!-- /shell -->
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav">
+  <button class="active" onclick="showTab('list')"><span class="mn-icon">📋</span>一覧</button>
+  <button onclick="showTab('form');initNewForm()"><span class="mn-icon">✏️</span>新規作成</button>
+  <button onclick="showTab('approval')"><span class="mn-icon">✅</span>承認</button>
+</nav>
+
+<!-- PDF Preview Modal -->
+<div class="modal-overlay" id="pdf-modal" onclick="if(event.target===this)closePdfModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>📄 PDF プレビュー</h2>
+      <div style="display:flex;gap:8px">
+        <button class="ghost-btn primary" onclick="downloadPdf()">⬇ PDF 保存</button>
+        <button class="icon-btn" onclick="closePdfModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="pdf-preview">
+        <div class="pdf-page" id="pdf-page">
+          <div class="pdf-title">作業日報</div>
+          <div class="pdf-sub" id="pdf-header-info"></div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">基本情報</div>
+            <table class="pdf-table"><tbody id="pdf-basic"></tbody></table>
+          </div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">作業内容</div>
+            <table class="pdf-table">
+              <thead><tr><th>作業内容</th><th>場所・区画</th><th>数量</th><th>単位</th><th>進捗</th></tr></thead>
+              <tbody id="pdf-work"></tbody>
+            </table>
+          </div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">使用機械・資材</div>
+            <table class="pdf-table">
+              <thead><tr><th>機械名・資材名</th><th>数量</th><th>単位</th><th>備考</th></tr></thead>
+              <tbody id="pdf-equip"></tbody>
+            </table>
+          </div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">安全管理チェック</div>
+            <div id="pdf-safety" style="font-size:10px;line-height:2"></div>
+          </div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">ヒヤリハット</div>
+            <div id="pdf-hazard" style="font-size:10px;min-height:28px"></div>
+          </div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">翌日の作業予定</div>
+            <div id="pdf-tomorrow" style="font-size:10px;min-height:28px"></div>
+          </div>
+          <div class="pdf-section">
+            <div class="pdf-section-title">特記事項</div>
+            <div id="pdf-notes" style="font-size:10px;min-height:24px"></div>
+          </div>
+          <div class="pdf-sign">
+            <div class="pdf-sign-box"><div class="pdf-sign-label">報告者</div></div>
+            <div class="pdf-sign-box"><div class="pdf-sign-label">確認者</div></div>
+            <div class="pdf-sign-box"><div class="pdf-sign-label">承認者</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────
+const REPORTS = [
+  {id:'r1', date:'2026/06/20', site:'○○ビル新築工事', reporter:'田中 一郎', dept:'工務部', weather:'☀️', timeStart:'08:00', timeEnd:'17:30', workers:8, status:'approved', submittedAt:'2026/06/20 18:05', approvedAt:'2026/06/20 20:14', approver:'山田 部長', workItems:[{content:'基礎コンクリート打設',area:'B棟 基礎',qty:45,unit:'m³',progress:80},{content:'型枠解体',area:'A棟 1F',qty:120,unit:'㎡',progress:100}], equip:[{name:'コンクリートポンプ車',qty:1,unit:'台',note:''},{name:'バイブレーター',qty:3,unit:'本',note:''}], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:true,機械点検:false,危険予知:true}, hazard:'', tomorrow:'型枠組立（B棟 1F）、資材搬入', notes:'コンクリート強度確認済み', photos:3},
+  {id:'r2', date:'2026/06/19', site:'△△橋梁補修工事', reporter:'鈴木 次郎', dept:'工務部', weather:'☁️', timeStart:'08:30', timeEnd:'17:00', workers:5, status:'approved', submittedAt:'2026/06/19 17:45', approvedAt:'2026/06/19 19:30', approver:'山田 部長', workItems:[{content:'橋面防水シート施工',area:'上流側スパン',qty:80,unit:'㎡',progress:60}], equip:[{name:'防水施工機',qty:1,unit:'台',note:''}], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:true,機械点検:true,危険予知:true}, hazard:'', tomorrow:'防水シート続き（下流側）', notes:'', photos:2},
+  {id:'r3', date:'2026/06/20', site:'□□マンション外壁改修', reporter:'高橋 三郎', dept:'現場部', weather:'⛅', timeStart:'08:00', timeEnd:'17:30', workers:6, status:'submitted', submittedAt:'2026/06/20 18:20', approvedAt:null, approver:null, workItems:[{content:'外壁タイル補修',area:'南面3〜5F',qty:15,unit:'㎡',progress:45},{content:'シーリング打替え',area:'南面',qty:25,unit:'m',progress:70}], equip:[{name:'高所作業車',qty:1,unit:'台',note:'70万/月'},{name:'コーキングガン',qty:4,unit:'本',note:''}], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:false,機械点検:true,危険予知:true}, hazard:'高所作業時に安全帯フック掛け忘れが1名。即座に注意し再教育。', tomorrow:'タイル補修（南面6〜8F）', notes:'足場材追加手配が必要', photos:4},
+  {id:'r4', date:'2026/06/20', site:'××道路舗装工事', reporter:'伊藤 四郎', dept:'現場部', weather:'☀️', timeStart:'07:30', timeEnd:'18:00', workers:12, status:'submitted', submittedAt:'2026/06/20 18:45', approvedAt:null, approver:null, workItems:[{content:'路盤仕上げ',area:'A工区 0〜200m',qty:1200,unit:'㎡',progress:100},{content:'アスファルト舗装（1層目）',area:'A工区 0〜200m',qty:1200,unit:'㎡',progress:80}], equip:[{name:'アスファルトフィニッシャー',qty:1,unit:'台',note:''},{name:'ロードローラー',qty:2,unit:'台',note:''},{name:'タイヤローラー',qty:1,unit:'台',note:''}], safety:{朝礼KY:true,安全帯:false,ヘルメット:true,整理整頓:true,機械点検:true,危険予知:true}, hazard:'', tomorrow:'アスファルト2層目施工', notes:'明日は交通規制範囲拡大、警備員3名追加', photos:5},
+  {id:'r5', date:'2026/06/21', site:'○○ビル新築工事', reporter:'田中 一郎', dept:'工務部', weather:'☀️', timeStart:'08:00', timeEnd:'', workers:8, status:'draft', submittedAt:null, approvedAt:null, approver:null, workItems:[{content:'型枠組立',area:'B棟 1F',qty:0,unit:'㎡',progress:0}], equip:[], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:false,機械点検:false,危険予知:false}, hazard:'', tomorrow:'', notes:'', photos:0},
+  {id:'r6', date:'2026/06/18', site:'△△橋梁補修工事', reporter:'鈴木 次郎', dept:'工務部', weather:'🌧', timeStart:'08:30', timeEnd:'16:00', workers:3, status:'returned', submittedAt:'2026/06/18 16:30', approvedAt:null, approver:null, returnReason:'作業数量の根拠が不明確。再確認して再提出してください。', workItems:[{content:'橋台清掃',area:'上下流',qty:1,unit:'式',progress:100}], equip:[], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:true,機械点検:false,危険予知:false}, hazard:'', tomorrow:'防水下地処理', notes:'降雨のため13:00以降は安全上作業中止', photos:1},
+  {id:'r7', date:'2026/06/17', site:'○○ビル新築工事', reporter:'田中 一郎', dept:'工務部', weather:'☀️', timeStart:'08:00', timeEnd:'17:30', workers:10, status:'approved', submittedAt:'2026/06/17 18:00', approvedAt:'2026/06/17 20:00', approver:'山田 部長', workItems:[{content:'基礎配筋',area:'B棟',qty:2500,unit:'kg',progress:100}], equip:[{name:'クローラークレーン',qty:1,unit:'台',note:''}], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:true,機械点検:true,危険予知:true}, hazard:'', tomorrow:'型枠組立', notes:'', photos:3},
+  {id:'r8', date:'2026/06/21', site:'□□マンション外壁改修', reporter:'高橋 三郎', dept:'現場部', weather:'☀️', timeStart:'08:00', timeEnd:'', workers:6, status:'submitted', submittedAt:'2026/06/21 12:10', approvedAt:null, approver:null, workItems:[{content:'タイル補修',area:'南面6〜8F',qty:12,unit:'㎡',progress:30}], equip:[{name:'高所作業車',qty:1,unit:'台',note:''}], safety:{朝礼KY:true,安全帯:true,ヘルメット:true,整理整頓:true,機械点検:true,危険予知:true}, hazard:'', tomorrow:'', notes:'', photos:2},
+];
+
+const STATUS_LABEL = {draft:'下書き', submitted:'提出済', approved:'承認済', returned:'差戻し'};
+const STATUS_CLASS = {draft:'b-draft', submitted:'b-submitted', approved:'b-approved', returned:'b-returned'};
+const WEATHER_ICON = {'☀️':'☀️','⛅':'⛅','☁️':'☁️','🌧':'🌧','❄️':'❄️','💨':'💨'};
+
+let currentTab = 'list';
+let statusFilter = 'all';
+let searchQ = '';
+let selectedReportId = null;
+let formWeather = '☀️';
+let formWorkerCount = 8;
+
+// ── LIST ────────────────────────────────────────────────────────
+function renderList() {
+  let data = REPORTS.filter(r =>
+    (statusFilter === 'all' || r.status === statusFilter) &&
+    (!searchQ || (r.site+r.reporter).includes(searchQ))
+  ).sort((a,b) => b.date.localeCompare(a.date));
+
+  const el = document.getElementById('report-list');
+  if (!data.length) {
+    el.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--muted)"><div style="font-size:32px;margin-bottom:10px">📋</div><p>該当する報告書がありません</p></div>';
+    return;
+  }
+  el.innerHTML = data.map(r => {
+    const d = r.date.split('/');
+    const isNew = !r.submittedAt && r.status !== 'draft';
+    return `<div class="report-card ${selectedReportId===r.id?'selected':''}" onclick="selectReport('${r.id}')">
+      <div class="rc-date"><span style="font-size:10px;color:var(--muted)">${d[1]}/${d[2]}</span><strong>${d[2]}</strong><span style="font-size:9px;color:var(--muted)">日</span></div>
+      <div class="rc-info">
+        <div class="rc-site">${r.site}</div>
+        <div class="rc-meta">${r.reporter} ／ ${r.workers}名 ／ ${r.timeStart}〜${r.timeEnd||'記録中'}</div>
+      </div>
+      <div class="rc-weather">${r.weather}</div>
+      <span class="badge ${STATUS_CLASS[r.status]}">${STATUS_LABEL[r.status]}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectReport(id) {
+  selectedReportId = id;
+  renderList();
+  const r = REPORTS.find(x=>x.id===id);
+  if (!r) return;
+  const area = document.getElementById('rp-detail-area');
+  const kv = document.getElementById('rp-detail-kv');
+  const actions = document.getElementById('rp-detail-actions');
+  area.style.display = '';
+  kv.innerHTML = [
+    ['現場名', r.site],
+    ['日付', r.date],
+    ['天気', r.weather],
+    ['時間', `${r.timeStart}〜${r.timeEnd||'未記録'}`],
+    ['作業員', `${r.workers}名`],
+    ['状態', `<span class="badge ${STATUS_CLASS[r.status]}">${STATUS_LABEL[r.status]}</span>`],
+    ['提出', r.submittedAt || '未提出'],
+    ...(r.approvedAt ? [['承認', r.approvedAt]] : []),
+    ...(r.returnReason ? [['差戻理由', `<span style="color:var(--red);font-size:10px">${r.returnReason}</span>`]] : []),
+  ].map(([k,v])=>`<div class="rp-kv"><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  actions.innerHTML = `
+    <button class="ghost-btn" style="justify-content:center" onclick="showPdfModalForReport('${id}')">👁 PDF 表示</button>
+    ${r.status==='draft'||r.status==='returned' ? `<button class="ghost-btn primary" style="justify-content:center" onclick="editReport('${id}')">編集する</button>` : ''}
+  `;
+}
+
+function filterReports(q) { searchQ = q; renderList(); }
+function setStatusFilter(key, btn) {
+  statusFilter = key;
+  document.querySelectorAll('.chips .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+function filterByMonth() { renderList(); }
+
+// ── APPROVAL ────────────────────────────────────────────────────
+function renderApproval() {
+  const pending = REPORTS.filter(r=>r.status==='submitted');
+  const el = document.getElementById('approval-list');
+  el.innerHTML = pending.map(r => `
+    <div class="approval-card">
+      <div class="ac-header">
+        <div>
+          <div style="font-weight:800;font-size:14px">${r.site}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${r.date} ／ ${r.reporter} ／ ${r.weather} ／ ${r.workers}名</div>
+          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+            ${r.workItems.map(w=>`<span style="font-size:11px;background:var(--soft);padding:2px 8px;border-radius:6px;font-weight:700">${w.content} ${w.progress}%</span>`).join('')}
+          </div>
+        </div>
+        <span class="badge b-submitted">提出済</span>
+      </div>
+      ${r.hazard ? `<div style="font-size:12px;background:#fae5d1;border-left:3px solid var(--orange);padding:7px 10px;border-radius:0 6px 6px 0;margin-bottom:8px">⚠️ ヒヤリハットあり: ${r.hazard}</div>` : ''}
+      <div style="margin-bottom:8px">
+        <input type="text" placeholder="差戻しコメント（任意）" style="width:100%;font-size:12px" id="comment-${r.id}">
+      </div>
+      <div class="ac-actions">
+        <button class="ghost-btn" onclick="showPdfModalForReport('${r.id}')">👁 PDF 確認</button>
+        <button class="ghost-btn danger" style="flex:1;justify-content:center" onclick="returnReport('${r.id}')">差戻し</button>
+        <button class="ghost-btn primary" style="flex:1;justify-content:center" onclick="approveReport('${r.id}')">✓ 承認する</button>
+      </div>
+    </div>`).join('') || '<div style="padding:40px;text-align:center;color:var(--muted)">承認待ちの報告書はありません</div>';
+}
+
+function approveReport(id) {
+  const r = REPORTS.find(x=>x.id===id);
+  if (r) { r.status='approved'; r.approvedAt='2026/06/21 '+new Date().toTimeString().slice(0,5); r.approver='山田 部長'; }
+  renderApproval();
+  document.querySelector('.mobile-nav button:nth-child(3) .mn-icon').textContent='✅';
+}
+function returnReport(id) {
+  const r = REPORTS.find(x=>x.id===id);
+  const comment = document.getElementById('comment-'+id)?.value || '内容を確認し修正してください';
+  if (r) { r.status='returned'; r.returnReason=comment; }
+  renderApproval();
+}
+
+// ── FORM ────────────────────────────────────────────────────────
+let workRows = [], equipRows = [];
+
+function initNewForm() {
+  workRows = [{content:'',area:'',qty:'',unit:'㎡',progress:''}];
+  equipRows = [];
+  renderWorkRows();
+  renderEquipRows();
+  document.getElementById('f-date').value = '2026-06-21';
+  document.getElementById('f-tomorrow').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-hazard').value = '';
+  formWorkerCount = 8;
+  document.getElementById('f-workers').textContent = formWorkerCount;
+  document.getElementById('rp-list').style.display='none';
+  document.getElementById('rp-form').style.display='';
+}
+
+function editReport(id) {
+  showTab('form');
+  const r = REPORTS.find(x=>x.id===id);
+  if (!r) return;
+  workRows = r.workItems.map(w=>({...w}));
+  equipRows = r.equip.map(e=>({...e}));
+  renderWorkRows(); renderEquipRows();
+  document.getElementById('f-tomorrow').value = r.tomorrow;
+  document.getElementById('f-notes').value = r.notes;
+  document.getElementById('f-hazard').value = r.hazard;
+  formWorkerCount = r.workers;
+  document.getElementById('f-workers').textContent = formWorkerCount;
+}
+
+function addWorkRow() {
+  workRows.push({content:'',area:'',qty:'',unit:'㎡',progress:''});
+  renderWorkRows();
+}
+function removeWorkRow(i) { workRows.splice(i,1); renderWorkRows(); }
+function renderWorkRows() {
+  document.getElementById('work-tbody').innerHTML = workRows.map((r,i)=>`
+    <tr>
+      <td><input type="text" value="${r.content}" placeholder="例: 基礎コンクリート打設" oninput="workRows[${i}].content=this.value"></td>
+      <td><input type="text" class="sm" value="${r.area}" placeholder="例: B棟" oninput="workRows[${i}].area=this.value"></td>
+      <td><input type="number" class="xs" value="${r.qty}" min="0" oninput="workRows[${i}].qty=this.value"></td>
+      <td><select onchange="workRows[${i}].unit=this.value">
+        ${['㎡','m³','m','本','枚','個','kg','t','式','その他'].map(u=>`<option ${r.unit===u?'selected':''}>${u}</option>`).join('')}
+      </select></td>
+      <td><input type="number" class="xs" value="${r.progress}" min="0" max="100" placeholder="%" oninput="workRows[${i}].progress=this.value"></td>
+      <td><button class="del-btn" onclick="removeWorkRow(${i})">×</button></td>
+    </tr>`).join('');
+}
+
+function addEquipRow() {
+  equipRows.push({name:'',qty:'',unit:'台',note:''});
+  renderEquipRows();
+}
+function removeEquipRow(i) { equipRows.splice(i,1); renderEquipRows(); }
+function renderEquipRows() {
+  document.getElementById('equip-tbody').innerHTML = equipRows.map((r,i)=>`
+    <tr>
+      <td><input type="text" value="${r.name}" placeholder="例: コンクリートポンプ車" oninput="equipRows[${i}].name=this.value"></td>
+      <td><input type="number" class="xs" value="${r.qty}" min="0" oninput="equipRows[${i}].qty=this.value"></td>
+      <td><select onchange="equipRows[${i}].unit=this.value">
+        ${['台','本','袋','m³','kg','缶','個','その他'].map(u=>`<option ${r.unit===u?'selected':''}>${u}</option>`).join('')}
+      </select></td>
+      <td><input type="text" value="${r.note}" placeholder="備考" oninput="equipRows[${i}].note=this.value"></td>
+      <td><button class="del-btn" onclick="removeEquipRow(${i})">×</button></td>
+    </tr>`).join('');
+}
+
+function selectWeather(w, btn) {
+  formWeather = w;
+  document.querySelectorAll('.w-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function changeCount(d) {
+  formWorkerCount = Math.max(1, formWorkerCount + d);
+  document.getElementById('f-workers').textContent = formWorkerCount;
+}
+function toggleCheck(el) {
+  el.classList.toggle('checked', el.querySelector('input').checked);
+}
+// init safety checks
+document.querySelectorAll('.check-item').forEach(el => {
+  if (el.querySelector('input').checked) el.classList.add('checked');
+});
+
+function toggleSection(id) {
+  const body = document.getElementById(id);
+  const tog = document.getElementById('tog-'+id.slice(-1));
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : '';
+  if (tog) tog.classList.toggle('open', !isOpen);
+}
+
+function saveDraft() { alert('下書きを保存しました。'); }
+function submitReport() {
+  if (confirm('この日報を提出します。よろしいですか？')) {
+    alert('提出しました！承認者に通知されました。');
+    showTab('list');
+  }
+}
+
+function triggerPhoto(i) {
+  document.querySelector(`#photo-${i} input[type=file]`).click();
+}
+function previewPhoto(input, i) {
+  if (!input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  const slot = document.getElementById('photo-'+i);
+  slot.innerHTML = `<img src="${url}" alt=""><button class="remove-photo" onclick="removePhoto(event,${i})">×</button>`;
+}
+function removePhoto(e, i) {
+  e.stopPropagation();
+  const slot = document.getElementById('photo-'+i);
+  slot.innerHTML = `<span class="photo-icon">📷</span><span>写真を追加</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="previewPhoto(this,${i})">`;
+}
+
+// ── PDF ─────────────────────────────────────────────────────────
+function buildPdfData(r) {
+  return r || {
+    site: document.getElementById('f-site').value,
+    date: document.getElementById('f-date').value.replace(/-/g,'/'),
+    reporter: '田中 一郎',
+    weather: formWeather,
+    timeStart: document.getElementById('f-start').value,
+    timeEnd: document.getElementById('f-end').value,
+    workers: formWorkerCount,
+    workItems: workRows,
+    equip: equipRows,
+    safety: Object.fromEntries([...document.querySelectorAll('.check-item')].map(el=>[el.textContent.trim(), el.querySelector('input').checked])),
+    hazard: document.getElementById('f-hazard').value,
+    tomorrow: document.getElementById('f-tomorrow').value,
+    notes: document.getElementById('f-notes').value,
+  };
+}
+
+function showPdfModal() { showPdfModalData(buildPdfData(null)); }
+function showPdfModalForReport(id) {
+  const r = REPORTS.find(x=>x.id===id);
+  showPdfModalData(buildPdfData(r));
+}
+function showPdfModalData(d) {
+  document.getElementById('pdf-header-info').textContent = `現場名: ${d.site}　日付: ${d.date}　報告者: ${d.reporter||'田中 一郎'}`;
+  document.getElementById('pdf-basic').innerHTML = [
+    ['現場名', d.site], ['日付', d.date], ['天気', d.weather],
+    ['作業時間', `${d.timeStart}〜${d.timeEnd||'—'}`], ['作業員数', `${d.workers}名`],
+  ].map(([k,v])=>`<tr><th style="width:80px">${k}</th><td>${v}</td></tr>`).join('');
+  document.getElementById('pdf-work').innerHTML = (d.workItems||[]).filter(w=>w.content).map(w=>
+    `<tr><td>${w.content}</td><td>${w.area}</td><td>${w.qty}</td><td>${w.unit}</td><td>${w.progress}%</td></tr>`).join('') || '<tr><td colspan="5" style="color:#aaa">記録なし</td></tr>';
+  document.getElementById('pdf-equip').innerHTML = (d.equip||[]).filter(e=>e.name).map(e=>
+    `<tr><td>${e.name}</td><td>${e.qty}</td><td>${e.unit}</td><td>${e.note}</td></tr>`).join('') || '<tr><td colspan="4" style="color:#aaa">記録なし</td></tr>';
+  const safety = d.safety||{};
+  document.getElementById('pdf-safety').innerHTML = Object.entries(safety).map(([k,v])=>
+    `<span style="margin-right:12px">${v?'☑':'☐'} ${k}</span>`).join('');
+  document.getElementById('pdf-hazard').textContent = d.hazard || 'なし';
+  document.getElementById('pdf-tomorrow').textContent = d.tomorrow || '—';
+  document.getElementById('pdf-notes').textContent = d.notes || '—';
+  document.getElementById('pdf-modal').classList.add('open');
+}
+function closePdfModal() { document.getElementById('pdf-modal').classList.remove('open'); }
+
+function downloadPdf() {
+  if (typeof jspdf === 'undefined') { alert('PDFライブラリを読み込み中です。もう少しお待ちください。'); return; }
+  const { jsPDF } = jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  doc.setFont('helvetica');
+  doc.setFontSize(16); doc.text('作業日報', 105, 20, {align:'center'});
+  doc.setFontSize(10);
+  const site = document.getElementById('f-site').value;
+  const date = document.getElementById('f-date').value.replace(/-/g,'/');
+  doc.text(`現場名: ${site}　日付: ${date}　報告者: 田中 一郎`, 14, 32);
+  doc.setFontSize(9);
+  doc.text(`天気: ${formWeather}　開始: ${document.getElementById('f-start').value}　終了: ${document.getElementById('f-end').value}　作業員: ${formWorkerCount}名`, 14, 40);
+  doc.text('作業内容:', 14, 52);
+  let y = 58;
+  workRows.filter(r=>r.content).forEach(r => {
+    doc.text(`・${r.content}（${r.area}）${r.qty}${r.unit} 進捗${r.progress}%`, 18, y);
+    y += 6;
+  });
+  doc.text('翌日予定: ' + (document.getElementById('f-tomorrow').value||'—'), 14, y+6);
+  doc.save(`日報_${date}_${site}.pdf`);
+}
+
+// ── TABS ────────────────────────────────────────────────────────
+function showTab(id) {
+  currentTab = id;
+  ['list','form','approval'].forEach(t => {
+    document.getElementById('view-'+t).style.display = t===id?'':'none';
+    document.getElementById('tb-'+t).classList.toggle('active', t===id);
+  });
+  const mbtns = document.querySelectorAll('.mobile-nav button');
+  mbtns.forEach((b,i) => b.classList.toggle('active', ['list','form','approval'][i]===id));
+  if (id==='list') {
+    renderList();
+    if (document.getElementById('rp-list')) { document.getElementById('rp-list').style.display=''; document.getElementById('rp-form').style.display='none'; }
+  }
+  if (id==='form') { document.getElementById('rp-list').style.display='none'; document.getElementById('rp-form').style.display=''; }
+  if (id==='approval') { renderApproval(); document.getElementById('rp-list').style.display=''; document.getElementById('rp-form').style.display='none'; }
+}
+
+// ── INIT ────────────────────────────────────────────────────────
+renderList();
+initNewForm();
+// hide form rows init
+document.getElementById('view-form').style.display='none';
+document.getElementById('view-approval').style.display='none';
+</script>
+</body>
+</html>
