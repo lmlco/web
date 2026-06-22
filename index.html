@@ -237,14 +237,33 @@ tr:hover td{background:rgba(76,201,240,.04)}
       <div id="h_steel_inputs">
         <label>H形鋼規格</label>
         <select id="h_size" onchange="updatePileProps()">
-          <option value="200x200x8x12">H-200×200×8×12</option>
-          <option value="250x250x9x14">H-250×250×9×14</option>
-          <option value="300x300x10x15">H-300×300×10×15</option>
-          <option value="350x350x12x19" selected>H-350×350×12×19</option>
-          <option value="400x400x13x21">H-400×400×13×21</option>
-          <option value="414x405x18x28">H-414×405×18×28</option>
-          <option value="458x417x30x50">H-458×417×30×50</option>
-          <option value="custom_h">カスタム入力</option>
+          <optgroup label="── ワイドフランジ（HW）──">
+            <option value="200x200x8x12">HW-200×200×8×12</option>
+            <option value="250x250x9x14">HW-250×250×9×14</option>
+            <option value="300x300x10x15">HW-300×300×10×15</option>
+            <option value="350x350x12x19" selected>HW-350×350×12×19</option>
+            <option value="400x400x13x21">HW-400×400×13×21</option>
+            <option value="414x405x18x28">HW-414×405×18×28</option>
+            <option value="458x417x30x50">HW-458×417×30×50</option>
+          </optgroup>
+          <optgroup label="── ナロー（H形鋼）──">
+            <option value="100x50x5x7">H-100×50×5×7</option>
+            <option value="125x60x6x8">H-125×60×6×8</option>
+            <option value="150x75x5x7">H-150×75×5×7</option>
+            <option value="175x90x5x8">H-175×90×5×8</option>
+            <option value="200x100x5.5x8">H-200×100×5.5×8</option>
+            <option value="250x125x6x9">H-250×125×6×9</option>
+            <option value="300x150x6.5x9">H-300×150×6.5×9</option>
+            <option value="350x175x7x11">H-350×175×7×11</option>
+            <option value="400x200x8x13">H-400×200×8×13</option>
+            <option value="450x200x9x14">H-450×200×9×14</option>
+            <option value="500x200x10x16">H-500×200×10×16</option>
+            <option value="600x200x11x17">H-600×200×11×17</option>
+            <option value="700x300x13x24">H-700×300×13×24</option>
+          </optgroup>
+          <optgroup label="────────────">
+            <option value="custom_h">カスタム入力</option>
+          </optgroup>
         </select>
       </div>
       <div class="r2">
@@ -268,10 +287,22 @@ tr:hover td{background:rgba(76,201,240,.04)}
     <div class="ab">
       <label>腹起し材 H形鋼規格</label>
       <select id="w_size" onchange="updateWalingProps()">
-        <option value="250x250x9x14">H-250×250×9×14</option>
-        <option value="300x300x10x15" selected>H-300×300×10×15</option>
-        <option value="350x350x12x19">H-350×350×12×19</option>
-        <option value="400x400x13x21">H-400×400×13×21</option>
+        <optgroup label="── ワイドフランジ（HW）──">
+          <option value="250x250x9x14">HW-250×250×9×14</option>
+          <option value="300x300x10x15" selected>HW-300×300×10×15</option>
+          <option value="350x350x12x19">HW-350×350×12×19</option>
+          <option value="400x400x13x21">HW-400×400×13×21</option>
+          <option value="414x405x18x28">HW-414×405×18×28</option>
+        </optgroup>
+        <optgroup label="── ナロー（H形鋼）──">
+          <option value="250x125x6x9">H-250×125×6×9</option>
+          <option value="300x150x6.5x9">H-300×150×6.5×9</option>
+          <option value="350x175x7x11">H-350×175×7×11</option>
+          <option value="400x200x8x13">H-400×200×8×13</option>
+          <option value="450x200x9x14">H-450×200×9×14</option>
+          <option value="500x200x10x16">H-500×200×10×16</option>
+          <option value="600x200x11x17">H-600×200×11×17</option>
+        </optgroup>
       </select>
       <div class="r2">
         <div><label>断面係数 Zw <span class="unit">cm³</span></label>
@@ -281,10 +312,22 @@ tr:hover td{background:rgba(76,201,240,.04)}
       </div>
       <label>切ばり材 H形鋼規格</label>
       <select id="s_size" onchange="updateStrutProps()">
-        <option value="250x250x9x14">H-250×250×9×14</option>
-        <option value="300x300x10x15" selected>H-300×300×10×15</option>
-        <option value="350x350x12x19">H-350×350×12×19</option>
-        <option value="400x400x13x21">H-400×400×13×21</option>
+        <optgroup label="── ワイドフランジ（HW）──">
+          <option value="250x250x9x14">HW-250×250×9×14</option>
+          <option value="300x300x10x15" selected>HW-300×300×10×15</option>
+          <option value="350x350x12x19">HW-350×350×12×19</option>
+          <option value="400x400x13x21">HW-400×400×13×21</option>
+          <option value="414x405x18x28">HW-414×405×18×28</option>
+        </optgroup>
+        <optgroup label="── ナロー（H形鋼）──">
+          <option value="250x125x6x9">H-250×125×6×9</option>
+          <option value="300x150x6.5x9">H-300×150×6.5×9</option>
+          <option value="350x175x7x11">H-350×175×7×11</option>
+          <option value="400x200x8x13">H-400×200×8×13</option>
+          <option value="450x200x9x14">H-450×200×9×14</option>
+          <option value="500x200x10x16">H-500×200×10×16</option>
+          <option value="600x200x11x17">H-600×200×11×17</option>
+        </optgroup>
       </select>
       <div class="r2">
         <div><label>断面積 As <span class="unit">cm²</span></label>
@@ -321,6 +364,13 @@ tr:hover td{background:rgba(76,201,240,.04)}
           <input type="number" id="delta_w" value="15" step="1" inputmode="numeric"></div>
         <div><label>土圧割増係数</label>
           <input type="number" id="ep_fac" value="1.0" step="0.05" min="0.5" max="2.0" inputmode="decimal"></div>
+      </div>
+      <label style="margin-top:10px;display:flex;align-items:center;gap:10px;cursor:pointer;min-height:44px">
+        <input type="checkbox" id="use_virtual_depth" checked style="width:22px;height:22px;min-height:unset;cursor:pointer">
+        <span>仮想掘削深さを使用<span class="unit">（慣用法・切ばりあり）</span></span>
+      </label>
+      <div class="formula-box" style="font-size:0.72rem;line-height:1.6;margin-top:4px">
+        FORUM-8方式：切ばりがある場合、受動土圧と主働土圧が釣り合う深さを仮想支点として採用し、そこを固定端としてモーメント計算を行います。
       </div>
     </div>
   </div>
@@ -411,13 +461,28 @@ let charts = {};
 let lastResult = null;
 
 const HSTEEL = {
-  '200x200x8x12': {I:4720,Z:472,A:64},
-  '250x250x9x14': {I:10800,Z:867,A:92},
-  '300x300x10x15':{I:20400,Z:1360,A:120},
-  '350x350x12x19':{I:40400,Z:2310,A:173},
-  '400x400x13x21':{I:66600,Z:3330,A:219},
-  '414x405x18x28':{I:92800,Z:4490,A:296},
-  '458x417x30x50':{I:187000,Z:8160,A:529},
+  // ワイドフランジ（HW）
+  '200x200x8x12': {I:4720,Z:472,A:64,label:'HW-200×200×8×12'},
+  '250x250x9x14': {I:10800,Z:867,A:92,label:'HW-250×250×9×14'},
+  '300x300x10x15':{I:20400,Z:1360,A:120,label:'HW-300×300×10×15'},
+  '350x350x12x19':{I:40400,Z:2310,A:173,label:'HW-350×350×12×19'},
+  '400x400x13x21':{I:66600,Z:3330,A:219,label:'HW-400×400×13×21'},
+  '414x405x18x28':{I:92800,Z:4490,A:296,label:'HW-414×405×18×28'},
+  '458x417x30x50':{I:187000,Z:8160,A:529,label:'HW-458×417×30×50'},
+  // ナロー（H形鋼）
+  '100x50x5x7':   {I:187,Z:37.5,A:11.85,label:'H-100×50×5×7'},
+  '125x60x6x8':   {I:413,Z:66.1,A:16.98,label:'H-125×60×6×8'},
+  '150x75x5x7':   {I:666,Z:88.8,A:17.85,label:'H-150×75×5×7'},
+  '175x90x5x8':   {I:1210,Z:138,A:23.05,label:'H-175×90×5×8'},
+  '200x100x5.5x8':{I:1840,Z:184,A:26.67,label:'H-200×100×5.5×8'},
+  '250x125x6x9':  {I:4050,Z:324,A:36.97,label:'H-250×125×6×9'},
+  '300x150x6.5x9':{I:7210,Z:481,A:46.78,label:'H-300×150×6.5×9'},
+  '350x175x7x11': {I:13600,Z:775,A:63.14,label:'H-350×175×7×11'},
+  '400x200x8x13': {I:23700,Z:1190,A:84.12,label:'H-400×200×8×13'},
+  '450x200x9x14': {I:33500,Z:1490,A:96.76,label:'H-450×200×9×14'},
+  '500x200x10x16':{I:47800,Z:1910,A:114.2,label:'H-500×200×10×16'},
+  '600x200x11x17':{I:75600,Z:2520,A:134.4,label:'H-600×200×11×17'},
+  '700x300x13x24':{I:201000,Z:5760,A:235.5,label:'H-700×300×13×24'},
 };
 
 const gamma_w = 9.81;
@@ -663,13 +728,32 @@ function buildPressure(depths,H,hw,epMethod,delta,epFac,q_sur=0){
 // ============================================================
 // CONVENTIONAL - single stage
 // ============================================================
-function calcStage(H,hw,strutList,epMethod,delta,epFac,q_sur){
+
+// Find virtual excavation depth Hv > H where pa(z) = pp(z-H)
+function findVirtualDepth(H,hw,epMethod,delta,epFac,q_sur){
+  for(let z=H+0.05;z<=H+25;z+=0.05){
+    const l=getLayerAt(z);
+    const sv=getSv(z,hw)+q_sur;
+    const ka=Ka(l.phi,epMethod,delta);
+    const kp=Kp(l.phi,epMethod,delta);
+    const uw=z>hw?gamma_w*(z-hw):0;
+    const pa_v=Math.max(0,epFac*(ka*sv-2*l.c*Math.sqrt(ka))+uw);
+    const ze=z-H;
+    const lbot=getLayerAt(z);
+    const sv_e=(hw<H?(H-hw)*(lbot.gsat-gamma_w):0)+ze*(lbot.gsat-gamma_w);
+    const pp_v=Math.max(0,kp*sv_e+2*lbot.c*Math.sqrt(kp));
+    if(pp_v>=pa_v)return z;
+  }
+  return H+3.0;
+}
+
+function calcStage(H,hw,strutList,epMethod,delta,epFac,q_sur,useVirtualDepth){
   const nDiv=400,dz=(H+12)/nDiv;
   const depths=Array.from({length:nDiv+1},(_,i)=>i*dz);
   const{pa,pp}=buildPressure(depths,H,hw,epMethod,delta,epFac,q_sur);
   const pnet=pa.map((p,i)=>depths[i]<H?p:Math.max(0,pp[i]-p));
 
-  // Find D by moment equilibrium
+  // Find D by standard moment equilibrium (Fs=1.5) — independent of virtual depth method
   let D=findD(H,pnet,depths,dz,strutList);
   D=Math.max(D,1.5);
 
@@ -678,10 +762,25 @@ function calcStage(H,hw,strutList,epMethod,delta,epFac,q_sur){
   const{pa:pa2,pp:pp2}=buildPressure(d2,H,hw,epMethod,delta,epFac,q_sur);
   const pnet2=pa2.map((p,i)=>d2[i]<H?p:Math.max(0,pp2[i]-p));
 
-  const{sfd,bmd,reactions}=intSFDBMD(d2,pnet2,dz2,strutList,H,total);
+  let sfd,bmd,reactions;
+
+  if(useVirtualDepth&&strutList.length>0){
+    // 仮想掘削深さ法（FORUM-8方式）
+    // Hv = depth where Pa = Pp (net pressure crosses zero below excavation)
+    const Hv=findVirtualDepth(H,hw,epMethod,delta,epFac,q_sur);
+    // Find HvIdx on d2 grid
+    const HvIdx=d2.reduce((b,z,i)=>Math.abs(z-Hv)<Math.abs(d2[b]-Hv)?i:b,0);
+    // Net load for integration: above H = pa, below H = pa - pp (signed)
+    const qv=pa2.map((p,i)=>d2[i]<H?p:p-(pp2[i]||0));
+    ({sfd,bmd,reactions}=intSFDBMD_virtual(d2,qv,dz2,strutList,Hv,HvIdx));
+  } else {
+    ({sfd,bmd,reactions}=intSFDBMD(d2,pnet2,dz2,strutList,H,total));
+  }
+
   const Mmax=Math.max(...bmd.map(Math.abs));
   const Qmax=Math.max(...sfd.map(Math.abs));
-  return{D,Mmax,Qmax,depths:d2,pa:pa2,pp:pp2,pnet:pnet2,sfd,bmd,reactions,H,total};
+  return{D,Mmax,Qmax,depths:d2,pa:pa2,pp:pp2,pnet:pnet2,sfd,bmd,reactions,H,total,
+    Hv:(useVirtualDepth&&strutList.length>0)?findVirtualDepth(H,hw,epMethod,delta,epFac,q_sur):null};
 }
 
 function findD(H,pnet,depths,dz,struts){
@@ -698,6 +797,7 @@ function findD(H,pnet,depths,dz,struts){
   return 5.0;
 }
 
+// Standard: moment about pile toe
 function intSFDBMD(depths,pnet,dz,struts,H,total){
   const n=depths.length;
   const q=pnet.map((p,i)=>depths[i]<H?p:-p);
@@ -709,7 +809,6 @@ function intSFDBMD(depths,pnet,dz,struts,H,total){
     for(let i=1;i<n;i++)sfd[i]=sfd[i-1]+(q[i-1]+q[i])/2*dz;
     for(let i=1;i<n;i++)bmd[i]=bmd[i-1]+(sfd[i-1]+sfd[i])/2*dz;
   } else {
-    // moment about pile toe → solve top strut reaction
     const sp0=struts[0];
     const spIdx=depths.reduce((b,z,i)=>Math.abs(z-sp0)<Math.abs(depths[b]-sp0)?i:b,0);
     let Mtoe=0;
@@ -718,6 +817,38 @@ function intSFDBMD(depths,pnet,dz,struts,H,total){
     reactions.push({pos:depths[spIdx],R});
     for(let i=1;i<n;i++){sfd[i]=sfd[i-1]+(q[i-1]+q[i])/2*dz;if(i===spIdx)sfd[i]-=R;}
     for(let i=1;i<n;i++)bmd[i]=bmd[i-1]+(sfd[i-1]+sfd[i])/2*dz;
+  }
+  return{sfd,bmd,reactions};
+}
+
+// Virtual depth method: moment about Hv (仮想掘削深さ)
+function intSFDBMD_virtual(depths,qv,dz,struts,Hv,HvIdx){
+  const n=depths.length;
+  const sfd=new Array(n).fill(0);
+  const bmd=new Array(n).fill(0);
+  const reactions=[];
+
+  if(struts.length===0){
+    for(let i=1;i<=HvIdx;i++)sfd[i]=sfd[i-1]+(qv[i-1]+qv[i])/2*dz;
+    for(let i=1;i<=HvIdx;i++)bmd[i]=bmd[i-1]+(sfd[i-1]+sfd[i])/2*dz;
+  } else {
+    const sp0=struts[0];
+    const spIdx=depths.slice(0,HvIdx+1).reduce((b,z,i)=>Math.abs(z-sp0)<Math.abs(depths[b]-sp0)?i:b,0);
+    // Moment about Hv → find strut reaction R
+    let M_Hv=0;
+    for(let i=1;i<=HvIdx;i++){
+      const zm=(depths[i-1]+depths[i])/2;
+      M_Hv+=(qv[i-1]+qv[i])/2*dz*(Hv-zm);
+    }
+    const R=M_Hv/(Hv-depths[spIdx]);
+    reactions.push({pos:depths[spIdx],R});
+    for(let i=1;i<=HvIdx;i++){
+      sfd[i]=sfd[i-1]+(qv[i-1]+qv[i])/2*dz;
+      if(i===spIdx)sfd[i]-=R;
+    }
+    for(let i=1;i<=HvIdx;i++)bmd[i]=bmd[i-1]+(sfd[i-1]+sfd[i])/2*dz;
+    // Below Hv: M and Q decay to zero (passive resistance dominates)
+    for(let i=HvIdx+1;i<n;i++){sfd[i]=0;bmd[i]=0;}
   }
   return{sfd,bmd,reactions};
 }
@@ -906,6 +1037,7 @@ function calculate(){
     const E_kNcm2=+document.getElementById('E_val').value;
     const kh=+document.getElementById('kh').value;
     const alpha=+document.getElementById('alpha_ep').value;
+    const useVirtDepth=document.getElementById('use_virtual_depth').checked;
 
     // Run each stage
     const stageResults=[];
@@ -915,7 +1047,7 @@ function calculate(){
       const activeStruts=stages.slice(0,i).filter(ss=>ss.strut&&ss.spos!=null).map(ss=>ss.spos);
       let sr;
       if(method==='conv'){
-        sr=calcStage(s.depth,hw,activeStruts,epMethod,delta,epFac,q_sur);
+        sr=calcStage(s.depth,hw,activeStruts,epMethod,delta,epFac,q_sur,useVirtDepth);
       } else {
         sr=calcElastic(s.depth,hw,activeStruts,epMethod,delta,epFac,q_sur,E_kNcm2,I_cm4,kh,alpha);
       }
@@ -988,6 +1120,7 @@ function displayStages(srs){
     div.innerHTML=`
       <h5>ステージ ${i+1}：掘削深さ ${sr.H.toFixed(1)} m ／ ${strutInfo}</h5>
       <div class="stage-row"><span class="stage-label">根入れ長 D</span><span class="stage-val">${sr.D.toFixed(2)} m</span></div>
+      ${sr.Hv!=null?`<div class="stage-row"><span class="stage-label">仮想掘削深さ Hv</span><span class="stage-val">${sr.Hv.toFixed(2)} m <span class="stage-badge">FORUM-8方式</span></span></div>`:''}
       <div class="stage-row"><span class="stage-label">最大M</span><span class="stage-val">${sr.Mmax.toFixed(2)} kN·m/m</span></div>
       <div class="stage-row"><span class="stage-label">最大Q</span><span class="stage-val">${sr.Qmax.toFixed(2)} kN/m</span></div>
       ${sr.reactions.map(rx=>`<div class="stage-row"><span class="stage-label">支保反力</span><span class="stage-val">${rx.R.toFixed(2)} kN/m <span class="stage-badge">@${rx.pos.toFixed(2)}m</span></span></div>`).join('')}
@@ -1167,8 +1300,9 @@ function exportReport(){
     const sr=r.stageResults[i];
     const strutTxt=s.strut?`切ばり設置 @ ${s.spos}m`:'なし';
     const rxnTxt=sr.reactions.length>0?sr.reactions.map(rx=>`${rx.R.toFixed(2)} kN/m`).join('<br>'):'－';
+    const hvTxt=sr.Hv!=null?`${sr.Hv.toFixed(2)} m`:'—';
     return `<tr><td>${i+1}</td><td class="num">${s.depth.toFixed(2)}</td><td>${strutTxt}</td>
-      <td class="num">${sr.D.toFixed(2)}</td><td class="num">${sr.Mmax.toFixed(2)}</td>
+      <td class="num">${sr.D.toFixed(2)}</td><td class="num">${hvTxt}</td><td class="num">${sr.Mmax.toFixed(2)}</td>
       <td class="num">${sr.Qmax.toFixed(2)}</td><td class="num">${rxnTxt}</td></tr>`;
   }).join('');
 
@@ -1358,7 +1492,7 @@ ${r.method==='elastic'?`<tr><td>地盤反力係数</td><td>kh</td><td class="num
 <!-- SECTION 3 -->
 <h2>3. 施工ステージ</h2>
 <table class="no-break">
-<thead><tr><th>ｽﾃｰｼﾞ</th><th>掘削深さ<br>m</th><th>切ばり設置</th><th>根入れ長 D<br>m</th><th>最大M<br>kN·m/m</th><th>最大Q<br>kN/m</th><th>支保工反力<br>kN/m</th></tr></thead>
+<thead><tr><th>ｽﾃｰｼﾞ</th><th>掘削深さ<br>m</th><th>切ばり設置</th><th>根入れ長 D<br>m</th><th>仮想掘削深さ Hv<br>m</th><th>最大M<br>kN·m/m</th><th>最大Q<br>kN/m</th><th>支保工反力<br>kN/m</th></tr></thead>
 <tbody>${stageRows}</tbody>
 </table>
 
