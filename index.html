@@ -3,21 +3,603 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="refresh" content="0; url=https://lmlco.github.io/">
-<title>LifeMakersLabs</title>
+<meta name="description" content="LifeMakersLabs（LML / Lml.co）— 生活を豊かにするものを、実験しながら自ら作り続けるクリエイター集団。映像・写真・ブランディング・SNS・MEO・AEOの運用型リテイナー。">
+<meta name="theme-color" content="#EFEDE4">
+<title>LifeMakersLabs — We make. ／ 生活を、実験しながら、自ら作る。</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;500;700;900&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+
 <style>
-  html,body{height:100%;margin:0}
-  body{background:#fff;color:#163A5C;font-family:'Archivo',system-ui,sans-serif;
-       display:grid;place-items:center;letter-spacing:.02em}
-  .b{font-weight:800;font-size:28px;letter-spacing:-.5px}
-  .s{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#5B7C9C;margin-top:8px;letter-spacing:.15em}
-  a{color:#163A5C}
+/* ==============================================================
+   LifeMakersLabs — "Lab Brutalism × Riso zine" / STUDIO MODE
+   青写真インク1色(#163A5C) + 設計図グリッド + リソ粒状/版ズレ
+   + プリズム一閃(激薄) + 仕様HUD。外部依存=Google Fontsのみ(無料)
+   ============================================================== */
+:root{
+  --paper:#EFEDE4;          /* riso paper */
+  --paper-2:#E6E3D8;
+  --ink:#163A5C;            /* blueprint ink — the only text color */
+  --ink-70:rgba(22,58,92,.70);
+  --ink-52:rgba(22,58,92,.52);
+  --line:rgba(22,58,92,.20);
+  --line-2:rgba(22,58,92,.34);
+  --grid:rgba(22,58,92,.07);
+  --grid-strong:rgba(22,58,92,.12);
+  /* riso misregistration channels (pastel, low opacity) */
+  --riso-pink:#E79FBE;
+  --riso-cyan:#8FD0DE;
+  /* prism pastels (激薄で一閃のみ) */
+  --prism:conic-gradient(from 210deg at 62% 38%,
+     rgba(143,208,222,.00) 0deg, rgba(143,208,222,.55) 40deg,
+     rgba(231,159,190,.45) 95deg, rgba(246,236,201,.50) 150deg,
+     rgba(213,205,235,.42) 210deg, rgba(201,230,211,.40) 270deg,
+     rgba(143,208,222,.00) 340deg);
+  --arch:"Archivo", system-ui, sans-serif;
+  --mono:"Space Mono", ui-monospace, Consolas, monospace;
+  --jp:"Noto Sans JP", system-ui, "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+  --round:"Fredoka", var(--jp);
+  --edge:clamp(18px,4.5vw,64px);
+  --max:1240px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; background:var(--paper); }
+body{
+  margin:0; color:var(--ink); background:var(--paper);
+  font-family:var(--jp); font-size:16px; line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden; position:relative;
+}
+/* blueprint grid — always on (命綱①) */
+body{
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+    linear-gradient(var(--grid-strong) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px);
+  background-size:28px 28px, 28px 28px, 140px 140px, 140px 140px;
+}
+/* riso grain — STRONG (命綱②) */
+body::after{
+  content:""; position:fixed; inset:0; z-index:120; pointer-events:none;
+  opacity:.16; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+img,video{ display:block; max-width:100%; }
+a{ color:inherit; text-decoration:none; }
+button,input,textarea{ font:inherit; color:inherit; }
+h1,h2,h3,h4{ margin:0; }
+p{ margin:0; }
+::selection{ background:var(--ink); color:var(--paper); }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+
+.mono{ font-family:var(--mono); letter-spacing:.08em; }
+.wrap{ width:min(100%,var(--max)); margin-inline:auto; padding-inline:var(--edge); }
+
+/* spec label (HUD) */
+.spec{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-70); }
+
+/* zine sticker (かわいさ = Fredoka限定) */
+.sticker{
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:var(--round); font-weight:600; font-size:12px; letter-spacing:.02em;
+  color:var(--ink); background:var(--paper); border:1.5px solid var(--ink);
+  border-radius:999px; padding:5px 12px; box-shadow:2px 2px 0 var(--ink);
+}
+.sticker.pink{ background:var(--riso-pink); }
+.sticker.cyan{ background:var(--riso-cyan); }
+.sticker.rot{ transform:rotate(-3deg); }
+
+/* registration marks ⊕ (riso印刷の見当) — 構造の意味を持つ装置 */
+.reg{ position:absolute; width:18px; height:18px; color:var(--line-2); pointer-events:none; z-index:2; }
+.reg::before,.reg::after{ content:""; position:absolute; background:currentColor; }
+.reg::before{ left:50%; top:0; width:1px; height:100%; transform:translateX(-.5px); }
+.reg::after{ top:50%; left:0; height:1px; width:100%; transform:translateY(-.5px); }
+.reg i{ position:absolute; inset:4px; border:1px solid currentColor; border-radius:50%; }
+.reg.tl{ top:-9px; left:-9px; } .reg.tr{ top:-9px; right:-9px; }
+.reg.bl{ bottom:-9px; left:-9px; } .reg.br{ bottom:-9px; right:-9px; }
+
+/* prism flare — one gesture per view, 激薄 (命綱を破らない) */
+.flare{ position:absolute; z-index:0; width:min(72vw,720px); aspect-ratio:1; border-radius:50%;
+  background:var(--prism); filter:blur(46px) saturate(.85); opacity:.5; pointer-events:none;
+  mix-blend-mode:multiply; }
+@media (prefers-reduced-motion:no-preference){
+  .flare{ animation:drift 20s var(--ease) infinite alternate; }
+}
+@keyframes drift{ from{ transform:translate(0,0) scale(1) rotate(0deg); } to{ transform:translate(4%,-3%) scale(1.08) rotate(16deg); } }
+
+/* riso misregistration text (版ズレ) */
+.riso{ position:relative; display:inline-block; color:var(--ink); }
+.riso::before,.riso::after{
+  content:attr(data-t); position:absolute; left:0; top:0; z-index:-1;
+  mix-blend-mode:multiply; transition:transform .5s var(--ease);
+}
+.riso::before{ color:var(--riso-pink); transform:translate(3px,2px); }
+.riso::after{ color:var(--riso-cyan); transform:translate(-3px,-2px); }
+.riso:hover::before{ transform:translate(6px,4px); }
+.riso:hover::after{ transform:translate(-6px,-4px); }
+
+/* ============ HEADER ============ */
+.head{ position:fixed; inset:0 0 auto; z-index:100; height:66px;
+  display:flex; align-items:center; justify-content:space-between; padding-inline:var(--edge);
+  background:color-mix(in srgb,var(--paper) 82%,transparent); backdrop-filter:blur(8px);
+  border-bottom:1px solid transparent; transition:border-color .3s var(--ease); }
+.head.on{ border-bottom-color:var(--line); }
+.brand{ font-family:var(--arch); font-weight:900; font-size:19px; letter-spacing:-.03em; text-transform:uppercase; }
+.brand small{ font-family:var(--mono); font-weight:400; font-size:10px; letter-spacing:.14em; color:var(--ink-52); text-transform:uppercase; margin-left:10px; }
+.nav{ display:flex; align-items:center; gap:24px; }
+.nav a{ font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; position:relative; }
+.nav a::after{ content:""; position:absolute; left:0; right:100%; bottom:-3px; height:1.5px; background:var(--ink); transition:right .3s var(--ease); }
+.nav a:hover::after{ right:0; }
+.menu{ display:none; width:40px; height:40px; border:1.5px solid var(--ink); background:none; cursor:pointer; align-items:center; justify-content:center; }
+.menu span{ width:16px; height:2px; background:var(--ink); position:relative; }
+.menu span::before,.menu span::after{ content:""; position:absolute; left:0; width:16px; height:2px; background:var(--ink); }
+.menu span::before{ top:-5px; } .menu span::after{ top:5px; }
+body.open .menu span{ background:transparent; }
+body.open .menu span::before{ transform:translateY(5px) rotate(45deg); }
+body.open .menu span::after{ transform:translateY(-5px) rotate(-45deg); }
+body.open{ overflow:hidden; }
+
+/* ============ PLATE scaffold ============ */
+.plate{ position:relative; padding-block:clamp(64px,9vw,128px); }
+.plate + .plate{ border-top:1px solid var(--line); }
+.plate-tag{ display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:34px; }
+.plate-tag .no{ font-family:var(--arch); font-weight:900; font-size:13px; letter-spacing:.02em; color:var(--ink); background:var(--ink); color:var(--paper); padding:2px 9px; }
+.plate-tag .nm{ font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; }
+.plate-tag .co{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--ink-52); margin-left:auto; }
+
+.reveal{ opacity:0; transform:translateY(22px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
+.reveal.in{ opacity:1; transform:none; }
+
+/* ============ HERO (plate 00) ============ */
+.hero{ position:relative; min-height:100svh; display:flex; align-items:center; padding:96px 0 60px; overflow:hidden; }
+.hero .flare{ top:-8%; right:-6%; }
+.hero-grid{ display:grid; grid-template-columns:1.35fr .65fr; gap:clamp(24px,4vw,56px); align-items:center; position:relative; z-index:1; }
+.hero-spec{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:26px; }
+.wordmark{ font-family:var(--arch); font-weight:900; text-transform:uppercase; letter-spacing:-.04em; line-height:.86; }
+.wordmark span{ display:block; font-size:clamp(52px,13vw,168px); }
+.wordmark .gloss{ display:block; font-family:var(--mono); font-weight:400; font-size:clamp(10px,1vw,12px); letter-spacing:.14em; color:var(--ink-70); text-transform:uppercase; margin:6px 0 14px; }
+.hero-lead{ font-family:var(--jp); font-weight:500; font-size:clamp(15px,1.5vw,19px); line-height:1.9; max-width:40ch; margin-top:26px; }
+.hero-lead b{ font-weight:900; }
+.hero-cta{ display:flex; gap:12px; flex-wrap:wrap; margin-top:30px; }
+.btn{ display:inline-flex; align-items:center; gap:9px; padding:13px 22px; font-family:var(--mono); font-weight:700;
+  font-size:12px; letter-spacing:.1em; text-transform:uppercase; border:1.5px solid var(--ink); background:var(--paper);
+  cursor:pointer; box-shadow:3px 3px 0 var(--ink); transition:transform .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease), color .18s var(--ease); }
+.btn:hover{ transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
+.btn.solid{ background:var(--ink); color:var(--paper); }
+.btn.solid:hover{ background:var(--ink); }
+.btn:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--ink); }
+
+/* riso duotone photo plate (single navy ink print) */
+.dt{ position:relative; border:1.5px solid var(--ink); background:var(--paper); overflow:hidden; }
+.dt img{ width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.12) brightness(1.06); mix-blend-mode:multiply; }
+.dt::after{ content:""; position:absolute; inset:0; background:var(--ink); mix-blend-mode:color; opacity:.9; pointer-events:none; }
+.dt .cap{ position:absolute; left:10px; bottom:9px; z-index:3; }
+.hero-plate{ position:relative; }
+.hero-plate .dt{ aspect-ratio:3/4; }
+
+/* ============ spec strip ============ */
+.strip{ border-block:1px solid var(--line); overflow:hidden; }
+.strip-track{ display:flex; width:max-content; animation:march 34s linear infinite; padding:11px 0; }
+@media (prefers-reduced-motion:reduce){ .strip-track{ animation:none; } }
+.strip-track span{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-70); padding-right:34px; white-space:nowrap; }
+.strip-track b{ color:var(--ink); }
+@keyframes march{ to{ transform:translateX(-50%); } }
+
+/* ============ ABOUT (plate 01) ============ */
+.about-grid{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(28px,5vw,72px); align-items:start; }
+.big{ font-family:var(--jp); font-weight:900; font-size:clamp(28px,4.4vw,54px); line-height:1.18; letter-spacing:-.02em; }
+.big .u{ position:relative; white-space:nowrap; }
+.big .u::after{ content:""; position:absolute; left:-2px; right:-2px; bottom:.08em; height:.42em; background:var(--riso-pink); opacity:.65; z-index:-1; mix-blend-mode:multiply; }
+.about-copy{ display:grid; gap:18px; }
+.about-copy p{ color:var(--ink-70); font-size:clamp(15px,1.4vw,17px); }
+.tenets{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-top:14px; }
+.tenet{ background:var(--paper); padding:20px 16px; }
+.tenet b{ display:block; font-family:var(--arch); font-weight:900; font-size:clamp(20px,2.4vw,28px); }
+.tenet span{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-52); }
+
+/* ============ CAPABILITY (plate 02) ============ */
+.cap-list{ border-top:1.5px solid var(--ink); }
+.cap{ display:grid; grid-template-columns:56px 1fr 1.1fr auto; gap:20px; align-items:center;
+  padding:22px 6px; border-bottom:1px solid var(--line); position:relative; transition:padding-left .3s var(--ease), background .3s var(--ease); }
+.cap:hover{ padding-left:16px; background:color-mix(in srgb,var(--riso-cyan) 22%, transparent); }
+.cap .n{ font-family:var(--mono); font-size:12px; color:var(--ink-52); }
+.cap .t{ font-family:var(--arch); font-weight:900; font-size:clamp(19px,2vw,27px); text-transform:uppercase; letter-spacing:-.01em; }
+.cap .t em{ display:block; font-family:var(--jp); font-weight:700; font-size:13px; letter-spacing:0; text-transform:none; color:var(--ink-70); font-style:normal; margin-top:2px; }
+.cap .d{ color:var(--ink-70); font-size:14px; }
+.cap .badge{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; border:1.5px solid var(--ink); padding:3px 8px; white-space:nowrap; }
+.cap .badge.hot{ background:var(--riso-pink); }
+
+/* ============ WORKS (plate 03) ============ */
+.works-head{ display:flex; justify-content:space-between; align-items:end; gap:20px; flex-wrap:wrap; margin-bottom:30px; }
+.works{ display:grid; grid-template-columns:repeat(12,1fr); gap:clamp(14px,2vw,22px); }
+.work{ position:relative; }
+.work .dt{ aspect-ratio:16/11; }
+.work.a{ grid-column:span 7; } .work.b{ grid-column:span 5; }
+.work.c{ grid-column:span 5; } .work.d{ grid-column:span 7; }
+.work .meta{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+.work h3{ font-family:var(--jp); font-weight:900; font-size:clamp(16px,1.8vw,21px); letter-spacing:-.01em; }
+.work p{ color:var(--ink-70); font-size:13.5px; margin-top:5px; }
+.work .tag{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-52); white-space:nowrap; }
+
+/* ============ PROCESS (plate 04) ============ */
+.flow{ display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line); }
+.step{ padding:26px 22px; border-right:1px solid var(--line); position:relative; }
+.step:last-child{ border-right:0; }
+.step .num{ font-family:var(--arch); font-weight:900; font-size:44px; line-height:1; }
+.step .en{ font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-70); margin-top:12px; }
+.step h3{ font-family:var(--jp); font-weight:900; font-size:16px; margin-top:2px; }
+.step p{ color:var(--ink-70); font-size:13.5px; margin-top:10px; }
+
+/* ============ PRICE (plate 05) — 3階建て ============ */
+.tiers{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:stretch; }
+.tier{ border:1.5px solid var(--ink); background:var(--paper); padding:26px; display:flex; flex-direction:column; gap:18px;
+  box-shadow:4px 4px 0 var(--line); transition:transform .2s var(--ease), box-shadow .2s var(--ease); }
+.tier:hover{ transform:translate(-2px,-2px); box-shadow:7px 7px 0 var(--line-2); }
+.tier.core{ background:var(--ink); color:var(--paper); box-shadow:5px 5px 0 var(--riso-pink); }
+.tier.core .mono,.tier.core .t-role,.tier.core li{ color:inherit; }
+.tier .t-top{ display:flex; align-items:center; justify-content:space-between; }
+.tier .t-kind{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+.tier .t-pick{ font-family:var(--round); font-weight:600; font-size:11px; background:var(--riso-pink); color:var(--ink); border:1.5px solid var(--paper); border-radius:999px; padding:3px 10px; }
+.tier h3{ font-family:var(--jp); font-weight:900; font-size:19px; letter-spacing:-.01em; }
+.tier .t-role{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--ink-52); }
+.tier .price{ font-family:var(--arch); font-weight:900; font-size:clamp(30px,3.6vw,42px); line-height:1; letter-spacing:-.02em; }
+.tier .price small{ font-family:var(--mono); font-size:12px; font-weight:400; letter-spacing:0; opacity:.7; }
+.tier ul{ list-style:none; margin:0; padding:16px 0 0; border-top:1px solid currentColor; display:grid; gap:9px; }
+.tier li{ display:grid; grid-template-columns:auto 1fr; gap:9px; font-size:13.5px; color:var(--ink-70); }
+.tier li::before{ content:"+"; font-family:var(--mono); }
+.tier .btn{ margin-top:auto; justify-content:center; }
+.tier.core .btn{ background:var(--paper); color:var(--ink); box-shadow:3px 3px 0 var(--riso-pink); border-color:var(--paper); }
+.price-note{ margin-top:22px; font-family:var(--mono); font-size:11.5px; color:var(--ink-52); letter-spacing:.02em; }
+
+/* ============ CONTACT (plate 06) ============ */
+.contact{ position:relative; overflow:hidden; }
+.contact .flare{ bottom:-30%; left:-10%; }
+.contact-grid{ display:grid; grid-template-columns:1fr .85fr; gap:clamp(30px,5vw,72px); align-items:start; position:relative; z-index:1; }
+.contact h2{ font-family:var(--arch); font-weight:900; font-size:clamp(40px,7vw,96px); line-height:.9; text-transform:uppercase; letter-spacing:-.04em; }
+.contact .sub{ font-family:var(--jp); font-weight:500; color:var(--ink-70); margin-top:20px; max-width:44ch; }
+.contact-list{ list-style:none; margin:28px 0 0; padding:0; }
+.contact-list li{ display:grid; grid-template-columns:130px 1fr; gap:14px; padding:14px 0; border-top:1px solid var(--line); }
+.contact-list dt{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-52); }
+.contact-list dd{ margin:0; font-size:14.5px; }
+.form{ border:1.5px solid var(--ink); background:var(--paper); padding:clamp(22px,3vw,32px); box-shadow:5px 5px 0 var(--ink); }
+.field{ display:grid; gap:7px; padding:12px 0; border-bottom:1px solid var(--line); }
+.field:first-child{ padding-top:0; }
+.field label{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-52); }
+.field input,.field textarea{ width:100%; background:none; border:0; outline:none; font-family:var(--jp); font-size:16px; padding:4px 0; resize:vertical; }
+.field.focus{ border-color:var(--ink); }
+.form .btn{ width:100%; justify-content:center; margin-top:20px; }
+.form-note{ font-family:var(--mono); font-size:10.5px; color:var(--ink-52); margin-top:12px; letter-spacing:.02em; }
+
+/* ============ FOOTER ============ */
+.foot{ border-top:1.5px solid var(--ink); padding:clamp(44px,6vw,80px) 0 36px; }
+.foot-top{ display:flex; justify-content:space-between; gap:36px; flex-wrap:wrap; }
+.foot-mark{ font-family:var(--arch); font-weight:900; font-size:clamp(40px,7vw,92px); text-transform:uppercase; letter-spacing:-.05em; line-height:.86; }
+.foot-blurb{ max-width:34ch; color:var(--ink-70); font-size:14px; margin-top:14px; }
+.foot-nav{ display:flex; gap:52px; flex-wrap:wrap; }
+.foot-col{ display:grid; gap:11px; align-content:start; }
+.foot-col h4{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-52); }
+.foot-col a{ font-size:14px; }
+.foot-col a:hover{ text-decoration:underline; text-underline-offset:3px; }
+.foot-bot{ display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:center;
+  margin-top:40px; padding-top:22px; border-top:1px solid var(--line);
+  font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-52); }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width:940px){
+  .nav{ position:fixed; inset:66px 12px auto; flex-direction:column; align-items:stretch; gap:0; padding:8px 18px;
+    background:var(--paper); border:1.5px solid var(--ink); box-shadow:5px 5px 0 var(--ink);
+    opacity:0; transform:translateY(-10px); pointer-events:none; transition:opacity .25s var(--ease), transform .25s var(--ease); }
+  body.open .nav{ opacity:1; transform:none; pointer-events:auto; }
+  .nav a{ padding:14px 2px; border-bottom:1px solid var(--line); font-size:14px; }
+  .nav a:last-child{ border:0; }
+  .nav a::after{ display:none; }
+  .menu{ display:inline-flex; }
+  .hero-grid,.about-grid,.contact-grid{ grid-template-columns:1fr; }
+  .hero-plate{ display:none; }
+  .tiers,.flow{ grid-template-columns:1fr; }
+  .flow{ border:1px solid var(--line); }
+  .step{ border-right:0; border-bottom:1px solid var(--line); }
+  .step:last-child{ border-bottom:0; }
+  .work.a,.work.b,.work.c,.work.d{ grid-column:span 12; }
+  .cap{ grid-template-columns:44px 1fr auto; }
+  .cap .d{ grid-column:2; grid-row:2; }
+}
+@media (max-width:560px){
+  .head{ height:58px; } .nav{ inset:58px 12px auto; }
+  .tenets{ grid-template-columns:1fr; }
+  .cap{ grid-template-columns:1fr auto; } .cap .n{ display:none; }
+  .contact-list li{ grid-template-columns:1fr; gap:3px; }
+  .hero-cta{ width:100%; } .hero-cta .btn{ flex:1; justify-content:center; }
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.001ms!important; transition-duration:.001ms!important; }
+  .reveal{ opacity:1; transform:none; }
+}
 </style>
 </head>
-<body>
-  <div style="text-align:center">
-    <div class="b">LifeMakersLabs</div>
-    <div class="s">redirecting → <a href="https://lmlco.github.io/">lmlco.github.io</a></div>
+
+<body id="top">
+
+<header class="head">
+  <a class="brand" href="#top">LifeMakersLabs<small>LML / Lml.co</small></a>
+  <nav class="nav" aria-label="メインナビ">
+    <a href="#about">About</a>
+    <a href="#capability">Capability</a>
+    <a href="#works">Works</a>
+    <a href="#process">Process</a>
+    <a href="#price">Price</a>
+    <a href="#contact">Contact</a>
+  </nav>
+  <button class="menu" data-menu aria-label="メニュー" aria-expanded="false"><span></span></button>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== HERO / PLATE 00 ===== -->
+  <section class="hero" id="hero">
+    <div class="flare" aria-hidden="true"></div>
+    <div class="hero-grid">
+      <div>
+        <div class="hero-spec reveal">
+          <span class="spec">state: formless / v0.∞</span>
+          <span class="sticker cyan rot">We make ✷</span>
+        </div>
+        <h1 class="wordmark reveal" aria-label="LifeMakersLabs">
+          <span class="riso" data-t="LIFE">LIFE</span>
+          <span class="gloss">何のため — 生活・人生を豊かにする</span>
+          <span class="riso" data-t="MAKERS">MAKERS</span>
+          <span class="gloss">どう関わる — 自分たちが作り手。“We make”</span>
+          <span class="riso" data-t="LABS">LABS</span>
+          <span class="gloss">姿勢 — 実験・試作・遊びを恐れない研究所</span>
+        </h1>
+        <p class="hero-lead reveal">生活を豊かにするものを、実験しながら<b>自ら作り続ける</b>クリエイター集団。撮る・作る・伸ばすを一気通貫で。</p>
+        <div class="hero-cta reveal">
+          <a class="btn solid" href="#capability">できること <span aria-hidden="true">→</span></a>
+          <a class="btn" href="#contact">相談する</a>
+        </div>
+      </div>
+      <div class="hero-plate reveal">
+        <div class="dt">
+          <img src="image_crop_and_resize-b586fd7d-ef78-4442-bff4-7b1e2da5390e.jpg" alt="スタジオでの撮影">
+          <span class="reg tl"><i></i></span><span class="reg tr"><i></i></span>
+          <span class="reg bl"><i></i></span><span class="reg br"><i></i></span>
+          <span class="spec cap">PLATE 00 · STUDIO</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SPEC STRIP ===== -->
+  <div class="strip" aria-hidden="true">
+    <div class="strip-track">
+      <span>映像 <b>/</b> 写真 <b>/</b> ブランディング <b>/</b> SNS運用 <b>/</b> MEO <b>/</b> SEO <b>/</b> <b>AEO</b> <b>/</b>&nbsp;</span>
+      <span>映像 <b>/</b> 写真 <b>/</b> ブランディング <b>/</b> SNS運用 <b>/</b> MEO <b>/</b> SEO <b>/</b> <b>AEO</b> <b>/</b>&nbsp;</span>
+    </div>
   </div>
+
+  <!-- ===== ABOUT / PLATE 01 ===== -->
+  <section class="plate" id="about">
+    <div class="plate-tag reveal"><span class="no">01</span><span class="nm">About</span><span class="co">— 匿名・無定形の作り手集団</span></div>
+    <div class="about-grid">
+      <div class="reveal">
+        <p class="big">受託で終わらない。<br><span class="u">俺たちの作家性</span>で、<br>事業ごと面白くする。</p>
+      </div>
+      <div class="about-copy reveal">
+        <p>LifeMakersLabsは「何屋か」をあえて固定しないクリエイター集団。表に立つのは、中の人ではなく<b>作品とキャラ</b>です。輪郭は薄く、気配は濃く。</p>
+        <p>だから納品物はデータで終わりません。営業資料になり、採用広報になり、Googleマップの第一印象になり、SNSで繰り返し効く“売れる文脈”として、事業に資産を残していきます。</p>
+        <div class="tenets">
+          <div class="tenet"><b>戦略</b><span>Why you win</span></div>
+          <div class="tenet"><b>制作</b><span>What they feel</span></div>
+          <div class="tenet"><b>運用</b><span>How it grows</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CAPABILITY / PLATE 02 ===== -->
+  <section class="plate" id="capability">
+    <div class="plate-tag reveal"><span class="no">02</span><span class="nm">Capability</span><span class="co">— 撮れる会社が、運用まで持つ</span></div>
+    <div class="cap-list">
+      <div class="cap reveal"><span class="n">C-01</span><div class="t">Video<em>映像制作</em></div><div class="d">採用・会社紹介・商品・ショート。冒頭3秒と視聴後の行動まで設計。</div><span class="badge">主力</span></div>
+      <div class="cap reveal"><span class="n">C-02</span><div class="t">Photo<em>写真撮影</em></div><div class="d">Web・SNS・採用で使い回せる、空気感のある写真資産。</div><span class="badge">主力</span></div>
+      <div class="cap reveal"><span class="n">C-03</span><div class="t">Branding<em>ブランディング</em></div><div class="d">理念を、顧客が「ここに頼みたい」と感じる判断材料へ翻訳。</div><span class="badge">設計</span></div>
+      <div class="cap reveal"><span class="n">C-04</span><div class="t">SNS<em>運用設計</em></div><div class="d">ネタ切れしない投稿設計と改善サイクルで“見られるだけ”を卒業。</div><span class="badge">運用</span></div>
+      <div class="cap reveal"><span class="n">C-05</span><div class="t">MEO / SEO<em>集客導線</em></div><div class="d">地図と検索で比較された瞬間に負けない、写真・文章・導線を整備。</div><span class="badge">運用</span></div>
+      <div class="cap reveal"><span class="n">C-06</span><div class="t">AEO<em>生成AI最適化</em></div><div class="d">AIに引用・推薦される情報設計。相場未確立＝先行者で差がつく領域。</div><span class="badge hot">新領域</span></div>
+    </div>
+  </section>
+
+  <!-- ===== WORKS / PLATE 03 ===== -->
+  <section class="plate" id="works">
+    <div class="plate-tag reveal"><span class="no">03</span><span class="nm">Works</span><span class="co">— 1本を、資産に増やす</span></div>
+    <div class="works-head reveal">
+      <p class="big" style="font-size:clamp(24px,3.4vw,42px)">作って終わり、に<span class="u">しない</span>。</p>
+      <p class="spec" style="max-width:40ch; text-transform:none; font-size:13px; line-height:1.7">1本の映像を、サイト・SNS・営業資料・採用ページ・Googleビジネスまで展開。制作費を“消費”から“蓄積する資産”へ。</p>
+    </div>
+    <div class="works">
+      <article class="work a reveal">
+        <div class="dt"><img src="image_crop_and_resize-b586fd7d-ef78-4442-bff4-7b1e2da5390e.jpg" alt="採用・企業PR映像">
+          <span class="reg tl"><i></i></span><span class="reg br"><i></i></span></div>
+        <div class="meta"><div><h3>応募前の不安を消す、採用・企業PR映像</h3><p>働く人の表情と現場の温度を短尺に。採用ページやSNSで何度も効く形に。</p></div><span class="tag">W-01</span></div>
+      </article>
+      <article class="work b reveal">
+        <div class="dt"><img src="image_crop_and_resize-883c334a-730e-439b-9383-aec8f2a6aa9a.jpg" alt="人物撮影">
+          <span class="reg tl"><i></i></span><span class="reg br"><i></i></span></div>
+        <div class="meta"><div><h3>採用に効く撮り下ろし写真</h3><p>Web・SNS・資料で使い回せる資産に。</p></div><span class="tag">W-02</span></div>
+      </article>
+      <article class="work c reveal">
+        <div class="dt"><img src="image_crop_and_resize-e0dbb88f-c388-4b47-91df-626518e6aed6.jpg" alt="店舗の検索導線">
+          <span class="reg tl"><i></i></span><span class="reg br"><i></i></span></div>
+        <div class="meta"><div><h3>地図で勝つ店舗導線（MEO）</h3><p>写真・紹介文・投稿を整え、来店前に安心を。</p></div><span class="tag">W-03</span></div>
+      </article>
+      <article class="work d reveal">
+        <div class="dt"><img src="image_crop_and_resize-198b0624-cc3d-472e-8e62-59eba9cd1067.jpg" alt="ショート動画運用">
+          <span class="reg tl"><i></i></span><span class="reg br"><i></i></span></div>
+        <div class="meta"><div><h3>短尺動画を“続く仕組み”にする</h3><p>撮影素材から、継続投稿のフォーマットと編集テンプレを構築。</p></div><span class="tag">W-04</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===== PROCESS / PLATE 04 ===== -->
+  <section class="plate" id="process">
+    <div class="plate-tag reveal"><span class="no">04</span><span class="nm">Process</span><span class="co">— 勝ち筋を、先に決める</span></div>
+    <div class="flow reveal">
+      <div class="step"><div class="num">1</div><div class="en">Hearing</div><h3>ヒアリング</h3><p>目的・単価・顧客心理・競合との違いを整理。</p></div>
+      <div class="step"><div class="num">2</div><div class="en">Planning</div><h3>設計</h3><p>勝てる訴求・構成・撮影内容・投稿展開を設計。</p></div>
+      <div class="step"><div class="num">3</div><div class="en">Production</div><h3>制作</h3><p>撮影・編集・コピーをまとめて高速に進行。</p></div>
+      <div class="step"><div class="num">4</div><div class="en">Delivery</div><h3>納品・伴走</h3><p>掲載・投稿・改善まで必要に応じて伴走。</p></div>
+    </div>
+  </section>
+
+  <!-- ===== PRICE / PLATE 05 (3階建て) ===== -->
+  <section class="plate" id="price">
+    <div class="plate-tag reveal"><span class="no">05</span><span class="nm">Price</span><span class="co">— 入口 → 本命 → 単発の3階建て</span></div>
+    <div class="tiers">
+      <article class="tier reveal">
+        <div class="t-top"><span class="t-kind">入口 / Entry</span></div>
+        <h3>MEOで、まず土台</h3>
+        <span class="t-role">Local / Map</span>
+        <div class="price">¥30,000<small> /月〜</small></div>
+        <ul>
+          <li>Googleビジネス最適化</li>
+          <li>写真・紹介文の整備</li>
+          <li>月次の投稿・改善</li>
+          <li>初期構築 0〜5万</li>
+        </ul>
+        <a class="btn" href="#contact">入口で相談</a>
+      </article>
+
+      <article class="tier core reveal">
+        <div class="t-top"><span class="t-kind">本命 / Retainer</span><span class="t-pick">おすすめ</span></div>
+        <h3>撮影込み SNS運用</h3>
+        <span class="t-role">We shoot × We run</span>
+        <div class="price">¥200,000<small> /月〜</small></div>
+        <ul>
+          <li>ブランド設計 / 構成台本</li>
+          <li>撮影（動画＋写真）</li>
+          <li>ショート動画 月4〜6本</li>
+          <li>投稿運用 / 改善レポート</li>
+          <li>SEO・AEO の連携</li>
+        </ul>
+        <a class="btn" href="#contact">本命で相談</a>
+      </article>
+
+      <article class="tier reveal">
+        <div class="t-top"><span class="t-kind">単発 / One-shot</span></div>
+        <h3>採用・会社紹介 映像</h3>
+        <span class="t-role">Film / Recruit</span>
+        <div class="price">¥300,000<small> 〜</small></div>
+        <ul>
+          <li>企画・構成・台本</li>
+          <li>ロケ撮影 / 編集</li>
+          <li>本編＋ショート派生</li>
+          <li>採用ページ・SNS展開</li>
+        </ul>
+        <a class="btn" href="#contact">単発で相談</a>
+      </article>
+    </div>
+    <p class="price-note">// 価格は目安。目的と素材量で調整します。AEO（生成AI最適化）は相場未確立の先行領域として個別見積。</p>
+  </section>
+
+  <!-- ===== CONTACT / PLATE 06 ===== -->
+  <section class="plate contact" id="contact">
+    <div class="flare" aria-hidden="true"></div>
+    <div class="plate-tag reveal"><span class="no">06</span><span class="nm">Contact</span><span class="co">— 売り込みでなく、勝ち筋の相談</span></div>
+    <div class="contact-grid">
+      <div>
+        <h2 class="reveal"><span class="riso" data-t="LET’S">LET’S</span><br><span class="riso" data-t="MAKE.">MAKE.</span></h2>
+        <p class="sub reveal">「何を作るべきか」から一緒に整理します。採用動画・SNS運用・店舗集客・ブランド刷新など、まだ曖昧な段階でも大丈夫です。</p>
+        <dl class="contact-list reveal">
+          <li><dt>初回相談</dt><dd>30分無料 / オンライン対応</dd></li>
+          <li><dt>制作範囲</dt><dd>映像 / 写真 / SNS / MEO・SEO / AEO / 広報</dd></li>
+          <li><dt>関わり方</dt><dd>運用型リテイナー（月額顧問）／ 単発</dd></li>
+        </dl>
+        <div style="margin-top:24px; display:flex; gap:10px; flex-wrap:wrap">
+          <span class="sticker rot">v0.∞</span><span class="sticker pink">☺ formless</span>
+        </div>
+      </div>
+      <form class="form reveal" data-form>
+        <div class="field"><label for="name">Name / お名前</label><input id="name" name="name" autocomplete="name" placeholder="山田 太郎"></div>
+        <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label for="message">Brief / 相談内容</label><textarea id="message" name="message" rows="3" placeholder="例）採用向けの動画と、SNS運用を相談したい。"></textarea></div>
+        <button class="btn solid" type="submit">送信する →</button>
+        <p class="form-note">// 送信でメールアプリが起動します</p>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <div class="foot-mark riso" data-t="LML,Co">LML,Co</div>
+        <p class="foot-blurb">生活を豊かにするものを、実験しながら自ら作り続けるクリエイター集団。We make.</p>
+      </div>
+      <nav class="foot-nav" aria-label="フッター">
+        <div class="foot-col">
+          <h4>Capability</h4>
+          <a href="#capability">映像 / 写真</a>
+          <a href="#capability">ブランディング</a>
+          <a href="#capability">SNS / MEO・SEO</a>
+          <a href="#capability">AEO</a>
+        </div>
+        <div class="foot-col">
+          <h4>Studio</h4>
+          <a href="#about">About</a>
+          <a href="#works">Works</a>
+          <a href="#process">Process</a>
+          <a href="#price">Price</a>
+        </div>
+      </nav>
+    </div>
+    <div class="foot-bot">
+      <span>LifeMakersLabs — LML / Lml.co</span>
+      <span>state: formless / v0.∞ · © 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const body = document.body;
+  const head = document.querySelector('.head');
+  const menu = document.querySelector('[data-menu]');
+
+  menu.addEventListener('click', () => {
+    const o = body.classList.toggle('open');
+    menu.setAttribute('aria-expanded', String(o));
+  });
+  document.querySelectorAll('.nav a').forEach(a => a.addEventListener('click', () => {
+    body.classList.remove('open'); menu.setAttribute('aria-expanded', 'false');
+  }));
+
+  window.addEventListener('scroll', () => head.classList.toggle('on', window.scrollY > 10), { passive:true });
+
+  const io = new IntersectionObserver((es) => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold:.12 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  const form = document.querySelector('[data-form]');
+  form.querySelectorAll('input,textarea').forEach(i => {
+    const f = i.closest('.field');
+    i.addEventListener('focus', () => f.classList.add('focus'));
+    i.addEventListener('blur', () => f.classList.remove('focus'));
+  });
+  const contactEmail = ''; /* TODO: 受信用メールアドレスを設定 */
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const d = new FormData(form);
+    const s = encodeURIComponent('LifeMakersLabs への相談');
+    const b = encodeURIComponent(`お名前: ${d.get('name')||''}\nEmail: ${d.get('email')||''}\n\n相談内容:\n${d.get('message')||''}`);
+    location.href = `mailto:${contactEmail}?subject=${s}&body=${b}`;
+  });
+})();
+</script>
 </body>
 </html>
