@@ -226,12 +226,28 @@
     .step strong { font-family: var(--arch); font-weight: 900; font-size: 24px; line-height: 1; }
     .step p { margin: 0; font-weight: 500; }
 
-    /* ============ COLLAB BOARD (burst brainstorm) ============ */
-    .board { position: relative; min-height: 620px; margin-top: clamp(28px,4vw,48px); }
-    .note { position: absolute; width: min(230px,74vw); border: 1.5px solid var(--ink); border-radius: 12px; padding: 15px 17px; box-shadow: 5px 5px 0 var(--ink); transform: rotate(var(--r,0deg)) scale(1); }
-    html.js .note { opacity: 0; transform: rotate(var(--r,0deg)) scale(.2); }
-    .board.in .note { animation: pop .62s var(--spring) both; animation-delay: var(--d, 0ms); }
-    @keyframes pop { 0% { opacity: 0; transform: rotate(var(--r,0deg)) scale(.2); } 60% { opacity: 1; transform: rotate(var(--r,0deg)) scale(1.08); } 100% { opacity: 1; transform: rotate(var(--r,0deg)) scale(1); } }
+    /* ============ COLLAB BOARD (fireworks brainstorm) ============ */
+    .board { position: relative; min-height: 620px; margin-top: clamp(28px,4vw,48px); overflow: visible; }
+    .note { position: absolute; width: min(230px,74vw); border: 1.5px solid var(--ink); border-radius: 12px; padding: 15px 17px; box-shadow: 5px 5px 0 var(--ink); z-index: 2; transform: translate(var(--dx,0px), var(--dy,0px)) rotate(var(--r,0deg)) scale(1); }
+    html.js .note { opacity: 0; transform: translate(var(--dx,0px), var(--dy,0px)) rotate(calc(var(--r,0deg) * .4)) scale(.14); }
+    .board.in .note { animation: burst .85s var(--spring) both; animation-delay: var(--d, 0ms); }
+    @keyframes burst {
+      0%   { opacity: 0; transform: translate(var(--dx,0px), var(--dy,0px)) rotate(calc(var(--r,0deg) * .4)) scale(.14); }
+      50%  { opacity: 1; transform: translate(calc(var(--dx,0px) * .1), calc(var(--dy,0px) * .1)) rotate(calc(var(--r,0deg) * 1.2)) scale(1.16); }
+      100% { opacity: 1; transform: translate(0, 0) rotate(var(--r,0deg)) scale(1); }
+    }
+    /* launch rocket + trail */
+    .rocket { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; z-index: 4; opacity: 0; pointer-events: none;
+      background: radial-gradient(circle, #fff 0%, var(--ink) 65%, transparent 72%);
+      box-shadow: 0 0 11px 3px var(--rk-glow, var(--pink)); }
+    .rocket::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 50px; transform: translateX(-50%);
+      background: linear-gradient(to top, transparent, var(--ink) 75%); opacity: .5; }
+    .board.in .rocket { animation: launch .5s cubic-bezier(.3,.68,.4,1) both; animation-delay: var(--d, 0ms); }
+    @keyframes launch { 0% { opacity: 1; transform: translateY(var(--rise, 260px)); } 86% { opacity: 1; } 100% { opacity: 0; transform: translateY(0); } }
+    /* burst flash ring */
+    .flash { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 2px solid var(--ink); opacity: 0; pointer-events: none; z-index: 3; }
+    .board.in .flash { animation: flash .5s var(--ease) both; animation-delay: var(--d, 0ms); }
+    @keyframes flash { 0% { opacity: 0; transform: scale(.3); } 35% { opacity: .85; transform: scale(1.7); } 100% { opacity: 0; transform: scale(2.7); } }
     .note h3 { font-family: var(--round); font-weight: 600; font-size: 15px; text-transform: none; letter-spacing: 0; }
     .note p { margin: 6px 0 0; font-weight: 500; font-size: 12.5px; }
     .note.pink { background: var(--pink); } .note.acid { background: var(--acid); } .note.sky { background: var(--sky); } .note.violet { background: var(--violet); } .note.mint { background: var(--mint); }
@@ -516,14 +532,61 @@
       }
     }
 
-    // collab board: burst on scroll into view
+    // collab board: fireworks — rockets launch, burst, notes scatter outward
     const board = document.querySelector("[data-board]");
     if (board) {
+      const notes = [...board.querySelectorAll(".note")];
+      const glows = ["var(--pink)", "var(--sky)", "var(--acid)"];
+      let armed = false;
+
+      function armFireworks() {
+        if (armed || !notes.length) return;
+        armed = true;
+        const bRect = board.getBoundingClientRect();
+        const origins = [{ x: .22, y: .14 }, { x: .62, y: .40 }, { x: .40, y: .72 }];
+        const perGroup = Math.ceil(notes.length / origins.length);
+
+        origins.forEach((op, gi) => {
+          const ox = op.x * bRect.width;
+          const oy = op.y * bRect.height;
+          const groupNotes = notes.slice(gi * perGroup, gi * perGroup + perGroup);
+          if (!groupNotes.length) return;
+          const shellDelay = gi * 260;
+
+          if (!reduce) {
+            const rocket = document.createElement("span");
+            rocket.className = "rocket"; rocket.setAttribute("aria-hidden", "true");
+            rocket.style.left = ox + "px"; rocket.style.top = oy + "px";
+            rocket.style.setProperty("--rise", Math.round(bRect.height - oy + 70) + "px");
+            rocket.style.setProperty("--rk-glow", glows[gi % glows.length]);
+            rocket.style.setProperty("--d", shellDelay + "ms");
+            board.appendChild(rocket);
+
+            const flash = document.createElement("span");
+            flash.className = "flash"; flash.setAttribute("aria-hidden", "true");
+            flash.style.left = ox + "px"; flash.style.top = oy + "px";
+            flash.style.setProperty("--d", (shellDelay + 440) + "ms");
+            board.appendChild(flash);
+          }
+
+          groupNotes.forEach((note, ni) => {
+            const nRect = note.getBoundingClientRect();
+            const ncx = nRect.left - bRect.left + nRect.width / 2;
+            const ncy = nRect.top - bRect.top + nRect.height / 2;
+            note.style.setProperty("--dx", Math.round(ox - ncx) + "px");
+            note.style.setProperty("--dy", Math.round(oy - ncy) + "px");
+            note.style.setProperty("--d", (shellDelay + 460 + ni * 60) + "ms");
+          });
+        });
+
+        board.classList.add("in");
+      }
+
       const bio = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { board.classList.add("in"); bio.unobserve(board); } });
+        entries.forEach(e => { if (e.isIntersecting) { armFireworks(); bio.unobserve(board); } });
       }, { threshold: .25 });
       bio.observe(board);
-      setTimeout(() => board.classList.add("in"), 1600);
+      setTimeout(armFireworks, 1800);
     }
   </script>
 </body>
