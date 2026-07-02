@@ -70,7 +70,7 @@
     .skip:focus { left: 12px; }
 
     h1, h2, h3, .display { font-family: var(--arch); font-weight: 900; margin: 0; letter-spacing: -.01em; text-transform: uppercase; }
-    .mono, .label, .button, .ticker, .meta, .num, .chip { font-family: var(--mono); }
+    .mono, .label, .button, .num, .chip { font-family: var(--mono); }
 
     .riso { position: relative; display: inline-block; }
     .riso::before, .riso::after { content: attr(data-t); position: absolute; left: 0; top: 0; z-index: -1; mix-blend-mode: multiply; transition: transform .45s var(--ease); }
@@ -373,12 +373,12 @@
         <article class="shot"><div class="still" data-k="meo"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 05</span></div><div class="cap"><h3>MEO / 店舗導線</h3><p>地図で比較された瞬間に勝つ写真・文・導線。</p></div></article>
         <article class="shot"><div class="still" data-k="aeo"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 06</span></div><div class="cap"><h3>AEO / 生成AI最適化</h3><p>AIに引用・推薦される情報設計。先行者で差がつく。</p></div></article>
         <!-- duplicate for seamless auto-flow -->
-        <article class="shot" aria-hidden="true"><div class="still" data-k="rec"><span class="kind">REC 01</span></div><div class="cap"><h3>採用・会社紹介</h3><p>応募前の不安を消す。現場の温度と人の表情を短尺に。</p></div></article>
-        <article class="shot" aria-hidden="true"><div class="still" data-k="pr"><span class="kind">REC 02</span></div><div class="cap"><h3>企業PR / ブランド</h3><p>事業の核を、一瞬で伝わる画と言葉に翻訳。</p></div></article>
-        <article class="shot" aria-hidden="true"><div class="still" data-k="prod"><span class="kind">REC 03</span></div><div class="cap"><h3>商品・サービス</h3><p>魅力の理由を、比較される前に見せ切る。</p></div></article>
-        <article class="shot" aria-hidden="true"><div class="still" data-k="short"><span class="kind">REC 04</span></div><div class="cap"><h3>ショート動画</h3><p>続く仕組みへ。編集テンプレと投稿フォーマット。</p></div></article>
-        <article class="shot" aria-hidden="true"><div class="still" data-k="meo"><span class="kind">REC 05</span></div><div class="cap"><h3>MEO / 店舗導線</h3><p>地図で比較された瞬間に勝つ写真・文・導線。</p></div></article>
-        <article class="shot" aria-hidden="true"><div class="still" data-k="aeo"><span class="kind">REC 06</span></div><div class="cap"><h3>AEO / 生成AI最適化</h3><p>AIに引用・推薦される情報設計。先行者で差がつく。</p></div></article>
+        <article class="shot" aria-hidden="true"><div class="still" data-k="rec"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 01</span></div><div class="cap"><h3>採用・会社紹介</h3><p>応募前の不安を消す。現場の温度と人の表情を短尺に。</p></div></article>
+        <article class="shot" aria-hidden="true"><div class="still" data-k="pr"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 02</span></div><div class="cap"><h3>企業PR / ブランド</h3><p>事業の核を、一瞬で伝わる画と言葉に翻訳。</p></div></article>
+        <article class="shot" aria-hidden="true"><div class="still" data-k="prod"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 03</span></div><div class="cap"><h3>商品・サービス</h3><p>魅力の理由を、比較される前に見せ切る。</p></div></article>
+        <article class="shot" aria-hidden="true"><div class="still" data-k="short"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 04</span></div><div class="cap"><h3>ショート動画</h3><p>続く仕組みへ。編集テンプレと投稿フォーマット。</p></div></article>
+        <article class="shot" aria-hidden="true"><div class="still" data-k="meo"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 05</span></div><div class="cap"><h3>MEO / 店舗導線</h3><p>地図で比較された瞬間に勝つ写真・文・導線。</p></div></article>
+        <article class="shot" aria-hidden="true"><div class="still" data-k="aeo"><span class="reg tl"><i></i></span><span class="reg br"><i></i></span><span class="kind">REC 06</span></div><div class="cap"><h3>AEO / 生成AI最適化</h3><p>AIに引用・推薦される情報設計。先行者で差がつく。</p></div></article>
       </div>
     </section>
 
@@ -475,11 +475,11 @@
     if (rail) {
       let paused = false, down = false, startX = 0, startScroll = 0, moved = 0;
       const half = () => rail.scrollWidth / 2;
-      rail.addEventListener("pointerenter", () => paused = true);
-      rail.addEventListener("pointerleave", () => { paused = false; down = false; rail.classList.remove("drag"); });
+      rail.addEventListener("pointerenter", (e) => { if (e.pointerType !== "touch") paused = true; });
+      rail.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") { paused = false; down = false; rail.classList.remove("drag"); } });
       rail.addEventListener("pointerdown", (e) => { down = true; paused = true; moved = 0; startX = e.clientX; startScroll = rail.scrollLeft; rail.classList.add("drag"); try { rail.setPointerCapture(e.pointerId); } catch (_) {} });
       rail.addEventListener("pointermove", (e) => { if (!down) return; const dx = e.clientX - startX; moved = Math.abs(dx); rail.scrollLeft = startScroll - dx; });
-      const up = () => { down = false; rail.classList.remove("drag"); };
+      const up = (e) => { down = false; rail.classList.remove("drag"); if (e && e.pointerType === "touch") paused = false; };
       rail.addEventListener("pointerup", up);
       rail.addEventListener("pointercancel", up);
       // prevent click after drag
