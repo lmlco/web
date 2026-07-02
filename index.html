@@ -457,7 +457,6 @@
       });
     }, { threshold: .12, rootMargin: "0px 0px -8% 0px" });
     revealEls.forEach(el => io.observe(el));
-    setTimeout(() => revealEls.forEach(el => el.classList.add("in")), 1400);
 
     // scroll-spy
     const spy = new IntersectionObserver((entries) => {
@@ -545,7 +544,6 @@
         entries.forEach(e => { if (e.isIntersecting) { armFireworks(); bio.unobserve(board); } });
       }, { threshold: .25 });
       bio.observe(board);
-      setTimeout(armFireworks, 1800);
     }
   </script>
 </body>
