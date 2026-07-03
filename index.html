@@ -149,23 +149,22 @@
 
     /* shape lab (shared by hero + ip flow) */
     .mask, .sun, .ninja, .unit, .tower, .sigil { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); transition: transform .5s var(--ease); }
-    .sigil { width: min(240px,64%); }
-    .mask { width: min(240px,68%); aspect-ratio: 1; border: 6px solid var(--ink); border-radius: 42% 58% 45% 55% / 56% 42% 58% 44%; background: radial-gradient(circle at 36% 42%, var(--paper-light) 0 8%, transparent 8.5%), radial-gradient(circle at 64% 42%, var(--paper-light) 0 8%, transparent 8.5%), radial-gradient(circle at 50% 63%, var(--ink) 0 6%, transparent 6.5%), linear-gradient(135deg, var(--pink), var(--acid) 48%, var(--sky)); box-shadow: 9px 9px 0 rgba(22,58,92,.18); }
-    .sun { width: min(240px,68%); aspect-ratio: 1; border: 6px solid var(--ink); border-radius: 50%; background: radial-gradient(circle, var(--paper-light) 0 30%, transparent 30.5%), repeating-conic-gradient(from 8deg, var(--acid) 0 8deg, var(--pink) 8deg 16deg, var(--sky) 16deg 24deg, var(--violet) 24deg 32deg); box-shadow: 9px 9px 0 rgba(22,58,92,.18); }
-    .ninja { width: min(250px,70%); aspect-ratio: 1.18; border: 6px solid var(--ink); background: linear-gradient(135deg, transparent 0 28%, var(--ink) 28% 32%, transparent 32%), radial-gradient(circle at 48% 48%, var(--paper-light) 0 16%, transparent 16.5%), linear-gradient(130deg, var(--paper-light), var(--sky)); clip-path: polygon(8% 78%, 48% 8%, 64% 52%, 95% 52%, 95% 70%, 58% 70%, 22% 96%); box-shadow: 9px 9px 0 rgba(22,58,92,.18); }
-    .unit { width: min(260px,74%); aspect-ratio: 1.3; display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; align-items: center; }
+    .sigil { width: min(180px,60%); }
+    .mask { width: min(180px,62%); aspect-ratio: 1; border: 6px solid var(--ink); border-radius: 42% 58% 45% 55% / 56% 42% 58% 44%; background: radial-gradient(circle at 36% 42%, var(--paper-light) 0 8%, transparent 8.5%), radial-gradient(circle at 64% 42%, var(--paper-light) 0 8%, transparent 8.5%), radial-gradient(circle at 50% 63%, var(--ink) 0 6%, transparent 6.5%), linear-gradient(135deg, var(--pink), var(--acid) 48%, var(--sky)); box-shadow: 9px 9px 0 rgba(22,58,92,.18); }
+    .sun { width: min(180px,62%); aspect-ratio: 1; border: 6px solid var(--ink); border-radius: 50%; background: radial-gradient(circle, var(--paper-light) 0 30%, transparent 30.5%), repeating-conic-gradient(from 8deg, var(--acid) 0 8deg, var(--pink) 8deg 16deg, var(--sky) 16deg 24deg, var(--violet) 24deg 32deg); box-shadow: 9px 9px 0 rgba(22,58,92,.18); }
+    .ninja { width: min(190px,64%); aspect-ratio: 1.18; border: 6px solid var(--ink); background: linear-gradient(135deg, transparent 0 28%, var(--ink) 28% 32%, transparent 32%), radial-gradient(circle at 48% 48%, var(--paper-light) 0 16%, transparent 16.5%), linear-gradient(130deg, var(--paper-light), var(--sky)); clip-path: polygon(8% 78%, 48% 8%, 64% 52%, 95% 52%, 95% 70%, 58% 70%, 22% 96%); box-shadow: 9px 9px 0 rgba(22,58,92,.18); }
+    .unit { width: min(200px,68%); aspect-ratio: 1.3; display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; align-items: center; }
     .unit i { aspect-ratio: 1; border: 4px solid var(--ink); border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--sky)); box-shadow: 4px 4px 0 rgba(22,58,92,.18); }
     .unit i:nth-child(even) { transform: translateY(24px); background: linear-gradient(135deg, var(--acid), var(--violet)); }
-    .tower { width: min(260px,68%); height: min(200px,60%); display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; align-items: end; }
+    .tower { width: min(200px,62%); height: min(150px,54%); display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; align-items: end; }
     .tower i { display: block; border: 4px solid var(--ink); background: rgba(251,248,239,.72); box-shadow: 4px 4px 0 rgba(22,58,92,.18); }
     .tower i:nth-child(1){height:42%;} .tower i:nth-child(2){height:70%;} .tower i:nth-child(3){height:92%;} .tower i:nth-child(4){height:58%;} .tower i:nth-child(5){height:78%;}
 
     /* ============ IP FLOW (Brave-like flowing slideshow) ============ */
     .ipflow { margin-top: clamp(30px,5vw,56px); overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent); }
     .ipflow-track { display: flex; gap: 20px; width: max-content; padding-inline: 20px; animation: ipflow 52s linear infinite; }
-    .ipflow:hover .ipflow-track { animation-play-state: paused; }
     @keyframes ipflow { to { transform: translateX(-50%); } }
-    .ipc { flex: 0 0 auto; width: min(80vw,400px); min-height: 480px; position: relative; overflow: hidden; border: 1px solid var(--line-hard); border-radius: var(--radius); background: rgba(251,248,239,.6); box-shadow: 9px 9px 0 rgba(22,58,92,.08); padding: 24px; display: grid; grid-template-rows: auto 1fr auto; gap: 18px; }
+    .ipc { flex: 0 0 auto; width: min(80vw,400px); min-height: 380px; position: relative; overflow: hidden; border: 1px solid var(--line-hard); border-radius: var(--radius); background: rgba(251,248,239,.6); box-shadow: 9px 9px 0 rgba(22,58,92,.08); padding: 24px; display: grid; grid-template-rows: auto 1fr auto; gap: 18px; }
     .ipc::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(22,58,92,.06) 1px, transparent 1px), linear-gradient(180deg, rgba(22,58,92,.06) 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; }
     .ipc[data-tone="pink"] { background: linear-gradient(150deg, rgba(242,185,207,.6), rgba(251,248,239,.6) 60%); }
     .ipc[data-tone="acid"] { background: linear-gradient(150deg, rgba(244,231,162,.66), rgba(251,248,239,.6) 60%); }
@@ -174,7 +173,7 @@
     .ipc[data-tone="mint"] { background: linear-gradient(150deg, rgba(196,230,207,.6), rgba(251,248,239,.6) 60%); }
     .ipc-head, .ipc-visual, .ipc-body { position: relative; z-index: 1; }
     .ipc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-    .ipc-visual { min-height: 220px; }
+    .ipc-visual { min-height: 160px; }
     .ipc h3 { font-size: clamp(30px,4vw,52px); line-height: .9; }
     .ipc-role { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 12px; display: block; }
     .ipc-body p { margin: 10px 0 0; font-weight: 500; font-size: 15px; }
@@ -270,7 +269,7 @@
       .hero.cover { padding-top: 96px; }
       .cover-stage .mask { width: min(420px,78vw); }
       .site-footer { flex-direction: column; }
-      .ipc { min-height: 430px; }
+      .ipc { min-height: 340px; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
