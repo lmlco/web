@@ -500,15 +500,15 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
 <script>
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ==================== theme (?theme=light) ==================== */
-const LIGHT = new URLSearchParams(location.search).get("theme") === "light";
+/* ==================== theme — white is the default, ?theme=dark opts out ==================== */
+const LIGHT = new URLSearchParams(location.search).get("theme") !== "dark";
 if (LIGHT) document.body.classList.add("light");
 (function(){
   const tg = document.getElementById("theme-toggle");
   tg.textContent = "THEME: " + (LIGHT ? "LIGHT" : "DARK");
   tg.addEventListener("click", () => {
     const q = new URLSearchParams(location.search);
-    if (LIGHT) q.delete("theme"); else q.set("theme", "light");
+    if (LIGHT) q.set("theme", "dark"); else q.delete("theme");
     location.search = q.toString();
   });
 })();
