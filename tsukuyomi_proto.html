@@ -180,7 +180,7 @@ body.assembled:not(.selected) #prompt{ opacity:1; }
 }
 /* chromatic-split glitch layers, offset copies of the same text */
 #ok span::before,#ok span::after{
-  content:"OK"; position:absolute; inset:0; z-index:-1;
+  content:attr(data-t); position:absolute; inset:0; z-index:-1;
   opacity:0; mix-blend-mode:screen;
 }
 #ok span::before{ color:var(--sky); }
@@ -348,11 +348,80 @@ body.console-on #console{ opacity:1; transform:translateX(-50%); }
 @media (prefers-reduced-motion:reduce){
   *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
 }
+
+/* ==================== LIGHT THEME (?theme=light) ==================== */
+body.light{
+  --void:#FCFCFA;
+  --panel:rgba(252,252,250,.82);
+  --paper:#163A5C;
+  --paper-60:rgba(22,58,92,.62);
+  --paper-35:rgba(22,58,92,.4);
+  --hair:rgba(22,58,92,.14);
+  --hair-2:rgba(22,58,92,.32);
+}
+body.light::before{
+  background-image:
+    linear-gradient(rgba(22,58,92,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22,58,92,.05) 1px, transparent 1px),
+    linear-gradient(rgba(22,58,92,.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22,58,92,.09) 1px, transparent 1px);
+}
+body.light::after{
+  background:radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(22,58,92,.06));
+}
+body.light #logo-stack img{ filter:none; }
+body.light #logo-stack .base{ opacity:.16; }
+body.light #logo-stack .fill{
+  filter:drop-shadow(0 0 16px rgba(111,198,232,.7));
+}
+body.light #gate-k{
+  text-shadow:0 0 12px rgba(111,198,232,.8), 0 0 30px rgba(111,198,232,.4);
+}
+body.light #stream{ color:rgba(45,116,184,.7); }
+body.light #stream .ok{ color:var(--blue); }
+body.light .hud .live{ color:var(--blue); }
+body.light .moon{ background:rgba(22,58,92,.1); border-color:var(--hair-2); }
+body.light .moon i{ background:var(--blue); }
+/* console stays an ink terminal — strong contrast on white */
+body.light #console{ background:#163A5C; border-color:var(--sky); }
+body.light #console .body{ color:#E8F1F8; }
+body.light #console .head{ color:var(--sky); border-color:rgba(252,252,250,.16); }
+body.light #prompt b{
+  text-shadow:0 0 12px rgba(111,198,232,.7), 0 0 30px rgba(111,198,232,.35);
+}
+body.light #prompt span{ color:var(--blue); }
+body.light .win{ box-shadow:0 24px 50px rgba(22,58,92,.1); }
+body.light .win .bar b{ color:var(--blue); }
+body.light .win .bar .st{ background:var(--blue); }
+body.light .win::before{ background:var(--blue); }
+body.light .a-mask,body.light .a-rec{ border-color:#163A5C; }
+body.light .a-rec::after{ color:#fff; text-shadow:0 0 4px rgba(22,58,92,.6); }
+body.light .a-world em,body.light .a-com b{ color:var(--blue); }
+body.light .win .data{ color:rgba(45,116,184,.6); }
+body.light #ok{ background:rgba(252,252,250,.88); }
+body.light #ok span{
+  text-shadow:0 0 30px rgba(111,198,232,.55), 0 0 90px rgba(111,198,232,.3);
+}
+body.light #ok span::before,body.light #ok span::after{ mix-blend-mode:multiply; }
+body.light #file{ background:rgba(252,252,250,.95); }
+body.light #file .back{ border-color:var(--blue); color:var(--blue); }
+body.light #file .back:hover{ background:var(--blue); color:#fff; }
+
+/* theme toggle chip */
+#theme-toggle{
+  position:fixed; top:18px; left:50%; transform:translateX(-50%);
+  z-index:65; cursor:pointer; user-select:none;
+  font-family:var(--mono); font-size:9px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--paper-35); border:1px solid var(--hair); padding:6px 14px; border-radius:999px;
+  transition:color .25s var(--ease), border-color .25s var(--ease);
+}
+#theme-toggle:hover{ color:var(--paper); border-color:var(--hair-2); }
 </style>
 </head>
 <body>
 
-<div id="scan" aria-hidden="true"></div><canvas id="gl3d"></canvas>
+<div id="scan" aria-hidden="true"></div>
+<div id="theme-toggle" title="テーマ切替">THEME: DARK</div><canvas id="gl3d"></canvas>
 
 <!-- boot / loading -->
 <div id="boot">
@@ -378,7 +447,7 @@ body.console-on #console{ opacity:1; transform:translateX(-50%); }
 </div>
 
 <!-- OK flash -->
-<div id="ok"><span>OK</span></div>
+<div id="ok"><span id="ok-word" data-t="OK">OK</span></div>
 
 <!-- HUD -->
 <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
@@ -430,6 +499,19 @@ body.console-on #console{ opacity:1; transform:translateX(-50%); }
 
 <script>
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ==================== theme (?theme=light) ==================== */
+const LIGHT = new URLSearchParams(location.search).get("theme") === "light";
+if (LIGHT) document.body.classList.add("light");
+(function(){
+  const tg = document.getElementById("theme-toggle");
+  tg.textContent = "THEME: " + (LIGHT ? "LIGHT" : "DARK");
+  tg.addEventListener("click", () => {
+    const q = new URLSearchParams(location.search);
+    if (LIGHT) q.delete("theme"); else q.set("theme", "light");
+    location.search = q.toString();
+  });
+})();
 
 /* ==================== fast code stream ==================== */
 const STREAM = [
@@ -616,7 +698,8 @@ let t0 = performance.now();
   const S = slots();
   for (let i = 0; i < state.length; i++){
     const s = state[i];
-    if (!s.shown){ s.el.style.opacity = 0; continue; }
+    if (!s.shown){ s.el.style.opacity = 0; s.el.style.pointerEvents = "none"; continue; }
+    s.el.style.pointerEvents = "auto";
     const life = Math.min(1, (now - s.born) / 900);
     const ein = 1 - Math.pow(1 - life, 3);
     s.hover += ((s.hoverT ? 1 : 0) - s.hover) * .08;
@@ -645,11 +728,19 @@ const SEC_LINES = {
   DOC: "注記。この組織に、完成形は存在しない。状態：formless。",
   COM: "経路を開通。以降の応答は、人間が担当する。"
 };
+/* section-specific confirmation words for the full-bleed flash */
+const SEC_OK = { IPS:"SCAN", REC:"REC", DOC:"READ", COM:"LINK" };
 let opening = false;
 function openFile(sec){
   if (opening) return; opening = true;
   document.body.classList.add("selected");   /* retire the center prompt */
-  /* 1. near-fullscreen OK, blinking */
+  /* 1. near-fullscreen confirmation word, fading in/out */
+  const word = SEC_OK[sec] || "OK";
+  const okWord = document.getElementById("ok-word");
+  okWord.textContent = word;
+  okWord.dataset.t = word;
+  /* scale with word length so long words stay on screen */
+  okWord.style.fontSize = `min(${Math.round(76 / word.length)}vw, 52vh)`;
   okEl.classList.add("on");
   setTimeout(() => {
     okEl.classList.remove("on");
@@ -749,6 +840,13 @@ document.getElementById("file-back").addEventListener("click", () => {
     clearcoat:1, clearcoatRoughness:.06,
     envMapIntensity:1.6, transparent:true
   });
+  if (document.body.classList.contains("light")){
+    /* deeper blue tint so the glass reads against the white page */
+    glassMat.color = new THREE.Color(0xE8F3FB);
+    glassMat.attenuationColor = new THREE.Color(0x2D74B8);
+    glassMat.attenuationDistance = .85;
+    glassMat.envMapIntensity = 1.25;
+  }
 
   let parts = [];
   const spin = new THREE.Group();
