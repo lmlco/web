@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>TSUKUYOMI — OBSERVATORY mockup v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FCFCFA; --ink:#163A5C; --ink-70:rgba(22,58,92,.72); --ink-45:rgba(22,58,92,.46);
+    --ink-25:rgba(22,58,92,.25); --hair:rgba(22,58,92,.14);
+    --blue:#2D74B8; --sky:#6FC6E8; --pink:#E79FBE;
+    --arch:"Archivo",sans-serif; --mono:"Space Mono",monospace; --jp:"Noto Sans JP",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:#E9E7DF; font-family:var(--jp); color:var(--ink); padding:40px; display:grid; gap:48px; justify-items:center;}
+  .cap{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:#6d6a5f; justify-self:start; margin-bottom:-36px;}
+
+  /* ============ viewport frame ============ */
+  .vp{
+    position:relative; width:min(1180px,100%); height:660px; overflow:hidden;
+    background:var(--bg); border:1px solid #c9c6bb;
+  }
+
+  /* ---- HUD frame ---- */
+  .hud{ position:absolute; font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-45); z-index:5; line-height:2; }
+  .hud b{ color:var(--ink); font-weight:700; }
+  .hud .live{ color:var(--blue); }
+  .hud.tl{ top:18px; left:22px; }
+  .hud.tr{ top:18px; right:22px; text-align:right; }
+  .hud.bl{ bottom:16px; left:22px; }
+  .hud.br{ bottom:16px; right:22px; text-align:right; }
+  /* corner ticks */
+  .tick{ position:absolute; width:16px; height:16px; z-index:5; color:var(--ink-25); }
+  .tick::before,.tick::after{ content:""; position:absolute; background:currentColor; }
+  .tick::before{ width:16px; height:1px; } .tick::after{ width:1px; height:16px; }
+  .tick.tl{ top:10px; left:10px; } .tick.tr{ top:10px; right:10px; transform:scaleX(-1); }
+  .tick.bl{ bottom:10px; left:10px; transform:scaleY(-1); } .tick.br{ bottom:10px; right:10px; transform:scale(-1); }
+
+  /* ---- page content (Lusion base, shrunk) ---- */
+  .page{ position:absolute; inset:0; padding:120px 90px; }
+  .wordmark{ font-family:var(--arch); font-weight:900; text-transform:uppercase; letter-spacing:-.04em; line-height:.84; font-size:120px; }
+  .wordmark em{ font-style:normal; background:linear-gradient(100deg,var(--blue),var(--sky) 45%,var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .lead{ max-width:34em; margin-top:26px; font-size:13px; color:var(--ink-70); }
+  .maskart{
+    position:absolute; right:120px; top:120px; width:250px; aspect-ratio:1;
+    border:6px solid var(--ink); border-radius:42% 58% 45% 55% / 56% 42% 58% 44%;
+    background:
+      radial-gradient(circle at 36% 42%, #fff 0 8%, transparent 8.5%),
+      radial-gradient(circle at 64% 42%, #fff 0 8%, transparent 8.5%),
+      radial-gradient(circle at 50% 63%, var(--ink) 0 6%, transparent 6.5%),
+      linear-gradient(135deg, var(--pink), #F4E7A2 48%, var(--sky));
+    box-shadow:9px 9px 0 rgba(22,58,92,.14);
+  }
+
+  /* section rows (frame 2) */
+  .giant{ font-family:var(--arch); font-weight:900; text-transform:uppercase; letter-spacing:-.04em; line-height:.86; font-size:92px;
+    background:linear-gradient(100deg,var(--blue),var(--sky) 45%,var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent; display:inline-block; }
+  .stamp{
+    display:inline-flex; align-items:center; gap:6px; vertical-align:top; margin:8px 0 0 18px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--blue);
+    border:1px solid var(--blue); padding:4px 10px; transform:rotate(-3deg);
+  }
+  .rows{ margin-top:34px; border-top:1px solid var(--hair); max-width:820px; }
+  .rowi{ display:grid; grid-template-columns:50px 60px 1fr auto; gap:18px; align-items:center; padding:16px 8px; border-bottom:1px solid var(--hair); font-size:13px; }
+  .rowi .idx{ font-family:var(--arch); font-weight:900; font-size:18px; color:transparent; -webkit-text-stroke:1px rgba(22,58,92,.4); }
+  .rowi .nm{ font-weight:900; font-size:15px; }
+  .rowi .nm i{ display:block; font-style:normal; font-family:var(--mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-45); }
+  .circle{ width:44px; height:44px; border-radius:50%; border:1px solid var(--hair); background:radial-gradient(circle at 36% 42%, #fff 0 9%, transparent 9.5%),radial-gradient(circle at 64% 42%, #fff 0 9%, transparent 9.5%),linear-gradient(135deg,var(--pink),var(--sky)); }
+
+  /* targeting brackets (AUTO mode) */
+  .target{ position:absolute; left:70px; right:70px; top:150px; height:330px; z-index:4; pointer-events:none; }
+  .tb{ position:absolute; width:26px; height:26px; border:2px solid var(--blue); animation:tpulse 1.6s ease-in-out infinite; }
+  .tb.tl{ top:0; left:0; border-right:0; border-bottom:0; }
+  .tb.tr{ top:0; right:0; border-left:0; border-bottom:0; }
+  .tb.bl{ bottom:0; left:0; border-right:0; border-top:0; }
+  .tb.br{ bottom:0; right:0; border-left:0; border-top:0; }
+  @keyframes tpulse{ 50%{ opacity:.35; } }
+  .target .tag{
+    position:absolute; top:-24px; left:0; font-family:var(--mono); font-size:9.5px;
+    letter-spacing:.22em; color:var(--blue); text-transform:uppercase;
+  }
+
+  /* scanline (AUTO mode) */
+  .scan{ position:absolute; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(45,116,184,.5),transparent); z-index:4; animation:scan 5s linear infinite; }
+  @keyframes scan{ from{ top:8%; } to{ top:94%; } }
+
+  /* ---- terminal ---- */
+  .term{ position:absolute; right:24px; bottom:52px; width:300px; background:var(--ink); color:var(--bg); border:1px solid var(--sky); font-family:var(--mono); z-index:6; }
+  .term-head{ display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid rgba(252,252,250,.18); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--sky); }
+  .term-head .x{ margin-left:auto; opacity:.6; }
+  .term-body{ padding:13px 12px; font-size:12px; line-height:1.9; min-height:64px; }
+  .cursorb{ display:inline-block; width:6px; height:12px; background:var(--sky); vertical-align:-2px; animation:blink 1s step-end infinite; }
+  @keyframes blink{ 50%{opacity:0} }
+  .choices{ display:grid; gap:6px; padding:0 12px 13px; }
+  .choices span{ display:flex; justify-content:space-between; border:1px solid rgba(252,252,250,.24); padding:7px 10px; font-size:11px; }
+  .choices span.hot{ border-color:var(--sky); background:rgba(111,198,232,.14); }
+
+  /* badge (collapsed) */
+  .badge{ position:absolute; right:24px; bottom:52px; display:flex; align-items:center; gap:9px; background:var(--ink); color:var(--bg); padding:9px 15px 9px 10px; border-radius:999px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; z-index:6; }
+
+  /* moon phase meter */
+  .moon{ width:18px; height:18px; border-radius:50%; background:#0d2438; position:relative; overflow:hidden; flex:0 0 auto; border:1px solid rgba(111,198,232,.5); }
+  .moon i{ position:absolute; inset:0; border-radius:50%; background:var(--sky); transform-origin:right center; }
+
+  /* faux cursor */
+  .fcur{ position:absolute; z-index:7; pointer-events:none; }
+  .fcur .d{ width:6px; height:6px; border-radius:50%; background:var(--blue); display:block; }
+  .fcur .r{ position:absolute; top:50%; left:50%; width:38px; height:38px; border-radius:50%; border:1px solid rgba(111,198,232,.9); transform:translate(-50%,-50%); animation:cpulse 1.4s ease-in-out infinite; display:block; }
+  @keyframes cpulse{ 50%{ box-shadow:0 0 0 6px rgba(111,198,232,.18); } }
+</style>
+</head>
+<body>
+
+<p class="cap">Frame 01 — MANUAL（通常閲覧：HUD常設＋月齢バッジ）</p>
+<div class="vp">
+  <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
+  <div class="hud tl"><b>SYS.TSUKUYOMI</b><br>OBS.MODE: <span class="live">MANUAL</span></div>
+  <div class="hud tr">月齢 <b class="live" id="ph1">34%</b> ◐<br>SEC: <b>HERO</b></div>
+  <div class="hud bl">読了記録: <b>—</b><br>T+<span class="live" id="tm1">00:12</span></div>
+  <div class="hud br">PTR <span class="live" id="xy1">0612, 0304</span><br>state: formless / v0.∞</div>
+
+  <div class="page">
+    <div class="wordmark">WORKS<br>BEFORE <em>WORDS.</em></div>
+    <p class="lead">LMLは、キャラ・世界観・動画・SNS・Web・広告導線までをひとつのIPとして設計する、匿名・無定形のクリエイターラボです。</p>
+    <div class="maskart"></div>
+  </div>
+
+  <div class="badge"><span class="moon"><i id="m1" style="transform:scaleX(.34)"></i></span>SYS.TSUKUYOMI</div>
+  <div class="fcur" style="left:610px; top:300px;"><span class="d"></span><span class="r"></span></div>
+</div>
+
+<p class="cap">Frame 02 — AUTO（代読モード：照準ブラケット＋読了スタンプ＋実況端末）</p>
+<div class="vp">
+  <span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
+  <div class="hud tl"><b>SYS.TSUKUYOMI</b><br>OBS.MODE: <span class="live" style="color:var(--pink)">AUTO — 代読中</span></div>
+  <div class="hud tr">月齢 <b class="live" id="ph2">58%</b> ◐<br>SEC: <b>IPS</b></div>
+  <div class="hud bl">読了記録: <b>01 ✓</b><br>T+<span class="live" id="tm2">00:41</span></div>
+  <div class="hud br">残り <b>~32s</b> — 操作で中断<br>state: formless / v0.∞</div>
+
+  <div class="scan"></div>
+
+  <div class="page" style="padding-top:150px;">
+    <span class="giant">Characters</span><span class="stamp">READ ✓ 02</span>
+    <div class="rows">
+      <div class="rowi"><span class="idx">01</span><span class="circle"></span><span class="nm">魔王さん<i>public persona / brand host</i></span><span style="font-family:var(--mono); color:var(--ink-45)">→</span></div>
+      <div class="rowi"><span class="idx">02</span><span class="circle" style="background:radial-gradient(circle,#fff 0 30%,transparent 31%),repeating-conic-gradient(#F4E7A2 0 30deg,var(--pink) 30deg 60deg,var(--sky) 60deg 90deg)"></span><span class="nm">アマテラスさん<i>ai vtuber / oracle</i></span><span style="font-family:var(--mono); color:var(--ink-45)">→</span></div>
+      <div class="rowi"><span class="idx">03</span><span class="circle" style="border-radius:8px"></span><span class="nm">えーあい株式会社<i>10 characters / tie-up</i></span><span style="font-family:var(--mono); color:var(--ink-45)">→</span></div>
+    </div>
+  </div>
+
+  <div class="target">
+    <span class="tag">OBSERVING — SEC.IPS</span>
+    <span class="tb tl"></span><span class="tb tr"></span><span class="tb bl"></span><span class="tb br"></span>
+  </div>
+
+  <div class="term">
+    <div class="term-head"><span class="moon" style="width:12px;height:12px"><i style="transform:scaleX(.58)"></i></span>SYS.TSUKUYOMI<span class="x">×</span></div>
+    <div class="term-body" id="type2"></div>
+    <div class="choices"><span class="hot">中断する<b>ESC</b></span></div>
+  </div>
+</div>
+
+<script>
+  /* live telemetry so the mock feels alive */
+  let t = 12;
+  setInterval(() => {
+    t++;
+    const mm = String(Math.floor(t/60)).padStart(2,"0"), ss = String(t%60).padStart(2,"0");
+    document.getElementById("tm1").textContent = mm + ":" + ss;
+    document.getElementById("tm2").textContent = "0" + Math.floor((t+29)/60) + ":" + String((t+29)%60).padStart(2,"0");
+  }, 1000);
+  setInterval(() => {
+    document.getElementById("xy1").textContent =
+      String(600 + Math.floor(Math.random()*30)).padStart(4,"0") + ", " +
+      String(290 + Math.floor(Math.random()*30)).padStart(4,"0");
+  }, 400);
+  /* typewriter loop */
+  const LINE = "照会完了。当該個体群、いずれも自走式。制御は保証しない。";
+  const el = document.getElementById("type2");
+  let i = 0;
+  setInterval(() => {
+    i = (i + 1) % (LINE.length + 24);
+    el.innerHTML = LINE.slice(0, Math.min(i, LINE.length)) + '<span class="cursorb"></span>';
+  }, 70);
+</script>
+</body>
+</html>

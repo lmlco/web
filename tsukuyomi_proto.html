@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYS.TSUKUYOMI — LML observation terminal / Stage 1.5 prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&family=Space+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ==============================================================
+   SYS.TSUKUYOMI — Stage 1.5 : dark machine terminal
+   loading (logo fills bottom-up + fast code stream)
+   -> welcome -> 3D logo rises & assembles -> hall of windows
+   narration never stops.
+   ============================================================== */
+:root{
+  --void:#050B14;
+  --panel:rgba(10,22,40,.72);
+  --paper:#E8F1F8;
+  --paper-60:rgba(232,241,248,.6);
+  --paper-35:rgba(232,241,248,.35);
+  --hair:rgba(111,198,232,.18);
+  --hair-2:rgba(111,198,232,.34);
+  --ink:#163A5C;
+  --blue:#2D74B8;
+  --sky:#6FC6E8;
+  --pink:#E79FBE;
+  --acid:#F4E7A2;
+  --arch:"Archivo",sans-serif;
+  --mono:"Space Mono",monospace;
+  --jp:"Noto Sans JP",sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0; background:var(--void); color:var(--paper); font-family:var(--jp);
+  overflow:hidden; -webkit-font-smoothing:antialiased;
+}
+/* machine backdrop: faint grid + drifting scanline + vignette */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(111,198,232,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111,198,232,.05) 1px, transparent 1px),
+    linear-gradient(rgba(111,198,232,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111,198,232,.08) 1px, transparent 1px);
+  background-size:32px 32px, 32px 32px, 160px 160px, 160px 160px;
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 45%, transparent 40%, rgba(2,6,12,.75));
+}
+#scan{
+  position:fixed; left:0; right:0; height:2px; z-index:1; pointer-events:none;
+  background:linear-gradient(90deg, transparent, rgba(111,198,232,.25), transparent);
+  animation:scan 7s linear infinite;
+}
+@keyframes scan{ from{ top:-2%; } to{ top:102%; } }
+
+/* ==================== layers ==================== */
+#gl3d{ position:fixed; inset:0; z-index:2; opacity:0; transform:translateY(60px);
+  transition:opacity 1.6s var(--ease), transform 1.6s var(--ease); }
+body.assembled #gl3d{ opacity:1; transform:none; }
+
+/* ==================== gate / loading ==================== */
+#boot{
+  position:fixed; inset:0; z-index:60; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:0; cursor:pointer;
+  transition:opacity .9s var(--ease);
+}
+#boot.done{ opacity:0; pointer-events:none; }
+#logo-stack{
+  position:relative; width:min(46vw,520px); animation:lpulse 3.4s ease-in-out infinite;
+}
+@keyframes lpulse{ 50%{ opacity:.72; } }
+#logo-stack img{ width:100%; display:block; filter:brightness(0) invert(1); }
+#logo-stack .base{ opacity:.14; }
+#logo-stack .fill{
+  position:absolute; inset:0; opacity:1;
+  clip-path:inset(100% 0 0 0);            /* fills bottom-up via JS */
+  filter:brightness(0) invert(1) drop-shadow(0 0 18px rgba(111,198,232,.55));
+}
+#pct{
+  margin-top:26px; font-family:var(--mono); font-size:12px; letter-spacing:.3em;
+  color:var(--sky);
+}
+#gate-k{
+  margin-top:22px; font-family:var(--mono); font-size:clamp(14px,1.8vw,19px);
+  letter-spacing:.3em; text-transform:uppercase; color:var(--paper);
+  animation:kfloat 3.2s ease-in-out infinite;
+  text-shadow:0 0 14px rgba(111,198,232,.9), 0 0 34px rgba(111,198,232,.5), 0 0 60px rgba(231,159,190,.3);
+}
+@keyframes kfloat{
+  0%,100%{ transform:translateY(0); opacity:.95;
+    text-shadow:0 0 14px rgba(111,198,232,.9), 0 0 34px rgba(111,198,232,.5), 0 0 60px rgba(231,159,190,.3); }
+  50%{ transform:translateY(-7px); opacity:.65;
+    text-shadow:0 0 22px rgba(111,198,232,1), 0 0 52px rgba(111,198,232,.7), 0 0 80px rgba(231,159,190,.45); }
+}
+@keyframes kpulse{ 50%{ opacity:.25; } }
+body.booting #gate-k{ display:none; }
+
+/* fast code stream */
+#stream{
+  position:fixed; left:26px; bottom:22px; z-index:61; width:min(46vw,430px);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; line-height:1.9;
+  color:rgba(111,198,232,.55); display:none;
+  mask-image:linear-gradient(to top, #000 62%, transparent);
+}
+body.booting #stream{ display:block; }
+#stream .ok{ color:var(--sky); }
+#stream .em{ color:var(--pink); }
+
+/* ==================== welcome ==================== */
+#welcome{
+  position:fixed; inset:0; z-index:55; display:flex; flex-direction:column; gap:16px;
+  align-items:center; justify-content:center; pointer-events:none; text-align:center;
+}
+#welcome .jp{
+  font-family:var(--jp); font-weight:900; font-size:clamp(30px,5.4vw,72px);
+  letter-spacing:.06em; display:inline-block; opacity:0; transform:translateY(38px);
+}
+#welcome .en{
+  font-family:var(--mono); font-size:clamp(10px,1.2vw,13px); letter-spacing:.42em;
+  text-transform:uppercase; color:var(--sky); opacity:0; transform:translateY(24px);
+}
+#welcome em{
+  font-style:normal;
+  background:linear-gradient(100deg,var(--sky),#D5CDEB 55%,var(--pink));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+#welcome.on .jp{ animation:wel 3.4s var(--ease) forwards; }
+#welcome.on .en{ animation:wel 3.4s var(--ease) .22s forwards; }
+@keyframes wel{
+  0%{ opacity:0; transform:translateY(38px); filter:blur(6px); }
+  22%{ opacity:1; transform:none; filter:blur(0); }
+  74%{ opacity:1; transform:none; filter:blur(0); }
+  100%{ opacity:0; transform:translateY(-24px); filter:blur(4px); }
+}
+
+/* ==================== center prompt (with the 3D) ==================== */
+#prompt{
+  position:fixed; left:50%; top:16%; transform:translateX(-50%);
+  z-index:44; text-align:center; pointer-events:none; opacity:0;
+  transition:opacity 1s var(--ease);
+  animation:pfloat 4.2s ease-in-out infinite;
+}
+body.assembled:not(.selected) #prompt{ opacity:1; }
+@keyframes pfloat{ 50%{ transform:translateX(-50%) translateY(-8px); } }
+#prompt b{
+  display:block; font-family:var(--jp); font-weight:900;
+  font-size:clamp(17px,2.4vw,28px); letter-spacing:.1em; color:var(--paper);
+  text-shadow:0 0 16px rgba(111,198,232,.8), 0 0 40px rgba(111,198,232,.4);
+}
+/* mechanical decode: brief chromatic split while the text re-acquires */
+#prompt.glitch b{
+  animation:pglitch .5s steps(3,end) 2;
+}
+@keyframes pglitch{
+  0%,100%{ text-shadow:0 0 16px rgba(111,198,232,.8), 0 0 40px rgba(111,198,232,.4); transform:none; }
+  33%{ text-shadow:3px 0 0 rgba(231,159,190,.9), -3px 0 0 rgba(111,198,232,.9); transform:translateX(2px); }
+  66%{ text-shadow:-3px 0 0 rgba(231,159,190,.9), 3px 0 0 rgba(111,198,232,.9); transform:translateX(-2px); }
+}
+#prompt span{
+  display:block; margin-top:8px; font-family:var(--mono);
+  font-size:clamp(9px,1vw,11px); letter-spacing:.42em; text-transform:uppercase;
+  color:var(--sky);
+}
+
+/* ==================== OK flash ==================== */
+#ok{
+  position:fixed; inset:0; z-index:80; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(5,11,20,.82); backdrop-filter:blur(4px);
+}
+#ok.on{ display:flex; animation:okfade .75s var(--ease) forwards; }
+#ok span{
+  position:relative; font-family:var(--arch); font-weight:900; letter-spacing:-.02em;
+  font-size:min(36vw,52vh); line-height:1; color:var(--paper);
+  text-shadow:0 0 40px rgba(111,198,232,.8), 0 0 120px rgba(111,198,232,.4);
+}
+/* chromatic-split glitch layers, offset copies of the same text */
+#ok span::before,#ok span::after{
+  content:"OK"; position:absolute; inset:0; z-index:-1;
+  opacity:0; mix-blend-mode:screen;
+}
+#ok span::before{ color:var(--sky); }
+#ok span::after{ color:var(--pink); }
+#ok.on span::before{ animation:okglitch-a .75s steps(2,end) forwards; }
+#ok.on span::after{ animation:okglitch-b .75s steps(2,end) forwards; }
+@keyframes okfade{
+  0%{ opacity:0; transform:scale(.965); }
+  30%{ opacity:1; transform:scale(1); }
+  56%{ opacity:1; transform:scale(1); }
+  100%{ opacity:0; transform:scale(1.03); }
+}
+@keyframes okglitch-a{
+  0%,29%{ opacity:0; transform:translate(0,0); }
+  31%{ opacity:.85; transform:translate(-10px,2px); clip-path:inset(10% 0 60% 0); }
+  36%{ opacity:.7; transform:translate(7px,-3px); clip-path:inset(55% 0 15% 0); }
+  41%{ opacity:.6; transform:translate(-4px,1px); clip-path:inset(30% 0 40% 0); }
+  46%,100%{ opacity:0; transform:translate(0,0); }
+}
+@keyframes okglitch-b{
+  0%,29%{ opacity:0; transform:translate(0,0); }
+  32%{ opacity:.8; transform:translate(9px,-2px); clip-path:inset(65% 0 5% 0); }
+  37%{ opacity:.65; transform:translate(-8px,3px); clip-path:inset(5% 0 70% 0); }
+  42%{ opacity:.55; transform:translate(5px,-1px); clip-path:inset(45% 0 20% 0); }
+  47%,100%{ opacity:0; transform:translate(0,0); }
+}
+
+/* ==================== HUD ==================== */
+.hud{
+  position:fixed; z-index:40; font-family:var(--mono); font-size:9.5px;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--paper-35); line-height:2;
+  opacity:0; transform:translateY(-8px); transition:opacity .9s var(--ease), transform .9s var(--ease);
+}
+body.live .hud{ opacity:1; transform:none; }
+.hud b{ color:var(--paper); font-weight:700; }
+.hud .live{ color:var(--sky); }
+.hud.tl{ top:18px; left:24px; }
+.hud.tr{ top:18px; right:24px; text-align:right; }
+.hud.bl{ bottom:16px; left:24px; transform:translateY(8px); }
+.hud.br{ bottom:16px; right:24px; text-align:right; transform:translateY(8px); }
+.tick{ position:fixed; width:18px; height:18px; z-index:40; color:var(--hair-2);
+  opacity:0; transition:opacity .9s var(--ease) .3s; }
+body.live .tick{ opacity:1; }
+.tick::before,.tick::after{ content:""; position:absolute; background:currentColor; }
+.tick::before{ width:18px; height:1px; } .tick::after{ width:1px; height:18px; }
+.tick.tl{ top:10px; left:10px; } .tick.tr{ top:10px; right:10px; transform:scaleX(-1); }
+.tick.bl{ bottom:10px; left:10px; transform:scaleY(-1); } .tick.br{ bottom:10px; right:10px; transform:scale(-1); }
+
+.moon{ display:inline-block; width:11px; height:11px; border-radius:50%; background:rgba(111,198,232,.15);
+  position:relative; overflow:hidden; vertical-align:-2px; margin-left:6px; border:1px solid var(--hair-2); }
+.moon i{ position:absolute; inset:0; border-radius:50%; background:var(--sky); transform:scaleX(0); transform-origin:left center; transition:transform .6s var(--ease); }
+
+/* ==================== subtitle console ==================== */
+#console{
+  position:fixed; left:50%; bottom:6vh; transform:translateX(-50%) translateY(30px);
+  z-index:75; width:min(88vw,640px);
+  background:var(--panel); border:1px solid var(--hair-2);
+  backdrop-filter:blur(10px);
+  clip-path:polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+  font-family:var(--mono); opacity:0;
+  transition:opacity .8s var(--ease), transform .8s var(--ease);
+}
+body.console-on #console{ opacity:1; transform:translateX(-50%); }
+#console .head{
+  display:flex; align-items:center; gap:8px; padding:8px 14px;
+  border-bottom:1px solid var(--hair);
+  font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--sky);
+}
+#console .head .dot{ width:6px; height:6px; border-radius:50%; background:var(--pink); animation:kpulse 1.2s ease-in-out infinite; }
+#console .head .stat{ margin-left:auto; opacity:.65; }
+#console .body{ padding:12px 16px 14px; font-size:12.5px; line-height:1.95; min-height:58px; color:var(--paper); }
+.curs{ display:inline-block; width:6px; height:12px; background:var(--sky); vertical-align:-2px; animation:blink 1s step-end infinite; }
+@keyframes blink{ 50%{ opacity:0; } }
+
+/* ==================== machine windows ==================== */
+#hall{ position:fixed; inset:0; z-index:30; pointer-events:none; }
+.win{
+  position:absolute; width:clamp(230px, min(26vw, 40vh), 400px); aspect-ratio:4/3.2;
+  background:var(--panel); border:1px solid var(--hair-2);
+  backdrop-filter:blur(8px); pointer-events:auto; cursor:pointer;
+  opacity:0; will-change:transform;
+  clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  transition:border-color .3s var(--ease);
+}
+.win::before{ /* accent seam along the cut corner */
+  content:""; position:absolute; top:0; right:0; width:26px; height:2px;
+  background:var(--sky); transform:rotate(45deg); transform-origin:right top; opacity:.7;
+}
+.win:hover{ border-color:var(--sky); }
+.win .bar{
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  border-bottom:1px solid var(--hair);
+  font-family:var(--mono); font-size:8.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--paper-35);
+}
+.win .bar b{ color:var(--sky); font-weight:700; margin-left:auto; }
+.win .bar .st{ width:5px; height:5px; border-radius:50%; background:var(--sky); animation:kpulse 1.6s ease-in-out infinite; }
+.win .view{ position:relative; height:calc(100% - 84px); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.win .view::before{ /* inner grid */
+  content:""; position:absolute; inset:0;
+  background-image:linear-gradient(var(--hair) 1px, transparent 1px), linear-gradient(90deg, var(--hair) 1px, transparent 1px);
+  background-size:22px 22px; opacity:.4;
+}
+.win .nm{
+  position:absolute; left:0; right:0; bottom:22px; padding:7px 12px;
+  border-top:1px solid var(--hair);
+  font-family:var(--arch); font-weight:900; font-size:14px; letter-spacing:.03em; text-transform:uppercase;
+  display:flex; justify-content:space-between; align-items:center; color:var(--paper);
+}
+.win .nm i{ font-style:normal; font-family:var(--jp); font-weight:700; font-size:10px; color:var(--paper-35); }
+.win .data{
+  position:absolute; left:0; right:0; bottom:0; padding:4px 12px;
+  font-family:var(--mono); font-size:7.5px; letter-spacing:.18em; color:rgba(111,198,232,.5);
+  display:flex; justify-content:space-between; text-transform:uppercase;
+}
+/* hover reticle */
+.win .ret{ position:absolute; inset:8px; opacity:0; transition:opacity .25s var(--ease); pointer-events:none; }
+.win:hover .ret{ opacity:1; }
+.win .ret i{ position:absolute; width:14px; height:14px; border:1.5px solid var(--pink); }
+.win .ret i:nth-child(1){ top:0; left:0; border-right:0; border-bottom:0; }
+.win .ret i:nth-child(2){ top:0; right:0; border-left:0; border-bottom:0; }
+.win .ret i:nth-child(3){ bottom:0; left:0; border-right:0; border-top:0; }
+.win .ret i:nth-child(4){ bottom:0; right:0; border-left:0; border-top:0; }
+/* window art */
+.a-mask{ width:70px; aspect-ratio:1; border:4px solid var(--paper); border-radius:42% 58% 45% 55% / 56% 42% 58% 44%;
+  background:radial-gradient(circle at 36% 42%,#fff 0 9%,transparent 9.5%),radial-gradient(circle at 64% 42%,#fff 0 9%,transparent 9.5%),linear-gradient(135deg,var(--pink),var(--acid) 48%,var(--sky));
+  position:relative; z-index:1; }
+.a-rec{ width:62px; aspect-ratio:1; border-radius:50%; border:4px solid var(--paper); position:relative; z-index:1;
+  background:conic-gradient(var(--pink) 0 25%, var(--sky) 25% 50%, var(--acid) 50% 75%, #C4E6CF 75%); }
+.a-rec::after{ content:"REC"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:9px; font-weight:700; color:var(--void); letter-spacing:.14em; }
+.a-world{ font-family:var(--jp); font-weight:900; font-size:13px; line-height:2; text-align:center; position:relative; z-index:1; }
+.a-world em{ font-style:normal; color:var(--sky); }
+.a-com{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; color:var(--paper-60); text-align:center; line-height:2.2; position:relative; z-index:1; }
+.a-com b{ display:block; font-size:14px; color:var(--sky); }
+
+/* Stage-2 placeholder — opens like a machine display powering on */
+#file{
+  position:fixed; inset:0; z-index:70; background:rgba(5,11,20,.94);
+  display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px;
+  font-family:var(--mono); letter-spacing:.2em; text-transform:uppercase; backdrop-filter:blur(6px);
+}
+#file.on{ display:flex; animation:crt .5s var(--ease); }
+@keyframes crt{
+  0%{ clip-path:inset(49.5% 0 49.5% 0); opacity:.6; }
+  55%{ clip-path:inset(46% 0 46% 0); opacity:1; }
+  100%{ clip-path:inset(0 0 0 0); }
+}
+#file::before{ /* opening scan flash */
+  content:""; position:absolute; left:0; right:0; top:50%; height:2px;
+  background:linear-gradient(90deg, transparent, var(--sky), transparent);
+  animation:crtline .5s var(--ease) forwards;
+}
+@keyframes crtline{ 0%{ opacity:1; } 100%{ opacity:0; transform:scaleY(30); } }
+#file .big{ font-family:var(--arch); font-weight:900; font-size:46px; letter-spacing:-.02em; color:var(--paper); }
+#file .sub{ color:var(--paper-35); font-size:10px; }
+#file .back{ cursor:pointer; border:1px solid var(--sky); color:var(--sky); padding:10px 24px; font-size:10px; }
+#file .back:hover{ background:var(--sky); color:var(--void); }
+
+@media (max-width:700px){
+  .win{ width:clamp(150px, 43vw, 210px); }
+  #stream{ width:70vw; }
+  #prompt{ top:8%; width:92vw; }
+  .hud.bl,.hud.br{ display:none; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="scan" aria-hidden="true"></div><canvas id="gl3d"></canvas>
+
+<!-- boot / loading -->
+<div id="boot">
+  <div id="logo-stack">
+    <img class="base" src="assets/lml-logo-full.svg" alt="LML,Co / LifeMakersLabs">
+    <img class="fill" id="logo-fill" src="assets/lml-logo-full.svg" alt="" aria-hidden="true">
+  </div>
+  <div id="pct" style="display:none">0%</div>
+  <div id="gate-k">ロゴをタッチして起動</div>
+</div>
+<div id="stream" aria-hidden="true"></div>
+
+<!-- welcome -->
+<div id="welcome">
+  <span class="jp">ようこそ、<em>LML,Co</em>へ。</span>
+  <span class="en">Welcome to LifeMakersLabs</span>
+</div>
+
+<!-- center prompt -->
+<div id="prompt">
+  <b id="prompt-jp">セクションを選択してください</b>
+  <span>Select a section</span>
+</div>
+
+<!-- OK flash -->
+<div id="ok"><span>OK</span></div>
+
+<!-- HUD -->
+<span class="tick tl"></span><span class="tick tr"></span><span class="tick bl"></span><span class="tick br"></span>
+<div class="hud tl"><b>SYS.TSUKUYOMI</b><br>OBS.MODE: <span class="live">MANUAL</span></div>
+<div class="hud tr">月齢 <b class="live" id="phase">0%</b><span class="moon"><i id="moonfill"></i></span><br>SEC: <b id="sec">HALL</b></div>
+<div class="hud bl">読了記録: <b id="readlog">—</b><br>T+<span class="live" id="tplus">00:00</span></div>
+<div class="hud br">PTR <span class="live" id="ptr">----, ----</span><br>ROT <span class="live" id="rot">+000.0°</span></div>
+
+<!-- subtitle console -->
+<div id="console">
+  <div class="head"><span class="dot"></span><span>SYS.TSUKUYOMI — 音声同期字幕</span><span class="stat" id="cstat">STANDBY</span></div>
+  <div class="body" id="cbody"></div>
+</div>
+
+<!-- machine windows -->
+<div id="hall">
+  <div class="win" data-sec="IPS" data-depth="1.0">
+    <div class="bar"><span class="st"></span><span>FILE 01</span><b>観測対象</b></div>
+    <div class="view"><span class="a-mask"></span><span class="ret"><i></i><i></i><i></i><i></i></span></div>
+    <div class="nm">IPs<i>キャラクター</i></div>
+    <div class="data"><span>ID:MZO-AMR-AIC-NJS-MSC</span><span id="d1">SCN 000</span></div>
+  </div>
+  <div class="win" data-sec="REC" data-depth="1.5">
+    <div class="bar"><span class="st"></span><span>FILE 02</span><b>撮影記録</b></div>
+    <div class="view"><span class="a-rec"></span><span class="ret"><i></i><i></i><i></i><i></i></span></div>
+    <div class="nm">Shooting<i>撮影</i></div>
+    <div class="data"><span>REC:01-06 READY</span><span id="d2">SCN 000</span></div>
+  </div>
+  <div class="win" data-sec="DOC" data-depth="0.7">
+    <div class="bar"><span class="st"></span><span>FILE 03</span><b>教義</b></div>
+    <div class="view"><span class="a-world">中の人より、<br><em>作品とキャラ</em>が前に立つ。</span><span class="ret"><i></i><i></i><i></i><i></i></span></div>
+    <div class="nm">World<i>世界観</i></div>
+    <div class="data"><span>DOCTRINE v0.∞</span><span id="d3">SCN 000</span></div>
+  </div>
+  <div class="win" data-sec="COM" data-depth="1.2">
+    <div class="bar"><span class="st"></span><span>FILE 04</span><b>通信</b></div>
+    <div class="view"><span class="a-com">OPEN CHANNEL<b>hello@lml.co</b></span><span class="ret"><i></i><i></i><i></i><i></i></span></div>
+    <div class="nm">Contact<i>相談</i></div>
+    <div class="data"><span>LINE:HUMAN STANDBY</span><span id="d4">SCN 000</span></div>
+  </div>
+</div>
+
+<!-- Stage-2 placeholder -->
+<div id="file">
+  <div class="big" id="file-title">SEC.IPS</div>
+  <span class="sub">観測ファイル — Stage 2 で実装</span>
+  <span class="back" id="file-back">&gt; 端末へ戻る</span>
+</div>
+
+<script>
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ==================== fast code stream ==================== */
+const STREAM = [
+  "> init SYS.TSUKUYOMI/kernel …… <span class='ok'>ok</span>",
+  "> mount /obs/moon …… <span class='ok'>ok</span>",
+  "> mount /obs/prism …… <span class='ok'>ok</span>",
+  "> lens.array [0x163A5C] calibrate …… <span class='ok'>ok</span>",
+  "> grain.filter riso=on …… <span class='ok'>ok</span>",
+  "> ip.registry 5 units …… <span class='ok'>loaded</span>",
+  "> unit MZO 魔王さん …… <span class='ok'>自走</span>",
+  "> unit AMR アマテラスさん …… <span class='ok'>自走</span>",
+  "> unit AIC えーあい株式会社 …… <span class='ok'>自走 ×10</span>",
+  "> unit NJS NinjaSaaaaaN …… <span class='em'>制御不能</span>",
+  "> unit MSC MusicUnit …… <span class='ok'>構想中</span>",
+  "> rec.archive 01-06 …… <span class='ok'>ready</span>",
+  "> doctrine v0.∞ …… <span class='ok'>formless</span>",
+  "> channel hello@lml.co …… <span class='ok'>standby</span>",
+  "> 観測機器 点検 …… <span class='ok'>良好</span>",
+  "> 月齢 同期 …… <span class='ok'>新月</span>",
+  "> 表示系 構成 …… <span class='ok'>完了</span>",
+  "> <span class='ok'>SYS.TSUKUYOMI 起動</span>"
+];
+const boot = document.getElementById("boot");
+const stream = document.getElementById("stream");
+const pctEl = document.getElementById("pct");
+const fillEl = document.getElementById("logo-fill");
+let booted = false;
+
+boot.addEventListener("click", () => {
+  if (booted) return; booted = true;
+  document.body.classList.add("booting");
+  pctEl.style.display = "block";
+  const total = REDUCED ? 200 : 3400;      /* loading duration */
+  const t0 = performance.now();
+  /* logo fills bottom-up with progress; % counts alongside */
+  (function load(now){
+    const p = Math.min(1, (now - t0) / total);
+    fillEl.style.clipPath = `inset(${(100 - p * 100).toFixed(1)}% 0 0 0)`;
+    pctEl.textContent = Math.floor(p * 100) + "%";
+    if (p < 1) requestAnimationFrame(load);
+    else setTimeout(finishBoot, 350);
+  })(t0);
+  /* fast log lines paced across the same window */
+  const step = total / STREAM.length;
+  STREAM.forEach((line, i) => setTimeout(() => {
+    const div = document.createElement("div");
+    div.innerHTML = line;
+    stream.appendChild(div);
+    while (stream.children.length > 9) stream.firstChild.remove();
+  }, i * step));
+});
+
+function finishBoot(){
+  document.body.classList.remove("booting");
+  boot.classList.add("done");
+  stream.style.display = "none";
+  /* welcome plays while narration begins immediately */
+  const wel = document.getElementById("welcome");
+  wel.classList.add("on");
+  document.body.classList.add("live", "console-on");
+  startNarration();
+  startClock();
+  const welMs = REDUCED ? 100 : 3400;
+  setTimeout(() => {
+    wel.remove();
+    /* 3D rises */
+    if (window.__logoReady) document.body.classList.add("assembled");
+    else window.__wantAssembled = true;
+    spawnWindows();
+  }, welMs);
+}
+
+/* ==================== HUD telemetry ==================== */
+function startClock(){
+  let t = 0;
+  setInterval(() => {
+    t++;
+    document.getElementById("tplus").textContent =
+      String(Math.floor(t/60)).padStart(2,"0") + ":" + String(t%60).padStart(2,"0");
+  }, 1000);
+  setInterval(() => {
+    ["d1","d2","d3","d4"].forEach(id => {
+      document.getElementById(id).textContent = "SCN " + String(Math.floor(Math.random()*900)+100);
+    });
+  }, 1400);
+}
+addEventListener("pointermove", e => {
+  document.getElementById("ptr").textContent =
+    String(Math.round(e.clientX)).padStart(4,"0") + ", " + String(Math.round(e.clientY)).padStart(4,"0");
+}, { passive:true });
+function setPhase(p){
+  document.getElementById("phase").textContent = Math.round(p*100) + "%";
+  document.getElementById("moonfill").style.transform = `scaleX(${p})`;
+}
+
+/* ==================== narration — never stops ==================== */
+const CUES = [
+  "接続確認。……良好。System: TSUKUYOMI — 当方は、この端末の\"読み手\"である。",
+  "LML,Co。生活を豊かにするものを、実験しながら作り続ける、匿名のクリエイターラボ。",
+  "表に立つのは、中の人ではなく作品とキャラ。……以上が前提となる。",
+  "本端末より、4件の観測ファイルへ接続できる。観測対象を選択せよ。",
+  "月齢は、読了とともに満ちる。……急ぐ必要はない。月は、待つのが得意だ。",
+  "補足。当該IP群はいずれも自走式。制御は保証しない。",
+  "……選択を待機している。"
+];
+const cbody = document.getElementById("cbody");
+const cstat = document.getElementById("cstat");
+let typeTimer = null;
+function say(text, done){
+  clearInterval(typeTimer);
+  cstat.textContent = "SPEAKING";
+  let i = 0;
+  if (REDUCED){ cbody.textContent = text; cstat.textContent = "STANDBY"; done && done(); return; }
+  typeTimer = setInterval(() => {
+    i++;
+    cbody.innerHTML = text.slice(0, i) + '<span class="curs"></span>';
+    if (i >= text.length){
+      clearInterval(typeTimer);
+      cbody.textContent = text;
+      cstat.textContent = "STANDBY";
+      done && done();
+    }
+  }, 32);
+}
+function startNarration(){
+  let idx = 0;
+  (function next(){
+    if (idx >= CUES.length) return;         /* ends on 待機 line */
+    const i = idx++;
+    say(CUES[i], () => {
+      setPhase(Math.min(.4, (i + 1) * .06));
+      setTimeout(next, REDUCED ? 40 : 1400); /* short breath, then keep talking */
+    });
+  })();
+}
+
+/* ==================== floating windows — full viewport ==================== */
+const wins = [...document.querySelectorAll(".win")];
+/* slots ring the center logo; pulled inward, responsive on small screens */
+function slots(){
+  if (innerWidth < 700){
+    /* phones: tight 2x2 grid, everything on screen */
+    return [
+      { x:.05, y:.14 }, { x:.53, y:.14 },
+      { x:.05, y:.52 }, { x:.53, y:.52 }
+    ];
+  }
+  return [
+    { x:.155, y:.15 }, { x:.60, y:.13 },
+    { x:.145, y:.54 }, { x:.61, y:.56 }
+  ];
+}
+let mx = 0, my = 0;
+addEventListener("pointermove", e => {
+  mx = e.clientX / innerWidth - .5;
+  my = e.clientY / innerHeight - .5;
+}, { passive:true });
+
+const state = wins.map((w, i) => ({
+  el: w,
+  phase: Math.random() * 6.28,
+  freq: .55 + Math.random() * .5,
+  ampY: 10 + Math.random() * 7,
+  ampR: .6 + Math.random() * .5,
+  depth: parseFloat(w.dataset.depth),
+  hover: 0, hoverT: false, shown: false, born: 0
+}));
+wins.forEach((w, i) => {
+  w.addEventListener("pointerenter", () => state[i].hoverT = true);
+  w.addEventListener("pointerleave", () => state[i].hoverT = false);
+  w.addEventListener("click", () => openFile(w.dataset.sec));
+});
+
+function spawnWindows(){
+  state.forEach((s, i) => setTimeout(() => {
+    s.shown = true; s.born = performance.now();
+  }, (REDUCED ? 0 : 1900) + i * 240));      /* rise as the 3D settles */
+}
+
+let t0 = performance.now();
+(function float(now){
+  requestAnimationFrame(float);
+  const t = (now - t0) / 1000;
+  const S = slots();
+  for (let i = 0; i < state.length; i++){
+    const s = state[i];
+    if (!s.shown){ s.el.style.opacity = 0; continue; }
+    const life = Math.min(1, (now - s.born) / 900);
+    const ein = 1 - Math.pow(1 - life, 3);
+    s.hover += ((s.hoverT ? 1 : 0) - s.hover) * .08;
+    const bob = (1 - s.hover);
+    const bx = Math.sin(t * s.freq * .8 + s.phase * 2) * 5 * bob;
+    const by = Math.sin(t * s.freq + s.phase) * s.ampY * bob;
+    const br = Math.sin(t * s.freq * .6 + s.phase) * s.ampR * bob;
+    const px = -mx * 30 * s.depth;
+    const py = -my * 20 * s.depth;
+    const lift = s.hover * -9;
+    const x = S[i].x * innerWidth + bx + px;
+    const y = S[i].y * innerHeight + by + py + (1 - ein) * 50 + lift;
+    s.el.style.opacity = ein;
+    s.el.style.transform =
+      `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${br.toFixed(2)}deg) scale(${1 + s.hover * .045})`;
+  }
+})(t0);
+
+/* ==================== select -> OK flash -> mechanical open ==================== */
+const fileEl = document.getElementById("file");
+const okEl = document.getElementById("ok");
+const READ = new Set();
+const SEC_LINES = {
+  IPS: "照会完了。当該個体群、いずれも自走式。制御は保証しない。",
+  REC: "撮影機能、稼働中。出力は安定。",
+  DOC: "注記。この組織に、完成形は存在しない。状態：formless。",
+  COM: "経路を開通。以降の応答は、人間が担当する。"
+};
+let opening = false;
+function openFile(sec){
+  if (opening) return; opening = true;
+  document.body.classList.add("selected");   /* retire the center prompt */
+  /* 1. near-fullscreen OK, blinking */
+  okEl.classList.add("on");
+  setTimeout(() => {
+    okEl.classList.remove("on");
+    /* 2. file powers on like a CRT + TSUKUYOMI speaks over it */
+    document.getElementById("file-title").textContent = "SEC." + sec;
+    document.getElementById("sec").textContent = sec;
+    fileEl.classList.add("on");
+    say(SEC_LINES[sec] || "照会完了。");
+    READ.add(sec);
+    document.getElementById("readlog").textContent =
+      [...READ].map((_, i) => String(i+1).padStart(2,"0") + " ✓").join(" ");
+    setPhase(Math.min(1, .4 + READ.size * .15));
+    opening = false;
+  }, REDUCED ? 60 : 750);
+}
+document.getElementById("file-back").addEventListener("click", () => {
+  fileEl.classList.remove("on");
+  document.getElementById("sec").textContent = "HALL";
+});
+
+/* ==================== prompt: calm float, then periodic machine decode ==================== */
+(function(){
+  const prompt = document.getElementById("prompt");
+  const jpEl = document.getElementById("prompt-jp");
+  const TEXT = "セクションを選択してください";
+  const GLYPH = "アイウエオカキクケコサシスセソ01<>/¦=+*#";
+  let started = false;
+  function decodeOnce(){
+    if (document.body.classList.contains("selected")) return;
+    prompt.classList.add("glitch");
+    let step = 0;
+    const iv = setInterval(() => {
+      step++;
+      jpEl.textContent = TEXT.split("").map((c, j) =>
+        j < step ? c : GLYPH[Math.floor(Math.random() * GLYPH.length)]).join("");
+      if (step > TEXT.length){
+        clearInterval(iv);
+        jpEl.textContent = TEXT;
+        prompt.classList.remove("glitch");
+      }
+    }, 26);
+  }
+  /* watch for the prompt becoming visible (3D assembled) */
+  const watch = setInterval(() => {
+    if (!document.body.classList.contains("assembled") || started) return;
+    started = true;
+    clearInterval(watch);
+    if (REDUCED) return;
+    setTimeout(() => {
+      decodeOnce();
+      setInterval(decodeOnce, 5200);   /* re-acquire every few seconds */
+    }, 4500);                           /* calm float first */
+  }, 400);
+})();
+</script>
+
+<!-- Three.js (MIT / 無料OSS) — jsDelivr CDN (無料) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+/* glass logo: parts fly in, assemble, spin — pops on the dark field */
+(async () => {
+  const canvas = document.getElementById("gl3d");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let THREE, RoomEnvironment;
+  try {
+    THREE = await import("three");
+    ({ RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js"));
+  } catch (e) { return; }
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, .1, 60);
+  camera.position.set(0, 0, 8.2);
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), .05).texture;
+  const l1 = new THREE.PointLight(0x6FC6E8, 60, 40); l1.position.set(-4, 3, 4);
+  const l2 = new THREE.PointLight(0xE79FBE, 46, 40); l2.position.set(4, -2, 3);
+  const l3 = new THREE.PointLight(0x2D74B8, 52, 40); l3.position.set(0, 4, -3);
+  scene.add(l1, l2, l3);
+
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color:0xDCEEFB, metalness:0, roughness:.05,
+    transmission:1, thickness:1.6, ior:1.52,
+    attenuationColor:new THREE.Color(0x6FC6E8), attenuationDistance:1.6,
+    iridescence:1, iridescenceIOR:1.35, iridescenceThicknessRange:[140,560],
+    clearcoat:1, clearcoatRoughness:.06,
+    envMapIntensity:1.6, transparent:true
+  });
+
+  let parts = [];
+  const spin = new THREE.Group();
+  const inner = new THREE.Group();
+  spin.add(inner); scene.add(spin);
+  try {
+    const res = await fetch("assets/lml-mark.svg");
+    if (!res.ok) return;
+    const svgText = await res.text();
+    const { SVGLoader } = await import("three/addons/loaders/SVGLoader.js");
+    const parsed = new SVGLoader().parse(svgText);
+    const shapes = parsed.paths.flatMap(p => SVGLoader.createShapes(p))
+      .filter(sh => {
+        const pts = sh.getPoints(8);
+        if (!pts.length) return false;
+        let minX = Infinity;
+        for (const pt of pts) if (pt.x < minX) minX = pt.x;
+        return minX < 1100;
+      });
+    if (!shapes.length) return;
+    for (const sh of shapes){
+      const geo = new THREE.ExtrudeGeometry(sh, {
+        depth:110, curveSegments:7,
+        bevelEnabled:true, bevelThickness:9, bevelSize:7, bevelSegments:2
+      });
+      const m = new THREE.Mesh(geo, glassMat);
+      inner.add(m); parts.push(m);
+    }
+    inner.scale.setScalar(3.6 / 914);
+    inner.rotation.x = Math.PI;
+    const box = new THREE.Box3().setFromObject(inner);
+    const c = box.getCenter(new THREE.Vector3());
+    inner.position.sub(c);
+    parts.forEach((m, i) => {
+      const a = (i / parts.length) * Math.PI * 2 + 1.3;
+      m.userData.from = new THREE.Vector3(
+        Math.cos(a) * (900 + Math.random() * 700),
+        Math.sin(a) * (700 + Math.random() * 600),
+        (Math.random() - .5) * 1200
+      );
+      m.userData.rotFrom = new THREE.Euler(
+        (Math.random() - .5) * 2.4, (Math.random() - .5) * 2.4, (Math.random() - .5) * 2.4
+      );
+      m.position.copy(m.userData.from);
+      m.rotation.copy(m.userData.rotFrom);
+    });
+    window.__logoReady = true;
+    if (window.__wantAssembled) document.body.classList.add("assembled");
+  } catch (e) { return; }
+
+  function resize(){
+    const w = Math.max(innerWidth, 1), h = Math.max(innerHeight, 1);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  addEventListener("resize", resize, { passive:true });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) resize(); });
+  resize();
+
+  let mx = 0, my = 0, smx = 0, smy = 0;
+  addEventListener("pointermove", e => {
+    mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5;
+  }, { passive:true });
+
+  let assembleT0 = null;
+  const clock = new THREE.Clock();
+  const ease = x => 1 - Math.pow(1 - x, 3);
+  const rotEl = document.getElementById("rot");
+
+  function tick(){
+    if (!reduced) requestAnimationFrame(tick);
+    const t = clock.getElapsedTime();
+    const active = document.body.classList.contains("assembled");
+    if (active && assembleT0 === null) assembleT0 = t;
+    if (assembleT0 !== null){
+      const at = t - assembleT0;
+      parts.forEach((m, i) => {
+        const p = Math.min(1, Math.max(0, (at - i * .14) / 1.1));
+        const e = ease(p);
+        m.position.lerpVectors(m.userData.from, new THREE.Vector3(0,0,0), e);
+        m.rotation.set(
+          m.userData.rotFrom.x * (1 - e),
+          m.userData.rotFrom.y * (1 - e),
+          m.userData.rotFrom.z * (1 - e)
+        );
+      });
+      const done = Math.min(1, Math.max(0, (at - 1.4) / 1.2));
+      spin.rotation.y = t * .3 * done + smx * .7;
+      spin.rotation.x = Math.sin(t * .32) * .1 * done + smy * .45;
+      if (rotEl) rotEl.textContent =
+        (spin.rotation.y >= 0 ? "+" : "-") +
+        String((Math.abs(spin.rotation.y * 57.2958) % 360).toFixed(1)).padStart(5,"0") + "°";
+    }
+    smx += (mx - smx) * .04; smy += (my - smy) * .04;
+    renderer.render(scene, camera);
+  }
+  if (reduced){
+    parts.forEach(m => { m.position.set(0,0,0); m.rotation.set(0,0,0); });
+    document.body.classList.add("assembled");
+    renderer.render(scene, camera);
+  } else {
+    tick();
+  }
+})();
+</script>
+</body>
+</html>
