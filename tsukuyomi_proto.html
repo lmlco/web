@@ -1071,16 +1071,24 @@ const wins = [...document.querySelectorAll(".win")];
 /* slots ring the center logo; pulled inward, responsive on small screens */
 function slots(){
   if (innerWidth < 700){
-    /* phones: tight 2x2 grid, everything on screen */
+    /* phones: tight 2x2 grid, everything on screen (keep as-is) */
     return [
       { x:.05, y:.14 }, { x:.53, y:.14 },
       { x:.05, y:.52 }, { x:.53, y:.52 }
     ];
   }
-  /* ring the center so the spinning 3D logo stays visible between the cards */
+  if (innerWidth < 1100){
+    /* tablets: ring the centered logo, nudged down clear of the prompt */
+    return [
+      { x:.155, y:.20 }, { x:.60, y:.18 },
+      { x:.145, y:.58 }, { x:.61, y:.60 }
+    ];
+  }
+  /* desktop: columns opened wider + moved down; the 3D logo shifts right
+     (see resize() in the three.js module) for an asymmetric composition */
   return [
-    { x:.155, y:.15 }, { x:.60, y:.13 },
-    { x:.145, y:.54 }, { x:.61, y:.56 }
+    { x:.10, y:.22 }, { x:.62, y:.20 },
+    { x:.095, y:.585 }, { x:.625, y:.60 }
   ];
 }
 let mx = 0, my = 0;
@@ -1526,6 +1534,14 @@ const FILE_DEFS = {
     const narrow = Math.min(aspect, .8);
     camera.position.z = 8.2 * (.8 / narrow);
     camera.updateProjectionMatrix();
+    /* desktop: shift the logo right of the card columns (asymmetric hall);
+       tablet/phone keep it centered */
+    if (w >= 1100){
+      const worldW = 2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360) * aspect;
+      spin.position.x = worldW * .16;
+    } else {
+      spin.position.x = 0;
+    }
   }
   addEventListener("resize", resize, { passive:true });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) resize(); });
