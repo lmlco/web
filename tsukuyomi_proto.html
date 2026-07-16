@@ -1154,6 +1154,9 @@ function openFile(sec){
 }
 function closeFile(){
   clearTimeout(viewTimer);
+  clearInterval(recTcTimer);   /* stop the REC timecode when leaving */
+  clearInterval(comTimer);
+  clearInterval(evalTimer);
   fileEl.classList.remove("on");
   document.body.classList.remove("file-open");
   document.getElementById("sec").textContent = "HALL";
