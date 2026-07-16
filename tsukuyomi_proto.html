@@ -334,12 +334,8 @@ body.light .a-sun,body.light .a-unit i{ border-color:#163A5C; }
   display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px;
   font-family:var(--mono); letter-spacing:.2em; text-transform:uppercase; backdrop-filter:blur(6px);
 }
-#file.on{ display:flex; animation:crt .5s var(--ease); }
-@keyframes crt{
-  0%{ clip-path:inset(49.5% 0 49.5% 0); opacity:.6; }
-  55%{ clip-path:inset(46% 0 46% 0); opacity:1; }
-  100%{ clip-path:inset(0 0 0 0); }
-}
+#file.on{ display:flex; animation:fappear .2s var(--ease); }
+@keyframes fappear{ from{ opacity:0; } }
 #file::before{ /* opening scan flash */
   content:""; position:absolute; left:0; right:0; top:50%; height:2px;
   background:linear-gradient(90deg, transparent, var(--sky), transparent);
@@ -351,16 +347,18 @@ body.light .a-sun,body.light .a-unit i{ border-color:#163A5C; }
 #file .back{ cursor:pointer; border:1px solid var(--sky); color:var(--sky); padding:10px 24px; font-size:10px; }
 #file .back:hover{ background:var(--sky); color:var(--void); }
 
-/* ---------- section title card: SEC.XXX -> doors part open ---------- */
+/* ---------- section title card: 2-stage aperture ----------
+   closed -> s1: slit opens just enough to show the title, holds
+   -> s2: doors open fully while the text dissolves            */
 #file-card{
-  position:absolute; inset:0; z-index:6; display:none;
+  position:fixed; inset:0; z-index:6; display:none;
   align-items:center; justify-content:center; flex-direction:column; gap:12px;
   overflow:hidden; text-align:center;
 }
 #file-card::before,#file-card::after{
-  content:""; position:absolute; left:0; right:0; height:50.5%;
-  background:var(--void); z-index:-1;
-  transition:transform .65s var(--ease);
+  content:""; position:absolute; left:0; right:0; height:51%;
+  background:var(--void); z-index:1;
+  transition:transform .55s var(--ease);
 }
 #file-card::before{ top:0; }
 #file-card::after{ bottom:0; }
@@ -375,10 +373,29 @@ body.light #file-card::before,body.light #file-card::after{ background:#FCFCFA; 
   letter-spacing:.5em; text-indent:.5em; color:var(--paper-60); text-transform:none;
   transition:opacity .45s var(--ease), transform .45s var(--ease);
 }
-#file-card.open::before{ transform:translateY(-102%); }
-#file-card.open::after{ transform:translateY(102%); }
-#file-card.open .fc-title{ opacity:0; letter-spacing:.16em; filter:blur(7px); }
-#file-card.open .fc-sub{ opacity:0; transform:translateY(12px); }
+/* stage 1: open to a band that just fits the title */
+#file-card.s1::before{ transform:translateY(calc(-1 * min(15vh, 130px))); }
+#file-card.s1::after{ transform:translateY(min(15vh, 130px)); }
+/* stage 2: full open, text dissolves as the doors move again */
+#file-card.s2::before{ transform:translateY(-102%); transition-duration:.7s; }
+#file-card.s2::after{ transform:translateY(102%); transition-duration:.7s; }
+#file-card.s2 .fc-title{ opacity:0; letter-spacing:.16em; filter:blur(7px); }
+#file-card.s2 .fc-sub{ opacity:0; transform:translateY(12px); }
+
+/* ---------- page entrance: elements assemble in order ---------- */
+.anim{ opacity:0; transform:translateY(16px);
+  transition:opacity .6s var(--ease) var(--d,0s), transform .6s var(--ease) var(--d,0s); }
+.enter .anim{ opacity:1; transform:none; }
+
+/* file view scrolls; bottom clearance keeps content off the console */
+#file.on{ overflow-y:auto; }
+#file-generic{ margin:auto; }
+#ips-file{ margin:8vh auto 26vh; }
+
+/* while a file is open the console retreats unless speaking / hovered */
+body.file-open #console{ opacity:.3; transform:translateX(-50%) translateY(52%); }
+body.file-open #console:hover,
+body.file-open #console.speaking{ opacity:1; transform:translateX(-50%); }
 
 /* ---------- SEC.IPS observation dossier ---------- */
 #file .frame{ width:min(1080px,94vw); display:none; flex-direction:column; gap:0; text-align:left; }
@@ -625,20 +642,20 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
 
   <!-- generic placeholder (REC/DOC/COM until their stages land) -->
   <div id="file-generic" style="display:flex; flex-direction:column; align-items:center; gap:16px;">
-    <div class="big" id="file-title">SEC.IPS</div>
-    <span class="sub">観測ファイル — Stage 2 で実装</span>
-    <span class="back" id="file-back">&gt; 端末へ戻る</span>
+    <div class="big anim" id="file-title">SEC.IPS</div>
+    <span class="sub anim" style="--d:.1s">観測ファイル — Stage 2 で実装</span>
+    <span class="back anim" id="file-back" style="--d:.2s">&gt; 端末へ戻る</span>
   </div>
 
   <!-- SEC.IPS observation dossier -->
   <div class="frame" id="ips-file">
-    <div class="fhead">
+    <div class="fhead anim">
       <span>● FILE 01 / 観測対象 — <b>SEC.IPS</b></span>
       <span class="back" id="ips-back" style="border:0; padding:0;">&gt; 端末へ戻る</span>
     </div>
     <div class="cols">
       <div>
-        <div class="dstage">
+        <div class="dstage anim" style="--d:.1s">
           <span class="tb tl"></span><span class="tb tr"></span><span class="tb bl"></span><span class="tb br"></span>
           <span class="scanline" aria-hidden="true"></span>
           <span class="dart" data-i="0"><span class="a-mask"></span></span>
@@ -647,21 +664,21 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
           <span class="dart" data-i="3"><span class="a-ninja"></span></span>
           <span class="dart" data-i="4"><img class="a-sigil" src="assets/lml-mark.svg" alt=""></span>
         </div>
-        <div class="dtabs" id="dtabs">
+        <div class="dtabs anim" id="dtabs" style="--d:.22s">
           <button data-i="0">01</button><button data-i="1">02</button><button data-i="2">03</button><button data-i="3">04</button><button data-i="4">05</button>
         </div>
       </div>
       <div class="dcol">
-        <span class="d-id mono" id="d-id">UNIT MZO / FACE</span>
-        <h3 id="d-name">魔王さん</h3>
-        <span class="d-role" id="d-role">public persona / brand host</span>
-        <p class="d-desc" id="d-desc"></p>
-        <div class="d-metrics">
+        <span class="d-id mono anim" id="d-id" style="--d:.16s">UNIT MZO / FACE</span>
+        <h3 class="anim" id="d-name" style="--d:.22s">魔王さん</h3>
+        <span class="d-role anim" id="d-role" style="--d:.28s">public persona / brand host</span>
+        <p class="d-desc anim" id="d-desc" style="--d:.34s"></p>
+        <div class="d-metrics anim" style="--d:.42s">
           <div class="row"><span class="k">AUTONOMY 自走性</span><span class="bar"><i id="m-a"></i></span><span class="v" id="v-a">--</span></div>
           <div class="row"><span class="k">REACH 展開力</span><span class="bar"><i id="m-r"></i></span><span class="v" id="v-r">--</span></div>
           <div class="row"><span class="k">CHAOS 予測不能性</span><span class="bar"><i id="m-c"></i></span><span class="v" id="v-c">--</span></div>
         </div>
-        <div class="d-eval mono"><b>&gt; 観測所見：</b><span id="d-eval-t"></span></div>
+        <div class="d-eval mono anim" style="--d:.52s"><b>&gt; 観測所見：</b><span id="d-eval-t"></span></div>
       </div>
     </div>
   </div>
@@ -793,16 +810,22 @@ let typeTimer = null;
 function say(text, done){
   clearInterval(typeTimer);
   cstat.textContent = "SPEAKING";
+  const consoleEl = document.getElementById("console");
+  consoleEl.classList.add("speaking");
+  const finish = () => {
+    cstat.textContent = "STANDBY";
+    setTimeout(() => consoleEl.classList.remove("speaking"), 2200);
+    done && done();
+  };
   let i = 0;
-  if (REDUCED){ cbody.textContent = text; cstat.textContent = "STANDBY"; done && done(); return; }
+  if (REDUCED){ cbody.textContent = text; finish(); return; }
   typeTimer = setInterval(() => {
     i++;
     cbody.innerHTML = text.slice(0, i) + '<span class="curs"></span>';
     if (i >= text.length){
       clearInterval(typeTimer);
       cbody.textContent = text;
-      cstat.textContent = "STANDBY";
-      done && done();
+      finish();
     }
   }, 32);
 }
@@ -914,36 +937,47 @@ function openFile(sec){
   okEl.classList.add("on");
   setTimeout(() => {
     okEl.classList.remove("on");
-    /* 2. file powers on like a CRT, showing the title card first */
+    /* 2. aperture: doors closed, then a slit opens to the title band */
     const isIPS = sec === "IPS";
-    document.getElementById("file-generic").style.display = isIPS ? "none" : "flex";
-    document.getElementById("ips-file").style.display = isIPS ? "flex" : "none";
+    const genericEl = document.getElementById("file-generic");
+    const ipsEl = document.getElementById("ips-file");
+    genericEl.style.display = isIPS ? "none" : "flex";
+    ipsEl.style.display = isIPS ? "flex" : "none";
+    genericEl.classList.remove("enter");
+    ipsEl.classList.remove("enter");
     if (!isIPS) document.getElementById("file-title").textContent = "SEC." + sec;
     document.getElementById("sec").textContent = sec;
     const card = document.getElementById("file-card");
     document.getElementById("fc-title").textContent = "SEC." + sec;
-    card.classList.remove("open");
+    card.classList.remove("s1", "s2");
     card.style.display = "flex";
     fileEl.classList.add("on");
+    document.body.classList.add("file-open");
     READ.add(sec);
     document.getElementById("readlog").textContent =
       [...READ].map((_, i) => String(i+1).padStart(2,"0") + " ✓").join(" ");
     setPhase(Math.min(1, .4 + READ.size * .15));
-    /* 3. hold the title, then the doors part and the text dissolves */
+
+    const T1 = REDUCED ? 20 : 90;      /* doors closed beat            */
+    const D1 = REDUCED ? 10 : 550;     /* slit opens to the band       */
+    const HOLD = REDUCED ? 20 : 750;   /* title visible, hold          */
+    const D2 = REDUCED ? 10 : 700;     /* full open, text dissolves    */
+
+    setTimeout(() => card.classList.add("s1"), T1);
+    setTimeout(() => card.classList.add("s2"), T1 + D1 + HOLD);
     setTimeout(() => {
-      card.classList.add("open");
-      /* 4. page revealed — TSUKUYOMI speaks, content comes alive */
-      setTimeout(() => {
-        card.style.display = "none";
-        if (isIPS) selectChar(0);
-        say(SEC_LINES[sec] || "照会完了。");
-        opening = false;
-      }, REDUCED ? 40 : 680);
-    }, REDUCED ? 60 : 1350);
+      card.style.display = "none";
+      /* 3. page revealed — elements assemble in order, TSUKUYOMI speaks */
+      (isIPS ? ipsEl : genericEl).classList.add("enter");
+      if (isIPS) selectChar(0);
+      say(SEC_LINES[sec] || "照会完了。");
+      opening = false;
+    }, T1 + D1 + HOLD + D2);
   }, REDUCED ? 60 : 750);
 }
 function closeFile(){
   fileEl.classList.remove("on");
+  document.body.classList.remove("file-open");
   document.getElementById("sec").textContent = "HALL";
 }
 document.getElementById("file-back").addEventListener("click", closeFile);
