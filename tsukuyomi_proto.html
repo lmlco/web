@@ -259,7 +259,7 @@ body.console-on #console{ opacity:1; transform:translateX(-50%); }
 /* ==================== machine windows ==================== */
 #hall{ position:fixed; inset:0; z-index:30; pointer-events:none; }
 .win{
-  position:absolute; width:clamp(180px, min(19vw, 24vh), 280px); aspect-ratio:1/1.25;
+  position:absolute; width:clamp(230px, min(26vw, 40vh), 400px); aspect-ratio:4/3.2;
   /* solid 3D glass slab: tinted body + diagonal light-catch + physical bevel shadow,
      echoing the transmission/iridescence of the Three.js glass logo */
   background:
@@ -1071,15 +1071,16 @@ const wins = [...document.querySelectorAll(".win")];
 /* slots ring the center logo; pulled inward, responsive on small screens */
 function slots(){
   if (innerWidth < 700){
-    /* phones: tight 2x2 grid, cards pulled close, nearly touching */
+    /* phones: tight 2x2 grid, everything on screen */
     return [
-      { x:.02, y:.10 }, { x:.505, y:.10 },
-      { x:.02, y:.40 }, { x:.505, y:.40 }
+      { x:.05, y:.14 }, { x:.53, y:.14 },
+      { x:.05, y:.52 }, { x:.53, y:.52 }
     ];
   }
+  /* ring the center so the spinning 3D logo stays visible between the cards */
   return [
-    { x:.195, y:.13 }, { x:.375, y:.12 },
-    { x:.19, y:.47 }, { x:.385, y:.475 }
+    { x:.155, y:.15 }, { x:.60, y:.13 },
+    { x:.145, y:.54 }, { x:.61, y:.56 }
   ];
 }
 let mx = 0, my = 0;
