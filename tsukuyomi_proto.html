@@ -351,7 +351,7 @@ body.light .a-sun,body.light .a-unit i{ border-color:#163A5C; }
    closed -> s1: slit opens just enough to show the title, holds
    -> s2: doors open fully while the text dissolves            */
 #file-card{
-  position:fixed; inset:0; z-index:6; display:none;
+  position:fixed; inset:0; z-index:72; display:none;
   align-items:center; justify-content:center; flex-direction:column; gap:12px;
   overflow:hidden; text-align:center;
 }
@@ -633,13 +633,13 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
 </div>
 
 <!-- Stage-2 placeholder -->
-<div id="file">
-  <!-- title card: shows SEC.XXX, then parts like doors to reveal the page -->
-  <div id="file-card">
-    <div class="fc-title" id="fc-title">SEC.IPS</div>
-    <div class="fc-sub">観測ファイル</div>
-  </div>
+<!-- title card: viewport-fixed so it never drifts with file scroll -->
+<div id="file-card">
+  <div class="fc-title" id="fc-title">SEC.IPS</div>
+  <div class="fc-sub">観測ファイル</div>
+</div>
 
+<div id="file">
   <!-- generic placeholder (REC/DOC/COM until their stages land) -->
   <div id="file-generic" style="display:flex; flex-direction:column; align-items:center; gap:16px;">
     <div class="big anim" id="file-title">SEC.IPS</div>
@@ -960,7 +960,7 @@ function openFile(sec){
 
     const T1 = REDUCED ? 20 : 90;      /* doors closed beat            */
     const D1 = REDUCED ? 10 : 550;     /* slit opens to the band       */
-    const HOLD = REDUCED ? 20 : 750;   /* title visible, hold          */
+    const HOLD = REDUCED ? 20 : 400;   /* title visible, hold          */
     const D2 = REDUCED ? 10 : 700;     /* full open, text dissolves    */
 
     setTimeout(() => card.classList.add("s1"), T1);
