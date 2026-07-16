@@ -833,6 +833,11 @@ function startNarration(){
   let idx = 0;
   (function next(){
     if (idx >= CUES.length) return;         /* ends on 待機 line */
+    /* a file is open — TSUKUYOMI is busy narrating it; hold the tour */
+    if (document.body.classList.contains("file-open")){
+      setTimeout(next, 1500);
+      return;
+    }
     const i = idx++;
     say(CUES[i], () => {
       setPhase(Math.min(.4, (i + 1) * .06));
@@ -923,6 +928,35 @@ const SEC_LINES = {
 };
 /* section-specific confirmation words for the full-bleed flash */
 const SEC_OK = { IPS:"SCAN", REC:"REC", DOC:"READ", COM:"LINK" };
+
+/* follow-up comments: spoken after ~3s of quietly viewing the content */
+const SEC_FOLLOW = {
+  REC: "録画は資産である。一度撮れば、何度でも働く。",
+  DOC: "教義は短い。短いものほど、守るのは難しい。",
+  COM: "回線の向こうは人間である。当方より、話が早い。"
+};
+const IPS_FOLLOW = [
+  "補足。この面の下に顔はない。探すだけ無駄である。",
+  "……姉は今日も眩しい。以上、私見である。",
+  "10個体の稼働ログは良好。人間より勤勉である。",
+  "本個体の行動予測を試みたが、断念した。",
+  "静かだ。……誕生前とは、こういう音がする。"
+];
+let viewTimer = null;
+const SPOKEN = new Set();
+function scheduleFollow(key, line){
+  clearTimeout(viewTimer);
+  if (!line || SPOKEN.has(key)) return;
+  viewTimer = setTimeout(function fire(){
+    if (!document.body.classList.contains("file-open")) return;
+    if (cstat.textContent === "SPEAKING"){          /* let her finish, retry */
+      viewTimer = setTimeout(fire, 2000);
+      return;
+    }
+    SPOKEN.add(key);
+    say(line);
+  }, REDUCED ? 500 : 3000);
+}
 let opening = false;
 function openFile(sec){
   if (opening) return; opening = true;
@@ -960,7 +994,7 @@ function openFile(sec){
 
     const T1 = REDUCED ? 20 : 90;      /* doors closed beat            */
     const D1 = REDUCED ? 10 : 550;     /* slit opens to the band       */
-    const HOLD = REDUCED ? 20 : 400;   /* title visible, hold          */
+    const HOLD = REDUCED ? 20 : 200;   /* title visible, hold          */
     const D2 = REDUCED ? 10 : 700;     /* full open, text dissolves    */
 
     setTimeout(() => card.classList.add("s1"), T1);
@@ -971,11 +1005,13 @@ function openFile(sec){
       (isIPS ? ipsEl : genericEl).classList.add("enter");
       if (isIPS) selectChar(0);
       say(SEC_LINES[sec] || "照会完了。");
+      if (!isIPS) scheduleFollow(sec, SEC_FOLLOW[sec]);
       opening = false;
     }, T1 + D1 + HOLD + D2);
   }, REDUCED ? 60 : 750);
 }
 function closeFile(){
+  clearTimeout(viewTimer);
   fileEl.classList.remove("on");
   document.body.classList.remove("file-open");
   document.getElementById("sec").textContent = "HALL";
@@ -1031,6 +1067,8 @@ function selectChar(i){
     evalEl.textContent = c.eval.slice(0, n);
     if (n >= c.eval.length) clearInterval(evalTimer);
   }, 30);
+  /* after ~3s of viewing this unit, TSUKUYOMI adds a comment */
+  scheduleFollow("IPS:" + i, IPS_FOLLOW[i]);
 }
 document.querySelectorAll("#dtabs button").forEach(b =>
   b.addEventListener("click", () => selectChar(+b.dataset.i)));
