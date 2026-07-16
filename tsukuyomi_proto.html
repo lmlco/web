@@ -237,6 +237,7 @@ body.live .tick{ opacity:1; }
 #console{
   position:fixed; left:50%; bottom:6vh; transform:translateX(-50%) translateY(30px);
   z-index:75; width:min(88vw,640px);
+  pointer-events:none;   /* subtitles only — never intercept clicks on content below */
   background:var(--panel); border:1px solid var(--hair-2);
   backdrop-filter:blur(10px);
   clip-path:polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
@@ -435,7 +436,6 @@ body.light #file-card::before,body.light #file-card::after{ background:#FCFCFA; 
 
 /* while a file is open the console retreats unless speaking / hovered */
 body.file-open #console{ opacity:.3; transform:translateX(-50%) translateY(52%); }
-body.file-open #console:hover,
 body.file-open #console.speaking{ opacity:1; transform:translateX(-50%); }
 
 /* ---------- SEC.IPS observation dossier ---------- */
@@ -483,10 +483,11 @@ body.file-open #console.speaking{ opacity:1; transform:translateX(-50%); }
 .dtabs button{
   all:unset; cursor:pointer; flex:1; text-align:center;
   font-family:var(--mono); font-size:10px; letter-spacing:.16em;
-  padding:8px 0; border:1px solid var(--hair); color:var(--paper-35);
-  transition:color .25s var(--ease), border-color .25s var(--ease);
+  padding:12px 0; border:1px solid var(--hair); color:var(--paper-35);
+  transition:color .25s var(--ease), border-color .25s var(--ease), background .15s var(--ease);
 }
 .dtabs button:hover{ color:var(--paper); border-color:var(--hair-2); }
+.dtabs button:active{ background:rgba(111,198,232,.18); }
 .dtabs button.on{ color:var(--sky); border-color:var(--sky); }
 .dcol .d-id{ font-size:10px; letter-spacing:.3em; color:var(--paper-35); text-transform:uppercase; }
 .dcol h3{
@@ -657,13 +658,35 @@ body.light #prompt b{
   text-shadow:0 0 12px rgba(111,198,232,.7), 0 0 30px rgba(111,198,232,.35);
 }
 body.light #prompt span{ color:var(--blue); }
+/* light theme: the default --panel is 82% opaque white, which kills all
+   transparency — re-mix the slab so the page (grid + 3D logo) shows through
+   and the glass reads via blue/pink dispersion tint + thick bevel edges */
 body.light .win{
+  background:
+    linear-gradient(150deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 30%),
+    linear-gradient(310deg, rgba(111,198,232,.28) 0%, rgba(231,159,190,.2) 50%, rgba(255,255,255,0) 100%),
+    rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.85);
+  backdrop-filter:blur(10px) saturate(170%) brightness(1.04);
+  -webkit-backdrop-filter:blur(10px) saturate(170%) brightness(1.04);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.7),
-    inset 0 -14px 22px -16px rgba(22,58,92,.15),
-    0 26px 50px -14px rgba(22,58,92,.16),
-    0 4px 16px rgba(45,116,184,.1);
-  border-color:rgba(22,58,92,.16);
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 1px 0 0 rgba(255,255,255,.55),
+    inset 0 -14px 24px -14px rgba(45,116,184,.3),
+    inset -10px 0 20px -14px rgba(231,159,190,.32),
+    0 26px 50px -12px rgba(22,58,92,.28),
+    0 6px 18px rgba(111,198,232,.22);
+}
+body.light .win:hover{
+  border-color:var(--sky);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 0 -14px 24px -14px rgba(45,116,184,.35),
+    0 30px 56px -12px rgba(22,58,92,.32),
+    0 0 28px rgba(111,198,232,.4);
+}
+body.light .win::after{
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 44%, rgba(255,255,255,.08) 56%, transparent 62%);
 }
 body.light .win .bar b{ color:var(--blue); }
 body.light .win .bar .st{ background:var(--blue); }
