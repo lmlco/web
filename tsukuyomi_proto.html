@@ -351,6 +351,35 @@ body.light .a-sun,body.light .a-unit i{ border-color:#163A5C; }
 #file .back{ cursor:pointer; border:1px solid var(--sky); color:var(--sky); padding:10px 24px; font-size:10px; }
 #file .back:hover{ background:var(--sky); color:var(--void); }
 
+/* ---------- section title card: SEC.XXX -> doors part open ---------- */
+#file-card{
+  position:absolute; inset:0; z-index:6; display:none;
+  align-items:center; justify-content:center; flex-direction:column; gap:12px;
+  overflow:hidden; text-align:center;
+}
+#file-card::before,#file-card::after{
+  content:""; position:absolute; left:0; right:0; height:50.5%;
+  background:var(--void); z-index:-1;
+  transition:transform .65s var(--ease);
+}
+#file-card::before{ top:0; }
+#file-card::after{ bottom:0; }
+body.light #file-card::before,body.light #file-card::after{ background:#FCFCFA; }
+#file-card .fc-title{
+  font-family:var(--arch); font-weight:900; letter-spacing:-.02em;
+  font-size:clamp(44px,9vw,100px); line-height:1; color:var(--paper);
+  transition:opacity .5s var(--ease), letter-spacing .5s var(--ease), filter .5s var(--ease);
+}
+#file-card .fc-sub{
+  font-family:var(--jp); font-weight:700; font-size:clamp(12px,1.4vw,15px);
+  letter-spacing:.5em; text-indent:.5em; color:var(--paper-60); text-transform:none;
+  transition:opacity .45s var(--ease), transform .45s var(--ease);
+}
+#file-card.open::before{ transform:translateY(-102%); }
+#file-card.open::after{ transform:translateY(102%); }
+#file-card.open .fc-title{ opacity:0; letter-spacing:.16em; filter:blur(7px); }
+#file-card.open .fc-sub{ opacity:0; transform:translateY(12px); }
+
 /* ---------- SEC.IPS observation dossier ---------- */
 #file .frame{ width:min(1080px,94vw); display:none; flex-direction:column; gap:0; text-align:left; }
 #file .fhead{
@@ -588,6 +617,12 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
 
 <!-- Stage-2 placeholder -->
 <div id="file">
+  <!-- title card: shows SEC.XXX, then parts like doors to reveal the page -->
+  <div id="file-card">
+    <div class="fc-title" id="fc-title">SEC.IPS</div>
+    <div class="fc-sub">観測ファイル</div>
+  </div>
+
   <!-- generic placeholder (REC/DOC/COM until their stages land) -->
   <div id="file-generic" style="display:flex; flex-direction:column; align-items:center; gap:16px;">
     <div class="big" id="file-title">SEC.IPS</div>
@@ -879,20 +914,32 @@ function openFile(sec){
   okEl.classList.add("on");
   setTimeout(() => {
     okEl.classList.remove("on");
-    /* 2. file powers on like a CRT + TSUKUYOMI speaks over it */
+    /* 2. file powers on like a CRT, showing the title card first */
     const isIPS = sec === "IPS";
     document.getElementById("file-generic").style.display = isIPS ? "none" : "flex";
     document.getElementById("ips-file").style.display = isIPS ? "flex" : "none";
     if (!isIPS) document.getElementById("file-title").textContent = "SEC." + sec;
     document.getElementById("sec").textContent = sec;
+    const card = document.getElementById("file-card");
+    document.getElementById("fc-title").textContent = "SEC." + sec;
+    card.classList.remove("open");
+    card.style.display = "flex";
     fileEl.classList.add("on");
-    if (isIPS) selectChar(0);
-    say(SEC_LINES[sec] || "照会完了。");
     READ.add(sec);
     document.getElementById("readlog").textContent =
       [...READ].map((_, i) => String(i+1).padStart(2,"0") + " ✓").join(" ");
     setPhase(Math.min(1, .4 + READ.size * .15));
-    opening = false;
+    /* 3. hold the title, then the doors part and the text dissolves */
+    setTimeout(() => {
+      card.classList.add("open");
+      /* 4. page revealed — TSUKUYOMI speaks, content comes alive */
+      setTimeout(() => {
+        card.style.display = "none";
+        if (isIPS) selectChar(0);
+        say(SEC_LINES[sec] || "照会完了。");
+        opening = false;
+      }, REDUCED ? 40 : 680);
+    }, REDUCED ? 60 : 1350);
   }, REDUCED ? 60 : 750);
 }
 function closeFile(){
