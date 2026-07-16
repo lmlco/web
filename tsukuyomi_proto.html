@@ -388,8 +388,9 @@ body.light #file-card::before,body.light #file-card::after{ background:#FCFCFA; 
 .enter .anim{ opacity:1; transform:none; }
 
 /* file view scrolls; bottom clearance keeps content off the console */
-#file.on{ overflow-y:auto; }
+#file.on{ overflow-y:auto; justify-content:flex-start; }
 .frame{ margin:8vh auto 26vh; }
+#file-generic{ margin-top:auto; margin-bottom:auto; }
 
 /* while a file is open the console retreats unless speaking / hovered */
 body.file-open #console{ opacity:.3; transform:translateX(-50%) translateY(52%); }
@@ -1127,6 +1128,7 @@ function openFile(sec){
     card.classList.remove("s1", "s2");
     card.style.display = "flex";
     fileEl.classList.add("on");
+    fileEl.scrollTop = 0;        /* always reveal from the top */
     document.body.classList.add("file-open");
     READ.add(sec);
     document.getElementById("readlog").textContent =
