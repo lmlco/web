@@ -70,7 +70,7 @@ body.assembled #gl3d{ opacity:1; transform:none; }
 }
 #boot.done{ opacity:0; pointer-events:none; }
 #logo-stack{
-  position:relative; width:min(46vw,520px); animation:lpulse 3.4s ease-in-out infinite;
+  position:relative; width:min(54vw,600px); animation:lpulse 3.4s ease-in-out infinite;
 }
 @keyframes lpulse{ 50%{ opacity:.72; } }
 #logo-stack img{ width:100%; display:block; filter:brightness(0) invert(1); }
@@ -139,16 +139,17 @@ body.booting #stream{ display:block; }
 
 /* ==================== center prompt (with the 3D) ==================== */
 #prompt{
-  position:fixed; left:50%; top:16%; transform:translateX(-50%);
+  position:fixed; left:50%; top:30%; transform:translateX(-50%);
   z-index:44; text-align:center; pointer-events:none; opacity:0;
   transition:opacity 1s var(--ease);
   animation:pfloat 4.2s ease-in-out infinite;
+  width:100%;
 }
 body.assembled:not(.selected) #prompt{ opacity:1; }
 @keyframes pfloat{ 50%{ transform:translateX(-50%) translateY(-8px); } }
 #prompt b{
   display:block; font-family:var(--jp); font-weight:900;
-  font-size:clamp(17px,2.4vw,28px); letter-spacing:.1em; color:var(--paper);
+  font-size:clamp(24px,3.6vw,40px); letter-spacing:.1em; color:var(--paper);
   text-shadow:0 0 16px rgba(111,198,232,.8), 0 0 40px rgba(111,198,232,.4);
 }
 /* mechanical decode: brief chromatic split while the text re-acquires */
@@ -355,14 +356,34 @@ body.light .a-sun,body.light .a-unit i{ border-color:#163A5C; }
   align-items:center; justify-content:center; flex-direction:column; gap:12px;
   overflow:hidden; text-align:center;
 }
+/* glass aperture panels — frosted, not solid, so the doors read as physical glass */
 #file-card::before,#file-card::after{
   content:""; position:absolute; left:0; right:0; height:51%;
-  background:var(--void); z-index:1;
-  transition:transform .55s var(--ease);
+  background:rgba(5,11,20,.5); backdrop-filter:blur(24px) saturate(150%);
+  -webkit-backdrop-filter:blur(24px) saturate(150%);
+  z-index:1; transition:transform .55s var(--ease);
 }
-#file-card::before{ top:0; }
-#file-card::after{ bottom:0; }
-body.light #file-card::before,body.light #file-card::after{ background:#FCFCFA; }
+#file-card::before{ top:0; border-bottom:1px solid var(--hair-2); }
+#file-card::after{ bottom:0; border-top:1px solid var(--hair-2); }
+body.light #file-card::before,body.light #file-card::after{
+  background:rgba(252,252,250,.55); border-color:var(--hair-2);
+}
+/* mechanical frame around the revealed title band */
+.fc-frame{ position:relative; padding:30px 46px; z-index:2; }
+.fc-tick{ position:absolute; width:22px; height:22px; color:var(--sky);
+  opacity:0; transition:opacity .5s var(--ease) .15s; }
+.fc-tick::before,.fc-tick::after{ content:""; position:absolute; background:currentColor; }
+.fc-tick::before{ width:22px; height:1px; } .fc-tick::after{ width:1px; height:22px; }
+.fc-tick.tl{ top:0; left:0; } .fc-tick.tr{ top:0; right:0; transform:scaleX(-1); }
+.fc-tick.bl{ bottom:0; left:0; transform:scaleY(-1); } .fc-tick.br{ bottom:0; right:0; transform:scale(-1); }
+#file-card.s1 .fc-tick{ opacity:.85; }
+#file-card.s2 .fc-tick{ opacity:0; transition-duration:.35s; }
+.fc-tag{
+  font-family:var(--mono); font-size:9px; letter-spacing:.34em; text-transform:uppercase;
+  color:var(--sky); opacity:0; margin-top:10px; transition:opacity .5s var(--ease) .2s;
+}
+#file-card.s1 .fc-tag{ opacity:.8; }
+#file-card.s2 .fc-tag{ opacity:0; transition-duration:.3s; }
 #file-card .fc-title{
   font-family:var(--arch); font-weight:900; letter-spacing:-.02em;
   font-size:clamp(44px,9vw,100px); line-height:1; color:var(--paper);
@@ -568,7 +589,7 @@ body.light .clink a{ color:var(--blue); }
 @media (max-width:700px){
   .win{ width:clamp(150px, 43vw, 210px); }
   #stream{ width:70vw; }
-  #prompt{ top:8%; width:92vw; }
+  #prompt{ top:20%; width:92vw; }
   .hud.bl,.hud.br{ display:none; }
 }
 @media (prefers-reduced-motion:reduce){
@@ -662,7 +683,7 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
 
 <!-- welcome -->
 <div id="welcome">
-  <span class="jp">ようこそ、<em>LML,Co</em>へ。</span>
+  <span class="jp">ようこそ、<em>LML,Co</em>へ</span>
   <span class="en">Welcome to LifeMakersLabs</span>
 </div>
 
@@ -719,8 +740,13 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
 <!-- Stage-2 placeholder -->
 <!-- title card: viewport-fixed so it never drifts with file scroll -->
 <div id="file-card">
-  <div class="fc-title" id="fc-title">SEC.IPS</div>
-  <div class="fc-sub">観測ファイル</div>
+  <div class="fc-frame">
+    <span class="fc-tick tl"></span><span class="fc-tick tr"></span>
+    <span class="fc-tick bl"></span><span class="fc-tick br"></span>
+    <div class="fc-title" id="fc-title">SEC.IPS</div>
+    <div class="fc-sub">観測ファイル</div>
+    <div class="fc-tag">APERTURE — SEC-LOCK RELEASED</div>
+  </div>
 </div>
 
 <div id="file">
@@ -1441,7 +1467,14 @@ const FILE_DEFS = {
   function resize(){
     const w = Math.max(innerWidth, 1), h = Math.max(innerHeight, 1);
     renderer.setSize(w, h, false);
-    camera.aspect = w / h; camera.updateProjectionMatrix();
+    const aspect = w / h;
+    camera.aspect = aspect;
+    /* portrait/mobile: horizontal FOV shrinks with aspect, so the logo
+       clips off one side and reads as "not centered" — dolly back to
+       keep the whole glass mark inside frame on narrow viewports. */
+    const narrow = Math.min(aspect, .8);
+    camera.position.z = 8.2 * (.8 / narrow);
+    camera.updateProjectionMatrix();
   }
   addEventListener("resize", resize, { passive:true });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) resize(); });
