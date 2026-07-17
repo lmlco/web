@@ -607,6 +607,11 @@ body.light .clink a{ color:var(--blue); }
   .dstage .dart > *{ --sz:min(150px,38vw); }
 }
 
+/* desktop: portrait glass slabs, sized so two rows + prompt + console
+   never collide (h-capped via 24vh); tablet/mobile keep the shorter shape */
+@media (min-width:1100px){
+  .win{ width:clamp(180px, min(13vw, 24vh), 320px); aspect-ratio:1/1.25; }
+}
 @media (max-width:700px){
   .win{ width:clamp(150px, 43vw, 210px); }
   #stream{ width:70vw; }
@@ -1084,13 +1089,12 @@ function slots(){
       { x:.145, y:.60 }, { x:.61, y:.62 }
     ];
   }
-  /* desktop: columns opened wider + moved down; the 3D logo shifts right
-     (see resize() in the three.js module) for an asymmetric composition.
-     right column starts past the prompt text so they never collide;
-     bottom row stays clear of the subtitle console (only a sliver behind) */
+  /* desktop: 2x2 card cluster on the LEFT half, 3D logo on the RIGHT
+     (see resize() in the three.js module). the cluster stays left of the
+     centered prompt text; bottom row clears the subtitle console */
   return [
-    { x:.09, y:.19 }, { x:.66, y:.17 },
-    { x:.085, y:.53 }, { x:.665, y:.55 }
+    { x:.06, y:.17 }, { x:.21, y:.15 },
+    { x:.055, y:.53 }, { x:.215, y:.55 }
   ];
 }
 let mx = 0, my = 0;
@@ -1539,10 +1543,9 @@ const FILE_DEFS = {
     /* desktop: shift the logo right of the card columns (asymmetric hall);
        tablet/phone keep it centered */
     if (w >= 1100){
-      /* modest shift: the logo core stays visible in the gap between
-         the card columns rather than hiding behind the right column */
+      /* cards cluster on the left half, so the logo owns the right half */
       const worldW = 2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360) * aspect;
-      spin.position.x = worldW * .10;
+      spin.position.x = worldW * .15;
     } else {
       spin.position.x = 0;
     }
