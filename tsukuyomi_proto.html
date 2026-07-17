@@ -664,18 +664,18 @@ body.light #prompt span{ color:var(--blue); }
 body.light .win{
   background:
     linear-gradient(150deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 30%),
-    linear-gradient(310deg, rgba(111,198,232,.28) 0%, rgba(231,159,190,.2) 50%, rgba(255,255,255,0) 100%),
-    rgba(255,255,255,.22);
+    linear-gradient(310deg, rgba(111,198,232,.12) 0%, rgba(231,159,190,.07) 50%, rgba(255,255,255,0) 100%),
+    rgba(255,255,255,.3);
   border:1px solid rgba(255,255,255,.85);
-  backdrop-filter:blur(10px) saturate(170%) brightness(1.04);
-  -webkit-backdrop-filter:blur(10px) saturate(170%) brightness(1.04);
+  backdrop-filter:blur(10px) saturate(140%) brightness(1.03);
+  -webkit-backdrop-filter:blur(10px) saturate(140%) brightness(1.03);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.95),
     inset 1px 0 0 rgba(255,255,255,.55),
-    inset 0 -14px 24px -14px rgba(45,116,184,.3),
-    inset -10px 0 20px -14px rgba(231,159,190,.32),
-    0 26px 50px -12px rgba(22,58,92,.28),
-    0 6px 18px rgba(111,198,232,.22);
+    inset 0 -14px 24px -14px rgba(45,116,184,.18),
+    inset -10px 0 20px -14px rgba(231,159,190,.14),
+    0 26px 50px -12px rgba(22,58,92,.24),
+    0 6px 18px rgba(111,198,232,.16);
 }
 body.light .win:hover{
   border-color:var(--sky);
@@ -1078,17 +1078,19 @@ function slots(){
     ];
   }
   if (innerWidth < 1100){
-    /* tablets: ring the centered logo, nudged down clear of the prompt */
+    /* tablets: ring the centered logo, top row dropped below the prompt */
     return [
-      { x:.155, y:.20 }, { x:.60, y:.18 },
-      { x:.145, y:.58 }, { x:.61, y:.60 }
+      { x:.155, y:.24 }, { x:.60, y:.22 },
+      { x:.145, y:.60 }, { x:.61, y:.62 }
     ];
   }
   /* desktop: columns opened wider + moved down; the 3D logo shifts right
-     (see resize() in the three.js module) for an asymmetric composition */
+     (see resize() in the three.js module) for an asymmetric composition.
+     right column starts past the prompt text so they never collide;
+     bottom row stays clear of the subtitle console (only a sliver behind) */
   return [
-    { x:.10, y:.22 }, { x:.62, y:.20 },
-    { x:.095, y:.585 }, { x:.625, y:.60 }
+    { x:.09, y:.19 }, { x:.66, y:.17 },
+    { x:.085, y:.53 }, { x:.665, y:.55 }
   ];
 }
 let mx = 0, my = 0;
@@ -1468,10 +1470,10 @@ const FILE_DEFS = {
   });
   if (document.body.classList.contains("light")){
     /* deeper blue tint so the glass reads against the white page */
-    glassMat.color = new THREE.Color(0xE8F3FB);
+    glassMat.color = new THREE.Color(0xD8ECFA);
     glassMat.attenuationColor = new THREE.Color(0x2D74B8);
-    glassMat.attenuationDistance = .85;
-    glassMat.envMapIntensity = 1.25;
+    glassMat.attenuationDistance = .5;
+    glassMat.envMapIntensity = .95;
   }
 
   let parts = [];
@@ -1537,8 +1539,10 @@ const FILE_DEFS = {
     /* desktop: shift the logo right of the card columns (asymmetric hall);
        tablet/phone keep it centered */
     if (w >= 1100){
+      /* modest shift: the logo core stays visible in the gap between
+         the card columns rather than hiding behind the right column */
       const worldW = 2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360) * aspect;
-      spin.position.x = worldW * .16;
+      spin.position.x = worldW * .10;
     } else {
       spin.position.x = 0;
     }
