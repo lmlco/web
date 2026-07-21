@@ -1098,7 +1098,9 @@ function slots(){
   const vw = innerWidth, vh = innerHeight;
   const cw = Math.min(Math.max(Math.min(.18 * vw, .26 * vh), 230), 400);
   const ch = cw * 1.1;
-  const OV = 18;                                  /* neighbour overlap */
+  /* slight base GAP: the floating bob (±17px per card) closes it now and
+     then, so neighbours brush occasionally instead of sitting overlapped */
+  const OV = -10;
   const cx = .30 * vw - (cw * 2 - OV) / 2;        /* cluster centred on 30% */
   const cy = Math.max(.10 * vh, (vh - (ch * 2 - OV)) / 2 - .01 * vh);
   return [
