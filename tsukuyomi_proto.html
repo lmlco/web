@@ -611,6 +611,7 @@ body.light .clink a{ color:var(--blue); }
    never collide (h-capped via 24vh); tablet/mobile keep the shorter shape */
 @media (min-width:1100px){
   .win{ width:clamp(230px, min(18vw, 26vh), 400px); aspect-ratio:1/1.1; }
+  #prompt{ top:6%; }   /* clear of the taller centered cluster */
 }
 @media (max-width:700px){
   .win{ width:clamp(150px, 43vw, 210px); }
@@ -1089,13 +1090,22 @@ function slots(){
       { x:.145, y:.60 }, { x:.61, y:.62 }
     ];
   }
-  /* desktop: big overlapping 2x2 cluster pulled toward center-left,
-     3D logo pulled toward center-right — the two zones just touch
-     (see resize() in the three.js module). column/row spacing is set
-     slightly under the card size so neighbours overlap a little */
+  /* desktop: big 2x2 cluster at center-left, 3D logo at center-right
+     (see resize() in the three.js module). positions are computed from
+     the actual card size so neighbours always overlap by a fixed 18px,
+     regardless of viewport — fraction-based spacing overlapped wildly
+     on short windows because of the 230px width floor */
+  const vw = innerWidth, vh = innerHeight;
+  const cw = Math.min(Math.max(Math.min(.18 * vw, .26 * vh), 230), 400);
+  const ch = cw * 1.1;
+  const OV = 18;                                  /* neighbour overlap */
+  const cx = .30 * vw - (cw * 2 - OV) / 2;        /* cluster centred on 30% */
+  const cy = Math.max(.10 * vh, (vh - (ch * 2 - OV)) / 2 - .01 * vh);
   return [
-    { x:.15, y:.17 }, { x:.29, y:.15 },
-    { x:.145, y:.44 }, { x:.295, y:.46 }
+    { x: cx / vw,             y: (cy + 6) / vh },
+    { x: (cx + cw - OV) / vw, y: cy / vh },
+    { x: (cx - 6) / vw,       y: (cy + ch - OV) / vh },
+    { x: (cx + cw - OV + 6) / vw, y: (cy + ch - OV + 8) / vh }
   ];
 }
 let mx = 0, my = 0;
