@@ -1363,6 +1363,8 @@ function closeFile(){
   clearInterval(evalTimer);
   fileEl.classList.remove("on");
   document.body.classList.remove("file-open");
+  /* back in the hall: bring the select prompt back (it stays from now on) */
+  document.body.classList.remove("selected");
   document.getElementById("sec").textContent = "HALL";
 }
 document.querySelectorAll(".fback").forEach(b => b.addEventListener("click", closeFile));
