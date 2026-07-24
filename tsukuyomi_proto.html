@@ -137,6 +137,36 @@ body.booting #stream{ display:block; }
   100%{ opacity:0; transform:translateY(-24px); filter:blur(4px); }
 }
 
+/* ==================== company intro (after welcome) ==================== */
+#intro{
+  position:fixed; inset:0; z-index:54; display:flex; flex-direction:column; gap:26px;
+  align-items:center; justify-content:center; pointer-events:none; text-align:center;
+  opacity:0; transition:opacity .7s var(--ease);
+}
+#intro.on{ opacity:1; }
+#intro.out{ opacity:0; filter:blur(5px); transition:opacity .8s var(--ease), filter .8s var(--ease); }
+#intro .i-tag{
+  font-family:var(--mono); font-size:10px; letter-spacing:.42em; text-transform:uppercase;
+  color:var(--sky);
+}
+#intro .i-rule{
+  width:min(56vw,560px); height:1px; background:var(--hair-2);
+  transform:scaleX(0); transition:transform .8s var(--ease);
+}
+#intro.on .i-rule{ transform:scaleX(1); }
+#intro .i-main{
+  font-family:var(--jp); font-weight:900; font-size:clamp(19px,2.6vw,34px);
+  line-height:2; letter-spacing:.06em; color:var(--paper); min-height:2.4em;
+}
+#intro .i-rows{
+  display:grid; gap:6px; font-family:var(--mono); font-size:clamp(9.5px,1vw,11.5px);
+  letter-spacing:.2em; color:var(--paper-60); text-align:left; min-height:66px;
+}
+#intro .i-rows div{ opacity:0; transform:translateY(8px);
+  transition:opacity .6s var(--ease), transform .6s var(--ease); }
+#intro .i-rows div.on{ opacity:1; transform:none; }
+#intro .i-rows b{ color:var(--sky); font-weight:400; }
+
 /* ==================== center prompt (with the 3D) ==================== */
 #prompt{
   position:fixed; left:50%; top:16%; transform:translateX(-50%);
@@ -743,6 +773,19 @@ body.light #file .back:hover{ background:var(--blue); color:#fff; }
   <span class="en">Welcome to LifeMakersLabs</span>
 </div>
 
+<!-- company intro: machine decode after the welcome -->
+<div id="intro">
+  <div class="i-tag">PROFILE — 照会結果</div>
+  <div class="i-rule"></div>
+  <div class="i-main" id="i-main"></div>
+  <div class="i-rows" id="i-rows">
+    <div><b>UNIT</b> : LML,Co — LifeMakersLabs</div>
+    <div><b>STATE</b> : formless — 完成形を持たない</div>
+    <div><b>FUNC</b> : IP設計 / 映像制作 / 生活の実験</div>
+  </div>
+  <div class="i-rule"></div>
+</div>
+
 <!-- center prompt -->
 <div id="prompt">
   <b id="prompt-jp">セクションを選択してください</b>
@@ -984,11 +1027,39 @@ function finishBoot(){
   const welMs = REDUCED ? 100 : 3400;
   setTimeout(() => {
     wel.remove();
-    /* 3D rises */
-    if (window.__logoReady) document.body.classList.add("assembled");
-    else window.__wantAssembled = true;
-    spawnWindows();
+    playIntro(() => {
+      /* 3D rises */
+      if (window.__logoReady) document.body.classList.add("assembled");
+      else window.__wantAssembled = true;
+      spawnWindows();
+    });
   }, welMs);
+}
+
+/* company intro: main line decodes from machine glyphs, dossier rows
+   type in, then the whole card dissolves and the hall takes over */
+function playIntro(done){
+  const el = document.getElementById("intro");
+  if (REDUCED){ el.remove(); done(); return; }
+  const main = document.getElementById("i-main");
+  const rows = [...document.querySelectorAll("#i-rows div")];
+  const TXT = "生活を豊かにするものを、実験しながら\n作り続ける、匿名のクリエイター集団。";
+  const GLY = "アイウエオカキクケコサシスセソ01<>/¦=+*#";
+  el.classList.add("on");
+  let step = 0;
+  const iv = setInterval(() => {
+    step += 1;
+    main.innerHTML = TXT.split("").map((c, j) =>
+      c === "\n" ? "<br>" :
+      j < step ? c : GLY[Math.floor(Math.random() * GLY.length)]
+    ).join("");
+    if (step > TXT.length) clearInterval(iv);
+  }, 38);
+  rows.forEach((r, i) => setTimeout(() => r.classList.add("on"), 1500 + i * 380));
+  setTimeout(() => {
+    el.classList.add("out");
+    setTimeout(() => { el.remove(); done(); }, 800);
+  }, 4800);
 }
 
 /* ==================== HUD telemetry ==================== */
