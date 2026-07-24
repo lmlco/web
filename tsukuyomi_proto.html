@@ -155,8 +155,34 @@ body.booting #stream{ display:block; }
 }
 #intro.on .i-rule{ transform:scaleX(1); }
 #intro .i-main{
-  font-family:var(--jp); font-weight:900; font-size:clamp(19px,2.6vw,34px);
+  position:relative; font-family:var(--jp); font-weight:900; font-size:clamp(19px,2.6vw,34px);
   line-height:2; letter-spacing:.06em; color:var(--paper); min-height:2.4em;
+}
+/* serene reveal: each character condenses out of soft light — no scramble */
+#intro .i-main .ich{
+  display:inline-block; opacity:0; filter:blur(10px); transform:translateY(10px);
+  animation:ichar 1.2s var(--ease) forwards;
+}
+@keyframes ichar{
+  0%{ opacity:0; filter:blur(10px); transform:translateY(10px);
+      text-shadow:0 0 22px rgba(111,198,232,.9); }
+  55%{ opacity:1; filter:blur(0); transform:none;
+      text-shadow:0 0 16px rgba(111,198,232,.7); }
+  100%{ opacity:1; filter:blur(0); transform:none;
+      text-shadow:0 0 6px rgba(111,198,232,.18); }
+}
+/* moonlight band sweeping across the settled line */
+#intro .i-main::after{
+  content:""; position:absolute; inset:-14px -40px; pointer-events:none; opacity:0;
+  background:linear-gradient(105deg, transparent 38%, rgba(111,198,232,.16) 47%,
+    rgba(255,255,255,.28) 50%, rgba(231,159,190,.12) 53%, transparent 62%);
+  filter:blur(2px); transform:translateX(-55%);
+}
+#intro.sweep .i-main::after{ animation:isweep 1.7s var(--ease) forwards; }
+@keyframes isweep{
+  0%{ opacity:0; transform:translateX(-55%); }
+  20%{ opacity:1; }
+  100%{ opacity:0; transform:translateX(55%); }
 }
 #intro .i-rows{
   display:grid; gap:6px; font-family:var(--mono); font-size:clamp(9.5px,1vw,11.5px);
@@ -181,14 +207,19 @@ body.assembled:not(.selected) #prompt{ opacity:1; }
   font-size:clamp(17px,2.4vw,28px); letter-spacing:.1em; color:var(--paper);
   text-shadow:0 0 16px rgba(111,198,232,.8), 0 0 40px rgba(111,198,232,.4);
 }
-/* mechanical decode: brief chromatic split while the text re-acquires */
-#prompt.glitch b{
-  animation:pglitch .5s steps(3,end) 2;
+/* serene re-acquire: a soft band of light sweeps across the text */
+#prompt b{ position:relative; }
+#prompt b::after{
+  content:""; position:absolute; inset:-10px -30px; pointer-events:none; opacity:0;
+  background:linear-gradient(105deg, transparent 38%, rgba(111,198,232,.18) 47%,
+    rgba(255,255,255,.4) 50%, rgba(231,159,190,.14) 53%, transparent 62%);
+  filter:blur(2px); transform:translateX(-55%);
 }
-@keyframes pglitch{
-  0%,100%{ text-shadow:0 0 16px rgba(111,198,232,.8), 0 0 40px rgba(111,198,232,.4); transform:none; }
-  33%{ text-shadow:3px 0 0 rgba(231,159,190,.9), -3px 0 0 rgba(111,198,232,.9); transform:translateX(2px); }
-  66%{ text-shadow:-3px 0 0 rgba(231,159,190,.9), 3px 0 0 rgba(111,198,232,.9); transform:translateX(-2px); }
+#prompt.shine b::after{ animation:pshine 1.6s var(--ease); }
+@keyframes pshine{
+  0%{ opacity:0; transform:translateX(-55%); }
+  22%{ opacity:1; }
+  100%{ opacity:0; transform:translateX(55%); }
 }
 #prompt span{
   display:block; margin-top:8px; font-family:var(--mono);
@@ -1044,18 +1075,14 @@ function playIntro(done){
   const main = document.getElementById("i-main");
   const rows = [...document.querySelectorAll("#i-rows div")];
   const TXT = "生活を豊かにするものを、実験しながら\n作り続ける、匿名のクリエイター集団。";
-  const GLY = "アイウエオカキクケコサシスセソ01<>/¦=+*#";
   el.classList.add("on");
-  let step = 0;
-  const iv = setInterval(() => {
-    step += 1;
-    main.innerHTML = TXT.split("").map((c, j) =>
-      c === "\n" ? "<br>" :
-      j < step ? c : GLY[Math.floor(Math.random() * GLY.length)]
-    ).join("");
-    if (step > TXT.length) clearInterval(iv);
-  }, 38);
-  rows.forEach((r, i) => setTimeout(() => r.classList.add("on"), 1500 + i * 380));
+  /* characters condense out of light one by one — serene, no scramble */
+  main.innerHTML = TXT.split("").map((c, j) =>
+    c === "\n" ? "<br>" :
+    `<span class="ich" style="animation-delay:${j * 48}ms">${c}</span>`
+  ).join("");
+  setTimeout(() => el.classList.add("sweep"), TXT.length * 48 + 500);
+  rows.forEach((r, i) => setTimeout(() => r.classList.add("on"), 1700 + i * 380));
   setTimeout(() => {
     el.classList.add("out");
     setTimeout(() => { el.remove(); done(); }, 800);
@@ -1480,24 +1507,14 @@ const FILE_DEFS = {
 /* ==================== prompt: calm float, then periodic machine decode ==================== */
 (function(){
   const prompt = document.getElementById("prompt");
-  const jpEl = document.getElementById("prompt-jp");
-  const TEXT = "セクションを選択してください";
-  const GLYPH = "アイウエオカキクケコサシスセソ01<>/¦=+*#";
   let started = false;
-  function decodeOnce(){
+  /* serene re-acquire: a band of light sweeps across the text —
+     no character scramble (it read as scary/glitchy) */
+  function shineOnce(){
     if (document.body.classList.contains("selected")) return;
-    prompt.classList.add("glitch");
-    let step = 0;
-    const iv = setInterval(() => {
-      step++;
-      jpEl.textContent = TEXT.split("").map((c, j) =>
-        j < step ? c : GLYPH[Math.floor(Math.random() * GLYPH.length)]).join("");
-      if (step > TEXT.length){
-        clearInterval(iv);
-        jpEl.textContent = TEXT;
-        prompt.classList.remove("glitch");
-      }
-    }, 26);
+    prompt.classList.remove("shine");
+    void prompt.offsetWidth;             /* restart the animation */
+    prompt.classList.add("shine");
   }
   /* watch for the prompt becoming visible (3D assembled) */
   const watch = setInterval(() => {
@@ -1506,9 +1523,9 @@ const FILE_DEFS = {
     clearInterval(watch);
     if (REDUCED) return;
     setTimeout(() => {
-      decodeOnce();
-      setInterval(decodeOnce, 5200);   /* re-acquire every few seconds */
-    }, 4500);                           /* calm float first */
+      shineOnce();
+      setInterval(shineOnce, 5200);      /* re-acquire every few seconds */
+    }, 4500);                             /* calm float first */
   }, 400);
 })();
 </script>
